@@ -9,7 +9,7 @@ const menuLists = [
 ];
 function Navbar() {
   return (
-    <nav className="capitalize">
+    <nav className="capitalize font-sora ">
       <div className="mx-[100px] my-[30px] flex justify-between">
         <div>
           <h1>InterExam</h1>
