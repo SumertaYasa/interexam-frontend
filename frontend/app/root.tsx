@@ -8,7 +8,7 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import "./app.css";
+import "./styles/app.css";
 import "flowbite";
 
 export const links: Route.LinksFunction = () => [
