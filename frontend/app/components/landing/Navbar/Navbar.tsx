@@ -8,7 +8,10 @@ const menuLists = [
 ];
 function Navbar() {
   return (
-    <nav className="capitalize cursor-pointer font-sora w-full z-50 fixed top-0 left-0">
+    <nav
+      id="main-navbar"
+      className="capitalize cursor-pointer font-sora w-full z-50 fixed top-0 left-0"
+    >
       <div className="mx-[100px] my-[30px] flex justify-between items-center">
         <div className="flex justify-center items-center gap-2.5">
           <img
