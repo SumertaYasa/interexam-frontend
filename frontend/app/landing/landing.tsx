@@ -6,6 +6,6 @@ export default function Landing() {
     <>
       <Navbar />
       <Hero />
-    </>
+      </>
   );
 }
