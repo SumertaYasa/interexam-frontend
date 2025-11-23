@@ -8,13 +8,19 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 function Hero() {
   const containerRef = useRef(null);
   const videoContainerRef = useRef(null);
-  const textRef = useRef(null); // Teks Judul Lama
-  const scrollTextContainerRef = useRef(null); // Container Teks Baru
+  const textRef = useRef(null);
+  const scrollTextContainerRef = useRef(null);
 
   useGSAP(
     () => {
-      // Ambil semua elemen teks baru (children dari container)
-      // Kita gunakan selector class '.scroll-text-item' agar spesifik
+      window.scrollTo(0, 0);
+
+      const navbar = document.querySelector("#main-navbar");
+      const navbarText = document.querySelectorAll(
+        "#main-navbar a, #main-navbar h1, #main-navbar span"
+      );
+      const navbarLogo = document.querySelector("#main-navbar img");
+
       const textItems = gsap.utils.toArray(
         ".scroll-text-item"
       ) as HTMLDivElement[];
@@ -23,61 +29,80 @@ function Hero() {
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
-          // Perpanjang durasi scroll agar cukup untuk membaca semua teks
-          // Rumus kasar: 1000px (video) + (1000px * jumlah teks)
           end: "+=4000",
           scrub: true,
           pin: true,
+          invalidateOnRefresh: true,
         },
       });
 
-      // --- BABAK 1: VIDEO ZOOM ---
       tl.to(videoContainerRef.current, {
-        y: -400, // Naik ke atas (karena top awalnya 400px)
+        y: -400,
         width: "100%",
         height: "100vh",
         borderRadius: 0,
-        duration: 1, // Durasi relatif
+        duration: 1,
       });
 
-      // Judul lama hilang
-      tl.to(textRef.current, { y: 150, opacity: 0, duration: 1 }, "<");
+      tl.to(textRef.current, { y: 150, duration: 1 }, "<");
 
-      // --- BABAK 2: TEKS FOKUS BERGANTIAN ---
+      if (navbar) {
+        tl.to(
+          navbar,
+          {
+            backgroundColor: "rgba(0,0,0,0)",
+            duration: 0.3,
+          },
+          0.9
+        );
+      }
 
-      // Loop setiap item teks untuk membuat animasi masuk/keluar
+      if (navbarText.length > 0) {
+        tl.to(
+          navbarText,
+          {
+            color: "#ffffff",
+            duration: 0.3,
+          },
+          0.9
+        );
+      }
+
+      if (navbarLogo) {
+        tl.to(
+          navbarLogo,
+          {
+            filter: "brightness(0) invert(1)",
+            duration: 0.3,
+          },
+          0.9
+        );
+      }
+
       textItems.forEach((item, index) => {
-        // 1. ANIMASI MASUK (Active)
-        // Teks ini muncul dari bawah, menjadi putih terang, posisi tengah
         tl.to(item, {
           opacity: 1,
-          y: 0, // Ke posisi tengah (reset translate)
-          color: "#ffffff", // Putih Terang
+          y: 0,
+          color: "#ffffff",
           duration: 1,
           ease: "power2.out",
         });
 
-        // Jika ini BUKAN item pertama, kita harus "membuang" item sebelumnya
         if (index > 0) {
           const previousItem = textItems[index - 1];
 
-          // Animasi KELUAR item sebelumnya (Inactive)
-          // Jalan BERSAMAAN ("<") dengan masuknya item sekarang
           tl.to(
             previousItem,
             {
               opacity: 0,
-              y: -200, // Geser naik ke atas sedikit
-              color: "#6b7280", // Jadi abu-abu (Tailwind gray-500)
-              duration: 0.8,
+              y: -200,
+              color: "#6b7280",
+              duration: 1,
             },
             "<"
-          ); // <--- Tanda ini bikin mereka jalan bareng
+          );
         }
 
-        // 2. JEDA BACA
-        // Tambahkan dummy animation agar teks diam sebentar biar sempat dibaca user
-        // sebelum user scroll lagi untuk teks berikutnya
         tl.to({}, { duration: 1 });
       });
     },
@@ -89,7 +114,6 @@ function Hero() {
       ref={containerRef}
       className="relative w-full h-screen overflow-hidden bg-white"
     >
-      {/* Judul Lama */}
       <div
         ref={textRef}
         className="absolute z-20 top-[150px] ml-[var(--spacing-7-5)] flex flex-col gap-[var(--spacing-2)]"
