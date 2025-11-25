@@ -21,6 +21,45 @@ function Hero() {
       );
       const navbarLogo = document.querySelector("#main-navbar img");
 
+      const setNavbarWhite = () => {
+        if (navbar)
+          gsap.to(navbar, {
+            duration: 0.3,
+            overwrite: "auto",
+          });
+        if (navbarText.length > 0)
+          gsap.to(navbarText, {
+            color: "#ffffff",
+            duration: 0.3,
+            overwrite: "auto",
+          });
+        if (navbarLogo)
+          gsap.to(navbarLogo, {
+            filter: "brightness(0) invert(1)",
+            duration: 0.3,
+            overwrite: "auto",
+          });
+      };
+
+      const setNavbarOriginal = () => {
+        if (navbar)
+          gsap.to(navbar, {
+            duration: 0.3,
+            clearProps: "all",
+          });
+        if (navbarText.length > 0)
+          gsap.to(navbarText, {
+            duration: 0.3,
+            clearProps: "all",
+          });
+        if (navbarLogo)
+          gsap.to(navbarLogo, {
+            filter: "none",
+            duration: 0.3,
+            clearProps: "all",
+          });
+      };
+
       const textItems = gsap.utils.toArray(
         ".scroll-text-item"
       ) as HTMLDivElement[];
@@ -33,6 +72,15 @@ function Hero() {
           scrub: true,
           pin: true,
           invalidateOnRefresh: true,
+
+          onLeave: () => {
+            setNavbarOriginal(); // Paksa balik ke warna asli
+          },
+
+          // onEnterBack: Dijalankan saat user scroll balik ke atas masuk ke Hero
+          onEnterBack: () => {
+            setNavbarWhite(); // Paksa jadi putih lagi
+          },
         },
       });
 
@@ -50,7 +98,6 @@ function Hero() {
         tl.to(
           navbar,
           {
-            backgroundColor: "rgba(0,0,0,0)",
             duration: 0.3,
           },
           0.9
@@ -139,20 +186,12 @@ function Hero() {
           loop
         ></video>
 
-        {/* Overlay Gelap */}
         <div className="absolute inset-0 bg-black/50"></div>
 
-        {/* CONTAINER TEKS BARU */}
         <div
           ref={scrollTextContainerRef}
-          className="absolute inset-0 flex flex-col justify-center items-center text-center px-4 font-noto-sans"
+          className="absolute inset-0 flex flex-col justify-center items-center text-center px-4 font-noto-sans font-semibold"
         >
-          {/* Item Teks:
-              - Awalnya opacity 0 (sembunyi)
-              - translate-y-[50px] (ada di bawah dikit)
-              - absolute (agar semua menumpuk di titik tengah yang sama)
-            */}
-
           <h1 className="scroll-text-item absolute opacity-0 translate-y-[100px] text-heading-1 w-[80%]">
             Kami percaya, persiapan menumbuhkan keyakinan.
           </h1>
