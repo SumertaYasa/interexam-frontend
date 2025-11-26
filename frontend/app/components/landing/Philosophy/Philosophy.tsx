@@ -2,7 +2,7 @@ import React from 'react'
 
 function Philosophy() {
   return (
-    <div>Philosophy</div>
+    <div>testasdadfasf</div>
   )
 }
 
