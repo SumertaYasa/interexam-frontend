@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
 
-export default function Sidebar({ isWide }) {
+export default function Sidebar({ isWide, userRole = "admin" }) {
   const location = useLocation();
 
 
@@ -71,6 +71,7 @@ export default function Sidebar({ isWide }) {
           </li>
 
           {/*Bank Soal */}
+          {["admin", "validator"].includes(userRole) && (
           <li>
             <Link
               to="#"
@@ -81,8 +82,25 @@ export default function Sidebar({ isWide }) {
               <span className={`ms-3 sidebar-menu-text font-noto-sans text-base whitespace-nowrap transition-all duration-300 ease-in-out ${textClass}`}>Bank Soal</span>
             </Link>
           </li>
+          )}
+
+          {/* Tempat Soal Khusus Contributor */}
+          {userRole === "contributor" && (
+          <li>
+            <Link
+              to="#"
+              className={`${baseClass} ${isActive("#") ? activeClass : inactiveClass}`}>
+              <svg className="w-6 h-6 transition duration-75 min-w-[24px] ml-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 20H5.2C4.07989 20 3.51984 20 3.09202 19.782C2.71569 19.5903 2.40973 19.2843 2.21799 18.908C2 18.4802 2 17.9201 2 16.8V7.2C2 6.07989 2 5.51984 2.21799 5.09202C2.40973 4.71569 2.71569 4.40973 3.09202 4.21799C3.51984 4 4.07989 4 5.2 4H5.6C7.84021 4 8.96031 4 9.81596 4.43597C10.5686 4.81947 11.1805 5.43139 11.564 6.18404C12 7.03968 12 8.15979 12 10.4M12 20V10.4M12 20H18.8C19.9201 20 20.4802 20 20.908 19.782C21.2843 19.5903 21.5903 19.2843 21.782 18.908C22 18.4802 22 17.9201 22 16.8V7.2C22 6.07989 22 5.51984 21.782 5.09202C21.5903 4.71569 21.2843 4.40973 20.908 4.21799C20.4802 4 19.9201 4 18.8 4H18.4C16.1598 4 15.0397 4 14.184 4.43597C13.4314 4.81947 12.8195 5.43139 12.436 6.18404C12 7.03968 12 8.15979 12 10.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span className={`ms-3 sidebar-menu-text font-noto-sans text-base whitespace-nowrap transition-all duration-300 ease-in-out ${textClass}`}>Tempat Soal</span>
+            </Link>
+          </li>
+          )}
+
 
           {/*Kategori */}
+          {["admin", "validator", "contributor"].includes(userRole) && (
           <li>
              <button type="button" 
               onClick={() => setIsKategoriOpen(!isKategoriOpen)}
@@ -98,6 +116,7 @@ export default function Sidebar({ isWide }) {
             </button>
             <ul className={`${isKategoriOpen && isWide ? "block" : "hidden"} py-2 space-y-2`}>
 
+              {userRole === "admin" && (
               <li>
                 <Link 
                   to="#" 
@@ -113,16 +132,17 @@ export default function Sidebar({ isWide }) {
                   Mata Pelajaran
                 </Link>
               </li>
+              )}
 
               <li>
                 <Link 
-                  to="#" 
+                  to="topik" 
                   className={`flex  h-12 items-center w-full p-2 transition duration-75 pl-11 rounded-2xl group font-noto-sans text-base
-                    ${isActive("#") 
+                    ${isActive("topik") 
                       ? "text-gray-900 bg-primary/10 font-medium" 
                       : "text-gray-500 hover:bg-primary/5"}`}>
                   <svg 
-                    className={`w-5 h-5 mr-2 ml-4 transition-transform flex-shrink-0 ${isActive("#") ? "text-gray-900" : "text-gray-400"}`}
+                    className={`w-5 h-5 mr-2 ml-4 transition-transform flex-shrink-0 ${isActive("topik") ? "text-gray-900" : "text-gray-400"}`}
                     aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m9 5 7 7-7 7"/>
                   </svg>
@@ -131,9 +151,11 @@ export default function Sidebar({ isWide }) {
               </li>
             </ul>
           </li>
+          )}
 
           
            {/*Paket Soal */}
+          {["admin", "validator"].includes(userRole) && (
           <li>
             <Link
               to="#"
@@ -144,9 +166,11 @@ export default function Sidebar({ isWide }) {
               <span className={`ms-3 sidebar-menu-text font-noto-sans text-base whitespace-nowrap transition-all duration-300 ease-in-out ${textClass}`}>Paket Soal</span>
             </Link>
           </li>
+          )}
 
 
            {/*User */}
+          {userRole === "admin" && (
           <li>
             <Link
               to="/dashboard/users"
@@ -157,9 +181,11 @@ export default function Sidebar({ isWide }) {
               <span className={`ms-3 sidebar-menu-text font-noto-sans text-base ${textClass}`}>User</span>
             </Link>
           </li>
+          )}
 
 
           {/*Subscription */}
+          {userRole === "admin" && (
           <li>
              <button type="button" 
               onClick={() => setIsSubscriptionOpen(!isSubscriptionOpen)}
@@ -208,9 +234,11 @@ export default function Sidebar({ isWide }) {
               </li>
             </ul>
           </li>
+          )}
 
 
           {/*Konten */}
+          {userRole === "admin" && (
           <li>
              <button type="button" 
               onClick={() => setIsKontenOpen(!isKontenOpen)}
@@ -242,7 +270,7 @@ export default function Sidebar({ isWide }) {
 
               <li>
                 <Link 
-                  to="#" 
+                  to="artikel" 
                   className={`flex  h-12 items-center w-full p-2 whitespace-nowrap transition-all duration-300 ease-in-out pl-11 rounded-2xl group font-noto-sans text-base
                     ${isActive("#") 
                       ? "text-gray-900 bg-primary/10 font-medium" 
@@ -257,8 +285,10 @@ export default function Sidebar({ isWide }) {
               </li>
             </ul>
           </li>
+          )}
 
           {/*Laporan */}
+          {userRole === "admin" && (
           <li>
             <Link
               to="#"
@@ -270,6 +300,7 @@ export default function Sidebar({ isWide }) {
               <span className={`ms-3 sidebar-menu-text font-noto-sans text-base ${textClass}`}>Laporan</span>
             </Link>
           </li>
+          )}
 
         </ul>
       </div>

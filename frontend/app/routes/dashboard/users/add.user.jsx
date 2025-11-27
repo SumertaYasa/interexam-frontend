@@ -1,4 +1,4 @@
-import UserTable from "../../../components/dashboard/users/AddUser";
+import AddUser from "../../../components/dashboard/users/AddUser";
 
 export function meta() {
   return [{ title: "Add User - InterExam" }];
@@ -10,7 +10,7 @@ export default function AddUsersPage() {
       {/* <h1 className="text-2xl font-bold mb-4">Manajemen User</h1> */}
       
       {/* Panggil komponen tabel di sini */}
-      <UserTable />
+      <AddUser />
     </div>
   );
 }

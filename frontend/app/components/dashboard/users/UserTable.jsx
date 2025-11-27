@@ -105,7 +105,7 @@ export default function UserTable() {
                       </th>
                       <th scope="col"
                           className="px-6 py-3 font-noto-sans text-left text-xs font-semibold text-gray-900  uppercase tracking-wider">
-                          Action
+                          AKSI
                       </th>
                   </tr>
               </thead>

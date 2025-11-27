@@ -106,8 +106,8 @@ export default function AddUser() {
                             className="text-red-500">*</span></label>
                         <input type="text" id="id_username" name="username"
                             className="bg-gray-50 border font-noto-sans border-gray-300 placeholder:text-gray-400 text-gray-900 text-sm rounded-2xl focus:ring-pr-900 focus:border-pr-900 block w-full p-3.5"
-                            placeholder="Masukan nana" required />
-                        <p class="text-red-500 text-xs mt-1"></p>
+                            placeholder="Masukan nama" required />
+                        <p className="text-red-500 text-xs mt-1"></p>
                     </div>
 
                     {/* form email */}
@@ -118,7 +118,7 @@ export default function AddUser() {
                         <input type="email" id="id_email" name="email"
                             className="bg-gray-50 font-noto-sans border border-gray-300 placeholder:text-gray-400 text-gray-900 text-sm rounded-2xl focus:ring-pr-900 focus:border-pr-900 block w-full p-3.5"
                             placeholder="Masukan email" required />
-                        <p class="text-red-500 text-xs mt-1"></p>
+                        <p className="text-red-500 text-xs mt-1"></p>
                     </div>
 
                     {/* form Nomor Telepon */}
@@ -129,7 +129,7 @@ export default function AddUser() {
                         <input type="text" id="id_phone_number" name="phone_number"
                             className="bg-gray-50 font-noto-sans border border-gray-300 placeholder:text-gray-400 text-gray-900 text-sm rounded-2xl focus:ring-pr-900 focus:border-pr-900 block w-full p-3.5"
                             placeholder="Masukan nomor telepon" required />
-                        <p class="text-red-500 text-xs mt-1"></p>
+                        <p className="text-red-500 text-xs mt-1"></p>
                     </div>
 
                     {/* form Password */}
@@ -140,7 +140,7 @@ export default function AddUser() {
                         <input type="password" id="id_password" name="password"
                             className="bg-gray-50 border font-noto-sans placeholder:text-gray-400 border-gray-300 text-gray-900 text-sm rounded-2xl focus:ring-pr-900 focus:border-pr-900 block w-full p-3.5"
                             placeholder="Masukan password" required />
-                        <p class="text-red-500 text-xs mt-1"></p>
+                        <p className="text-red-500 text-xs mt-1"></p>
                     </div>
 
                 </div>
@@ -175,7 +175,7 @@ export default function AddUser() {
                                 </ul>
                             </div>
                             )}
-                        <p class="text-red-500 text-xs mt-1"></p>
+                        <p className="text-red-500 text-xs mt-1"></p>
                     </div>
 
                     {/* Form Keahlian */}
@@ -219,7 +219,7 @@ export default function AddUser() {
                                 </ul>
                             </div>
                             )}
-                        <p class="text-red-500 text-xs mt-1"></p>
+                        <p className="text-red-500 text-xs mt-1"></p>
                     </div>
                     )}
 
@@ -254,7 +254,7 @@ export default function AddUser() {
                                 />
                             </label>
                         </div>
-                        <p class="text-red-500 text-xs mt-1"></p>
+                        <p className="text-red-500 text-xs mt-1"></p>
                     </div>
 
 
