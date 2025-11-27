@@ -57,7 +57,7 @@ const categories = [
 
 function Categories() {
   return (
-    <div className="mx-7-5 mt-[120px]">
+    <div className="mx-7-5 pt-[100px] pb-[100px]">
       <div className="border-b pb-10">
         <h1 className="text-heading-1 font-bold font-sora">
           Satu tempat untuk semua ujian impianmu
