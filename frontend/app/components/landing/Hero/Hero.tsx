@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { setNavbarOriginal, setNavbarWhite } from "~/utils/navColor";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -9,23 +10,19 @@ function Hero() {
   const containerRef = useRef(null);
   const videoContainerRef = useRef(null);
   const textRef = useRef(null);
-  const scrollTextContainerRef = useRef(null);
 
   useGSAP(
     () => {
+      setNavbarOriginal();
       window.scrollTo(0, 0);
-
-      const navbar = document.querySelector("#main-navbar");
-      const navbarText = document.querySelectorAll(
-        "#main-navbar a, #main-navbar h1, #main-navbar span"
-      );
-      const navbarLogo = document.querySelector("#main-navbar img");
 
       const textItems = gsap.utils.toArray(
         ".scroll-text-item"
       ) as HTMLDivElement[];
 
+      // scroll tigger main
       const tl = gsap.timeline({
+        id: "hero-timeline",
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
@@ -46,39 +43,6 @@ function Hero() {
 
       tl.to(textRef.current, { y: 150, duration: 1 }, "<");
 
-      if (navbar) {
-        tl.to(
-          navbar,
-          {
-            backgroundColor: "rgba(0,0,0,0)",
-            duration: 0.3,
-          },
-          0.9
-        );
-      }
-
-      if (navbarText.length > 0) {
-        tl.to(
-          navbarText,
-          {
-            color: "#ffffff",
-            duration: 0.3,
-          },
-          0.9
-        );
-      }
-
-      if (navbarLogo) {
-        tl.to(
-          navbarLogo,
-          {
-            filter: "brightness(0) invert(1)",
-            duration: 0.3,
-          },
-          0.9
-        );
-      }
-
       textItems.forEach((item, index) => {
         tl.to(item, {
           opacity: 1,
@@ -89,10 +53,10 @@ function Hero() {
         });
 
         if (index > 0) {
-          const previousItem = textItems[index - 1];
+          const previous = textItems[index - 1];
 
           tl.to(
-            previousItem,
+            previous,
             {
               opacity: 0,
               y: -200,
@@ -104,6 +68,17 @@ function Hero() {
         }
 
         tl.to({}, { duration: 1 });
+      });
+
+      // scroll trigger untuk navbar
+      ScrollTrigger.create({
+        trigger: videoContainerRef.current,
+        start: "top top",
+        end: "+=4000",
+        onEnter: () => setNavbarWhite(),
+        onEnterBack: () => setNavbarWhite(),
+        onLeave: () => setNavbarOriginal(),
+        onLeaveBack: () => setNavbarOriginal(),
       });
     },
     { scope: containerRef }
@@ -126,10 +101,9 @@ function Hero() {
         </h1>
       </div>
 
-      {/* Video Container */}
       <div
         ref={videoContainerRef}
-        className="absolute z-40 top-[400px] left-1/2 -translate-x-1/2 overflow-hidden w-[95%] h-[60vh] rounded-[var(--radius-card-sm)]"
+        className="absolute z-40 top-[400px] left-1/2 -translate-x-1/2 overflow-hidden w-[95%] h-full rounded-[var(--radius-card-sm)]"
       >
         <video
           src="/interexam-video.mp4"
@@ -139,20 +113,9 @@ function Hero() {
           loop
         ></video>
 
-        {/* Overlay Gelap */}
         <div className="absolute inset-0 bg-black/50"></div>
 
-        {/* CONTAINER TEKS BARU */}
-        <div
-          ref={scrollTextContainerRef}
-          className="absolute inset-0 flex flex-col justify-center items-center text-center px-4 font-noto-sans"
-        >
-          {/* Item Teks:
-              - Awalnya opacity 0 (sembunyi)
-              - translate-y-[50px] (ada di bawah dikit)
-              - absolute (agar semua menumpuk di titik tengah yang sama)
-            */}
-
+        <div className="absolute inset-0 flex flex-col justify-center items-center text-center px-4 font-noto-sans font-semibold">
           <h1 className="scroll-text-item absolute opacity-0 translate-y-[100px] text-heading-1 w-[80%]">
             Kami percaya, persiapan menumbuhkan keyakinan.
           </h1>
