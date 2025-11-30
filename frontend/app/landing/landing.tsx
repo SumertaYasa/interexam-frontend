@@ -1,4 +1,5 @@
 import Categories from "~/components/landing/Categories/Categories";
+import Footer from "~/components/landing/Footer/Footer";
 import Hero from "~/components/landing/Hero/Hero";
 import Navbar from "~/components/landing/Navbar/Navbar";
 import Philosophy from "~/components/landing/Philosophy/Philosophy";
@@ -12,6 +13,7 @@ export default function Landing() {
       <Categories />
       <Philosophy />
       <Preview />
+      <Footer />
     </div>
   );
 }

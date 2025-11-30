@@ -57,20 +57,20 @@ const categories = [
 
 function Categories() {
   return (
-    <div className="mx-7-5 pt-[100px] pb-[100px]">
+    <div className="px-5 pt-[100px] pb-5 md:pt-[120px] md:px-7-5">
       <div className="border-b pb-10">
-        <h1 className="text-heading-1 font-bold font-sora">
+        <h1 className="text-heading-3 md:text-heading-1 font-bold font-sora">
           Satu tempat untuk semua ujian impianmu
         </h1>
-        <p className="text-body-sm-demilight">
+        <p className="text-body-s-demilight md:text-body-sm-demilight">
           Dari ujian nasional hingga sertifikasi profesi, InterExam membantumu
           belajar dengan arah yang jelas dan dukungan yang tepat.
         </p>
       </div>
-      <div className="flex mt-10 gap-5 w-full">
+      <div className="flex flex-col md:flex-row mt-10 gap-5 w-full">
         {categories.map((category) => (
           <div key={category.category} className="w-full">
-            <h2 className="text-heading-2 font-semibold font-sora pb-7-5">
+            <h2 className="text-heading-3 md:text-heading-2 font-semibold font-sora pb-7-5">
               {category.category}
             </h2>
             <ul className="flex flex-col gap-7-5">
@@ -79,12 +79,14 @@ function Categories() {
                   key={feature.id}
                   className="flex gap-4 justify-center items-center border-b pb-4"
                 >
-                  <span className="font-semibold font-sora">{feature.id}</span>
+                  <span className="text-body-xs-semibold font-sora">
+                    {feature.id}
+                  </span>
                   <div>
-                    <h3 className="text-heading-3 font-semibold font-sora">
+                    <h3 className="text-heading-5 md:text-heading-3 font-semibold font-sora">
                       {feature.title}
                     </h3>
-                    <p className="text-body-sm-regular">
+                    <p className="md:text-body-s-regular md:text-body-sm-regular">
                       {feature.description}
                     </p>
                   </div>
