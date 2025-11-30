@@ -31,8 +31,8 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
       // className={`fixed top-0 left-0 z-40  h-screen pt-10 transition-all ease-in-out translate-x-full duration-200  sm:translate-x-0 bg-white border-r border-gray-100 "
       //   ${sidebarWidth}`}
       //   aria-label="Sidebar">
-      className={`fixed top-0 left-0 z-40 h-screen pt-10 transition-all duration-200 ease-in-out 
-        bg-white border-r border-gray-100
+      className={`fixed top-0 left-0 z-40 h-screen pt-10 transition-all duration-200 ease-in-out
+        bg-white border-r border-gray-300
         -translate-x-full sm:translate-x-0
         ${isWide ? "w-64" : "w-20"}`}
       aria-label="Sidebar">

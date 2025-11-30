@@ -19,6 +19,7 @@ export default [
         // user
         route("users", "routes/dashboard/users/data.user.jsx"),
         route("users/add", "routes/dashboard/users/add.user.jsx"),
+        route("users/edit/:id", "routes/dashboard/users/edit.user.jsx"),
 
         // konten
         route("artikel", "routes/dashboard/artikel/data.artikel.jsx"),
