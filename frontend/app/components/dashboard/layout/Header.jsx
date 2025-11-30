@@ -9,7 +9,7 @@ export default function Header({ toggleDesktopSidebar }) {
 
   return (
     <header className="antialiased">
-      <nav className="bg-white border-gray-200 px-4 lg:px-6 py-2.5 fixed top-0 left-0 w-full z-50">
+      <nav className="bg-white border-gray-300 border-b px-4 lg:px-6 py-2.5 fixed top-0 left-0 w-full z-50 ">
         <div className="flex flex-wrap justify-between items-center">
 
           <div className="flex justify-start items-center"> 
