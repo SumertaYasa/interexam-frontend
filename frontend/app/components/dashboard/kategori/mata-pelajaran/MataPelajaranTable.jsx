@@ -1,24 +1,21 @@
 import { Link } from "react-router";
-import { useState, useEffect } from "react"; // <--- PERUBAHAN: Import hooks
+import { useState, useEffect } from "react";
 
 export default function MataPelajaranTable() {
-    // Ambil URL Backend dari .env
+ 
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-    // 1. STATE UNTUK MENYIMPAN DATA & LOADING
     const [subjects, setSubjects] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // 2. FUNGSI FETCH DATA DARI BACKEND
     const fetchSubjects = async () => {
-        setIsLoading(true); // Mulai status loading
+        setIsLoading(true);
         try {
-            // Memanggil API Read All Subjects (GET /admin/subjects)
             const response = await fetch(`${API_BASE_URL}/admin/subjects`);
             const result = await response.json();
             
             if (response.ok) {
-                setSubjects(result.data); // Simpan data subject ke state
+                setSubjects(result.data);
             } else {
                 console.error("Gagal mengambil data:", result.message);
             }
@@ -26,17 +23,15 @@ export default function MataPelajaranTable() {
             console.error("Error koneksi:", error);
             alert("Gagal terhubung ke server backend.");
         } finally {
-            setIsLoading(false); // Selesai loading
+            setIsLoading(false);
         }
     };
 
-    // Panggil fetch saat komponen pertama kali dimuat
     useEffect(() => {
         fetchSubjects();
-    }, []); // <-- [] artinya hanya jalan sekali
+    }, []);
 
 
-    // 3. FUNGSI DELETE MATA PELAJARAN
     const handleDelete = async (id, nama) => {
         if (!confirm(`Yakin ingin menghapus Mata Pelajaran: ${nama}? Proses ini tidak bisa dibatalkan!`)) {
             return;
@@ -51,7 +46,6 @@ export default function MataPelajaranTable() {
 
             if (response.ok) {
                 alert(`Sukses: ${result.message}`);
-                // Update tampilan tanpa refresh penuh (Hapus item dari array)
                 setSubjects(subjects.filter(subj => subj.id_subject !== id));
             } else {
                 alert(`Gagal: ${result.message}`);
@@ -139,10 +133,9 @@ export default function MataPelajaranTable() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
                                             {item.nama_subject}
                                         </td>
-                                        
-                                        {/* PERBAIKAN: Kolom KETERANGAN (Sekarang pasti ada datanya dari backend) */}
+
                                         <td className="px-6 py-4 text-sm font-noto-sans text-gray-600 max-w-sm" title={item.keterangan}> 
-                                            {item.keterangan || "—"} {/* Tampilkan data atau tanda minus jika kosong */}
+                                            {item.keterangan || "—"} 
                                         </td>
                                         
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">

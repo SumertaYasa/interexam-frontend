@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 
 export default function EditMataPelajaran() {
     const navigate = useNavigate();
-    const { id } = useParams(); // Ambil ID dari URL
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+    const { id } = useParams();
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     const [formData, setFormData] = useState({
         nama_subject: "", 
@@ -12,15 +12,11 @@ export default function EditMataPelajaran() {
     });
     
     const [isLoading, setIsLoading] = useState(false);
-    const [isFetching, setIsFetching] = useState(true); // State loading saat ambil data
+    const [isFetching, setIsFetching] = useState(true); 
 
-    // 1. AMBIL DATA LAMA SAAT HALAMAN DIBUKA
     useEffect(() => {
         const fetchSubject = async () => {
             try {
-                // Panggil API Get All Subjects lalu filter di frontend (karena backend Anda belum ada getById untuk subject)
-                // ATAU jika backend sudah ada getById, panggil itu.
-                // Asumsi: Kita pakai getAllSubjects lalu cari yang ID-nya cocok
                 const response = await fetch(`${API_BASE_URL}/admin/subjects`);
                 const result = await response.json();
                 
@@ -51,7 +47,6 @@ export default function EditMataPelajaran() {
         setFormData({ ...formData, [name]: value });
     };
 
-    // 2. FUNGSI UPDATE (PUT)
     const handleUpdate = async (e) => {
         e.preventDefault(); 
 
@@ -64,7 +59,7 @@ export default function EditMataPelajaran() {
         
         try {
             const response = await fetch(`${API_BASE_URL}/admin/subject/${id}`, {
-                method: 'PUT', // Ganti POST jadi PUT
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
