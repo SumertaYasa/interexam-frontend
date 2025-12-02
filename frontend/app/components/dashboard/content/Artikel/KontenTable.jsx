@@ -43,7 +43,7 @@ export default function KontenTable() {
         </div>
 
 
-        <div className="container mx-auto p-4 bg-white rounded-2xl shadow-xl">
+        <div className="mx-auto p-4 bg-white rounded-2xl shadow-xl">
           <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div className="relative w-full sm:w-auto flex  flex-row items-center gap-4">
               <form method="GET" action="#" className="relative w-full sm:w-auto">
@@ -112,7 +112,7 @@ export default function KontenTable() {
                     1
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap" alt="Foto Profile">
-                    <img src="/profile.jpg" className="rounded-full h-12 w-12"/>
+                    <img src="/imagecontoh.jpg" className="rounded-lg h-12 w-20"/>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900 ">
                     Tips menghafal perkalian

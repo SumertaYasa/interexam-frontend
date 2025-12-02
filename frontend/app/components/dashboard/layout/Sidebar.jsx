@@ -6,8 +6,10 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
 
 
   const isActive = (path) => {
+    if (path === location.pathname) return true;
     if (path === "/dashboard" && location.pathname === "/dashboard") return true;
     if (path !== "/dashboard" && location.pathname.startsWith(path)) return true;
+    
     return false;
   };
   
@@ -105,7 +107,7 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
              <button type="button" 
               onClick={() => setIsKategoriOpen(!isKategoriOpen)}
               className={`flex items-center w-full justify-between px-6 py-1.5 gap-2 text-body rounded-2xl hover:bg-primary-10 hover:text-fg-brand group font-noto-sans text-base
-                ${isActive("#") || location.pathname.startsWith("/dashboard/billing") ? activeClass : inactiveClass}`} aria-controls="dropdown-example" data-collapse-toggle="dropdown-example">
+                ${(isActive("/dashboard/mata-pelajaran") || isActive("/dashboard/topik") || isActive("/dashboard/tipe-soal")) ? activeClass : inactiveClass}`} aria-controls="dropdown-example" data-collapse-toggle="dropdown-example">
 
                   <svg className="w-6 h-6 transition duration-75 min-w-[24px] flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M21 12L9 12M21 6L9 6M21 18L9 18M5 12C5 12.5523 4.55228 13 4 13C3.44772 13 3 12.5523 3 12C3 11.4477 3.44772 11 4 11C4.55228 11 5 11.4477 5 12ZM5 6C5 6.55228 4.55228 7 4 7C3.44772 7 3 6.55228 3 6C3 5.44772 3.44772 5 4 5C4.55228 5 5 5.44772 5 6ZM5 18C5 18.5523 4.55228 19 4 19C3.44772 19 3 18.5523 3 18C3 17.4477 3.44772 17 4 17C4.55228 17 5 17.4477 5 18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -119,9 +121,9 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
               {userRole === "admin" && (
               <li>
                 <Link 
-                  to="#" 
+                  to="mata-pelajaran" 
                   className={`flex whitespace-nowrap transition-all duration-300 ease-in-out  h-12 items-center w-full p-2  pl-11 rounded-2xl group font-noto-sans text-base
-                    ${isActive("#") 
+                    ${isActive("/dashboard/mata-pelajaran") 
                       ? "text-gray-900 bg-primary/10 font-medium" 
                       : "text-gray-500 hover:bg-primary/5"}`}>
                   <svg 
@@ -138,7 +140,7 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
                 <Link 
                   to="topik" 
                   className={`flex  h-12 items-center w-full p-2 transition duration-75 pl-11 rounded-2xl group font-noto-sans text-base
-                    ${isActive("topik") 
+                  ${isActive("/dashboard/topik") 
                       ? "text-gray-900 bg-primary/10 font-medium" 
                       : "text-gray-500 hover:bg-primary/5"}`}>
                   <svg 
@@ -190,7 +192,7 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
              <button type="button" 
               onClick={() => setIsSubscriptionOpen(!isSubscriptionOpen)}
               className={`flex items-center w-full justify-between px-6 py-1.5 gap-2 text-body rounded-2xl hover:bg-primary-10 hover:text-fg-brand group font-noto-sans text-base
-                ${isActive("#") || location.pathname.startsWith("#") ? activeClass : inactiveClass}`} aria-controls="dropdown-example" data-collapse-toggle="dropdown-example">
+                ${(isActive("/dashboard/paket-subscription") || isActive("/dashboard/daftar-subscription")) ? activeClass : inactiveClass}`} aria-controls="dropdown-example" data-collapse-toggle="dropdown-example">
 
                   <svg className="w-6 h-6 transition duration-75 min-w-[24px]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8 8H8.01M2 5.2L2 9.67451C2 10.1637 2 10.4083 2.05526 10.6385C2.10425 10.8425 2.18506 11.0376 2.29472 11.2166C2.4184 11.4184 2.59135 11.5914 2.93726 11.9373L10.6059 19.6059C11.7939 20.7939 12.388 21.388 13.0729 21.6105C13.6755 21.8063 14.3245 21.8063 14.927 21.6105C15.612 21.388 16.2061 20.7939 17.3941 19.6059L19.6059 17.3941C20.7939 16.2061 21.388 15.612 21.6105 14.927C21.8063 14.3245 21.8063 13.6755 21.6105 13.0729C21.388 12.388 20.7939 11.7939 19.6059 10.6059L11.9373 2.93726C11.5914 2.59135 11.4184 2.4184 11.2166 2.29472C11.0376 2.18506 10.8425 2.10425 10.6385 2.05526C10.4083 2 10.1637 2 9.67452 2L5.2 2C4.0799 2 3.51984 2 3.09202 2.21799C2.7157 2.40973 2.40973 2.71569 2.21799 3.09202C2 3.51984 2 4.07989 2 5.2ZM8.5 8C8.5 8.27614 8.27614 8.5 8 8.5C7.72386 8.5 7.5 8.27614 7.5 8C7.5 7.72386 7.72386 7.5 8 7.5C8.27614 7.5 8.5 7.72386 8.5 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -205,7 +207,7 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
                 <Link 
                   to="#" 
                   className={`flex  h-12 items-center w-full p-2 whitespace-nowrap transition-all duration-300 ease-in-out pl-11 rounded-2xl group font-noto-sans text-base
-                    ${isActive("#") 
+                   ${isActive("/dashboard/paket-subscription") 
                       ? "text-gray-900 bg-primary/10 font-medium" 
                       : "text-gray-500 hover:bg-primary/5"}`}>
                   <svg 
@@ -221,7 +223,7 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
                 <Link 
                   to="#" 
                   className={`flex  h-12 items-center w-full p-2 whitespace-nowrap transition-all duration-300 ease-in-out pl-11 rounded-2xl group font-noto-sans text-base
-                    ${isActive("#") 
+                    ${isActive("/dashboard/daftar-subscription") 
                       ? "text-gray-900 bg-primary/10 font-medium" 
                       : "text-gray-500 hover:bg-primary/5"}`}>
                   <svg 
@@ -243,7 +245,7 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
              <button type="button" 
               onClick={() => setIsKontenOpen(!isKontenOpen)}
               className={`flex items-center w-full justify-between px-6 py-1.5 gap-2 text-body rounded-2xl hover:bg-primary-10 hover:text-fg-brand group font-noto-sans text-base
-                ${isActive("#") || location.pathname.startsWith("#") ? activeClass : inactiveClass}`} aria-controls="dropdown-example" data-collapse-toggle="dropdown-example">
+               ${(isActive("/dashboard/promo") || isActive("/dashboard/artikel")) ? activeClass : inactiveClass}`} aria-controls="dropdown-example" data-collapse-toggle="dropdown-example">
                   <svg className="w-6 h-6 transition duration-75 min-w-[24px]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22 11.5V14.6C22 16.8402 22 17.9603 21.564 18.816C21.1805 19.5686 20.5686 20.1805 19.816 20.564C18.9603 21 17.8402 21 15.6 21H8.4C6.15979 21 5.03969 21 4.18404 20.564C3.43139 20.1805 2.81947 19.5686 2.43597 18.816C2 17.9603 2 16.8402 2 14.6V9.4C2 7.15979 2 6.03969 2.43597 5.18404C2.81947 4.43139 3.43139 3.81947 4.18404 3.43597C5.03969 3 6.15979 3 8.4 3H12.5M19 8V2M16 5H22M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
@@ -256,7 +258,7 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
                 <Link 
                   to="#" 
                   className={`flex  h-12 items-center w-full p-2 whitespace-nowrap transition-all duration-300 ease-in-out pl-11 rounded-2xl group font-noto-sans text-base
-                    ${isActive("#") 
+                    ${isActive("/dashboard/promo") 
                       ? "text-gray-900 bg-primary/10 font-medium" 
                       : "text-gray-500 hover:bg-primary/5"}`}>
                   <svg 
@@ -272,7 +274,7 @@ export default function Sidebar({ isWide, userRole = "admin" }) {
                 <Link 
                   to="artikel" 
                   className={`flex  h-12 items-center w-full p-2 whitespace-nowrap transition-all duration-300 ease-in-out pl-11 rounded-2xl group font-noto-sans text-base
-                    ${isActive("#") 
+                   ${isActive("/dashboard/artikel") 
                       ? "text-gray-900 bg-primary/10 font-medium" 
                       : "text-gray-500 hover:bg-primary/5"}`}>
                   <svg 
