@@ -137,7 +137,7 @@ function Philosophy() {
                 <h2 className="text-[20px] md:text-3xl font-bold mb-4 capitalize leading-tight">
                   {card.title}
                 </h2>
-                <p className="w-full text-body-xs-demilight text-gray-100 text-wrap">
+                <p className="w-full text-body-xs-demilight text-gray-100 text-wrap text-justify">
                   {card.description}
                 </p>
               </div>

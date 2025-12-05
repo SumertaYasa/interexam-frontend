@@ -86,7 +86,7 @@ function Categories() {
                     <h3 className="text-heading-5 md:text-heading-3 font-semibold font-sora">
                       {feature.title}
                     </h3>
-                    <p className="md:text-body-s-regular md:text-body-sm-regular">
+                    <p className="md:text-body-s-regular md:text-body-sm-regular text-justify">
                       {feature.description}
                     </p>
                   </div>
