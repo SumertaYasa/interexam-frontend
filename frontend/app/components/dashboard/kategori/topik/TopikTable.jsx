@@ -43,7 +43,7 @@ export default function TopikTable() {
             </div>
 
             {/* Icon Search dan button Topik */}
-            <div className="container mx-auto p-4 bg-white rounded-2xl shadow-xl">
+            <div className="mx-auto p-4 bg-white rounded-2xl shadow-xl">
                 <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div className="relative w-full sm:w-auto flex  flex-row items-center gap-4">
                     <form method="GET" action="#" className="relative w-full sm:w-auto">

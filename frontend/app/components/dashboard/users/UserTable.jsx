@@ -99,7 +99,7 @@ export default function UserTable() {
             </div>
 
             {/* --- CONTAINER KONTEN UTAMA --- */}
-            <div className="container mx-auto p-4 bg-white rounded-2xl shadow-xl">
+            <div className="mx-auto p-4 bg-white rounded-2xl shadow-xl">
                 
                 {/* SEARCH & FILTER BAR */}
                 <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-3">
