@@ -59,7 +59,7 @@ function Footer() {
           </div>
         </div>
         <div className="bg-primary flex flex-col md:flex-row justify-between gap-5">
-          <ul>
+          <ul className="flex flex-col md:flex-row gap-4">
             {menuLists.map((menu) => (
               <li key={menu.id}>
                 <NavLink to={menu.link} end={menu.end}>

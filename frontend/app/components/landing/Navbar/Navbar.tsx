@@ -115,7 +115,7 @@ function Navbar() {
       <div
         ref={menuRef}
         id="mobile-menu"
-        className="fixed inset-0 w-full h-screen bg-amber-200 z-40 flex flex-col justify-center px-[20px] gap-10 translate-x-full opacity-0 "
+        className="fixed inset-0 w-full h-screen bg-blue-200 z-40 flex flex-col justify-center px-[20px] gap-10 translate-x-full opacity-0 "
         style={{ pointerEvents: isMenuOpen ? "auto" : "none" }}
       >
         <ul className="flex flex-col gap-[30px] border-b">
