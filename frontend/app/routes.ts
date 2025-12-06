@@ -30,6 +30,10 @@ export default [
 
     //  -------------------- BATAS KATEGORI ------------------------
 
+    // Paket Soal
+    route("paket-soal", "routes/dashboard/paket-soal/data.paket.soal.jsx"),
+    route("paket-soal/add", "routes/dashboard/paket-soal/add.paket.soal.jsx"),
+
     // user
     route("users", "routes/dashboard/users/data.user.jsx"),
     route("users/add", "routes/dashboard/users/add.user.jsx"),
