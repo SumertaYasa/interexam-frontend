@@ -32,13 +32,13 @@ export default function DashboardLayout({ children }) {
   const marginClass = isWide ? "sm:ml-64" : "sm:ml-20";
 
   return (
-    <div className="antialiased">
+    <div className="antialiased bg-gray-50 min-h-screen">
       <Header toggleDesktopSidebar={toggleSidebar} />
       <Sidebar isWide={isWide} menuData={menuList} />
 
       <div
         id="main-content"
-        className={`h-s p-4  transition-all duration-200 ease-in-out py-20  h-screen bg-gray-50 
+        className={`h-s p-4  transition-all duration-200 ease-in-out py-20  min-h-screen bg-gray-50 
        ${marginClass}`}
       >
         <main className=" pt-15 ">{children}</main>

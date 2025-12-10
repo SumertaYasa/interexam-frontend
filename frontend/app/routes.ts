@@ -7,6 +7,7 @@ import {
 
 export default [
   index("routes/landing.tsx"),
+
   route("/tes", "landing/tes/tes.tsx"),
   route("/paket", "landing/paket/paket.tsx"),
   route("/tentang-kami", "landing/tentangKami/tentangKami.tsx"),
@@ -20,10 +21,31 @@ export default [
     // bank soal
     route("bank-soal", "routes/dashboard/bank-soal/data.bank.jsx"),
 
-    // khusus kategori
+    //  -------------------- KHUSUS KATEGORI ------------------------
+    // Kategori Mata Pelajaran
+    route(
+      "mata-pelajaran",
+      "routes/dashboard/mata-pelajaran/data.mata-pelajaran.jsx"
+    ),
+    route(
+      "mata-pelajaran/add",
+      "routes/dashboard/mata-pelajaran/add.mata-pelajaran.jsx"
+    ),
+    route(
+      "mata-pelajaran/edit/:id",
+      "routes/dashboard/mata-pelajaran/edit.mata-pelajaran.jsx"
+    ),
+
+    // Kategori Topik
     route("topik", "routes/dashboard/topik/data.topik.jsx"),
     route("topik/add", "routes/dashboard/topik/add.topik.jsx"),
-    route("topik/edit/1", "routes/dashboard/topik/edit.topik.jsx"),
+    route("topik/edit/:id", "routes/dashboard/topik/edit.topik.jsx"),
+
+    //  -------------------- BATAS KATEGORI ------------------------
+
+    // Paket Soal
+    route("paket-soal", "routes/dashboard/paket-soal/data.paket.soal.jsx"),
+    route("paket-soal/add", "routes/dashboard/paket-soal/add.paket.soal.jsx"),
 
     // user
     route("users", "routes/dashboard/users/data.user.jsx"),
@@ -33,13 +55,6 @@ export default [
     // konten
     route("artikel", "routes/dashboard/artikel/data.artikel.jsx"),
     route("artikel/add", "routes/dashboard/artikel/add.artikel.jsx"),
-  ]),
-
-  layout("routes/dashboardSubscriber.jsx", [
-    route(
-      "dashboard-subscriber",
-      "routes/dashboardSubscriber/dashboardHome/dashboard.home.jsx"
-    ),
   ]),
 
   route(
