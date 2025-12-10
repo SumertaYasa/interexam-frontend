@@ -1,4 +1,9 @@
-import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import {
+  type RouteConfig,
+  index,
+  layout,
+  route,
+} from "@react-router/dev/routes";
 
 export default [
   index("routes/landing.tsx"),
@@ -30,7 +35,19 @@ export default [
     route("artikel/add", "routes/dashboard/artikel/add.artikel.jsx"),
   ]),
 
-  route("dashboard-subscriber", "routes/dashboardSubscriber.jsx", [
-    index("routes/dashboardSubscriber/dashboardHome/dashboard.home.jsx"),
+  layout("routes/dashboardSubscriber.jsx", [
+    route(
+      "dashboard-subscriber",
+      "routes/dashboardSubscriber/dashboardHome/dashboard.home.jsx"
+    ),
   ]),
+
+  route(
+    "dashboard-subscriber/status-ujian-terakhir",
+    "components/DashboardSubcriber/Features/Dashboard/StatusAllCourse.jsx"
+  ),
+  route(
+    "dashboard-subscriber/status-ujian-terakhir/:id",
+    "components/DashboardSubcriber/Common/DetailExam.jsx"
+  ),
 ] satisfies RouteConfig;

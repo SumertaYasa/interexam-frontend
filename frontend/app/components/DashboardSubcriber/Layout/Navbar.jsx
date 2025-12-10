@@ -3,8 +3,8 @@ import { Bell } from "lucide-react";
 
 function Navbar({ Name }) {
   return (
-    <nav className="w-full">
-      <div className="flex justify-between items-center px-[45px] py-5">
+    <nav className="w-full shadow">
+      <div className="flex justify-between items-center px-[45px] py-5 ">
         <div className="flex justify-center items-center gap-[45px]">
           <div className="w-7-5 ">
             <img src="/interexam-logo.svg" />
