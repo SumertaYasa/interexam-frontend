@@ -42,6 +42,7 @@ export default function DashboardLayout({ children }) {
        ${marginClass}`}
       >
         <main className=" pt-15 ">{children}</main>
+        <p></p>
       </div>
     </div>
   );
