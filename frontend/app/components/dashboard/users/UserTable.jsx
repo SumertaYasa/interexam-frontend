@@ -183,7 +183,7 @@ export default function UserTable() {
                                         </td>
 
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
-                                            <span className="px-2 py-1 text-xs font-semibold leading-tight text-green-700 bg-green-100 rounded-full">
+                                            <span className="px-2 py-1 text-xs font-semibold leading-tight text-gray-900 ">
                                                 {user.role}
                                             </span>
                                         </td>

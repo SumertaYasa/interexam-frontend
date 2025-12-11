@@ -4,29 +4,29 @@ import { useState, useRef, useEffect } from "react";
 const initialPaketSoalData = [
     {
         id: 1,
-        nama_soal: "Tentukan hasil integral parsial $x \\cdot e^x$",
+        nama_soal: "Tentukan hasil integral parsial",
         tipe_soal: "Pilihan Ganda",
         level: "Sulit",
     },
     {
         id: 2,
         nama_soal: "Jelaskan proses fotosintesis!",
-        tipe_soal: "Esai",
+        tipe_soal: "Multi Jawaban",
         level: "Sedang",
     },
     {
         id: 3,
         nama_soal: "Sebutkan 3 senyawa kimia organik!",
-        tipe_soal: "Isian Singkat",
+        tipe_soal: "Pilihan Ganda",
         level: "Mudah",
     },
 ];
 
 const availableSoalData = [
-    { id: 10, matapelajaran: "Matematika", nama_soal: "Hitung volume kerucut dengan jari-jari 7 dan tinggi 10.", tipe_soal: "Isian Singkat", level: "Mudah", status: "Aktif" },
-    { id: 11, matapelajaran: "Biologi", nama_soal: "Sebutkan tahapan siklus Krebs!", tipe_soal: "Esai", level: "Sulit", status: "Aktif" },
+    { id: 10, matapelajaran: "Matematika", nama_soal: "Hitung volume kerucut dengan jari-jari 7 dan tinggi 10.", tipe_soal: "Pilihan Ganda", level: "Mudah", status: "Aktif" },
+    { id: 11, matapelajaran: "Biologi", nama_soal: "Sebutkan tahapan siklus Krebs!", tipe_soal: "Multi Jawaban", level: "Sulit", status: "Aktif" },
     { id: 12, matapelajaran: "Kimia", nama_soal: "Apa yang dimaksud dengan ikatan kovalen?", tipe_soal: "Pilihan Ganda", level: "Sedang", status: "Draft" },
-    { id: 13, matapelajaran: "Fisika", nama_soal: "Hitung percepatan benda jatuh bebas.", tipe_soal: "Isian Singkat", level: "Mudah", status: "Aktif" },
+    { id: 13, matapelajaran: "Fisika", nama_soal: "Hitung percepatan benda jatuh bebas.", tipe_soal: "Multi Jawaban", level: "Mudah", status: "Aktif" },
 ];
 
 const cleanupVisuals = (target) => {
@@ -124,8 +124,8 @@ export default function AddPaketSoal() {
         closeNewSoalModal();
     };
 
-    const modalPrimaryButtonClasses = 'text-white bg-indigo-600 box-border border border-transparent hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 shadow-xs font-medium leading-5 rounded-xl text-sm px-4 py-2.5 focus:outline-none';
-    const modalSecondaryButtonClasses = 'text-gray-900 bg-gray-100 box-border border border-gray-300 hover:bg-gray-200 hover:text-gray-900 focus:ring-4 focus:ring-gray-300 shadow-xs font-medium leading-5 rounded-xl text-sm px-4 py-2.5 focus:outline-none';
+    const modalPrimaryButtonClasses = 'text-white bg-primary box-border border border-transparent shadow-xs font-medium leading-5 rounded-xl text-sm px-4 py-2.5 focus:outline-none';
+    const modalSecondaryButtonClasses = 'text-gray-900 bg-gray-100 box-border border border-gray-300  shadow-xs font-medium leading-5 rounded-xl text-sm px-4 py-2.5 focus:outline-none';
 
     const [isMapelOpen, setIsMapelOpen] = useState(false);
     const mataPelajaranList = ["Matematika", "Bahasa Indonesia", "Fisika", "Kimia", "Biologi", "Sejarah", "Geografi"];
@@ -401,15 +401,30 @@ export default function AddPaketSoal() {
                     id="static-modal" 
                     tabIndex="-1" 
                     aria-hidden={!isNewSoalModalOpen}
-                    className="fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-gray-900 bg-opacity-50 overflow-y-auto">
+                    className="fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-gray-100/50 backdrop-blur-sm overflow-y-auto">
                     <div className="relative p-4 max-w-4xl w-full transition-transform duration-300 ease-out scale-100">
                         <div className="relative bg-white rounded-xl shadow-2xl">
                             
                             {/* Modal Header */}
                             <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-gray-200">
-                                <h3 className="text-xl font-semibold text-gray-900 font-noto-sans">
-                                    Daftar Soal yang Tersedia
-                                </h3>
+
+                                {/* form search dan filter */}
+                                <div className="relative w-full sm:w-auto flex flex-row items-center gap-4">
+                                    <form method="GET" action="#" className="relative w-full sm:w-auto">
+                                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center ">
+                                            <svg className="h-5 w-5 text-gray-400 " viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd"
+                                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                                clipRule="evenodd" />
+                                            </svg>
+                                        </span>
+                                        <input className="font-noto-sans block w-full sm:w-64 md:w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-3xl h-10 leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-pr-900 focus:border-pr-900 sm:text-sm"
+                                            type="search" name="q"  placeholder="Cari soal..." />
+                                    </form>
+                                    <svg className="w-10 h-10 ring-1 sm-start ring-gray-300 rounded-xl text-gray-700 p-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M3 8L15 8M15 8C15 9.65686 16.3431 11 18 11C19.6569 11 21 9.65685 21 8C21 6.34315 19.6569 5 18 5C16.3431 5 15 6.34315 15 8ZM9 16L21 16M9 16C9 17.6569 7.65685 19 6 19C4.34315 19 3 17.6569 3 16C3 14.3431 4.34315 13 6 13C7.65685 13 9 14.3431 9 16Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </div>
                                 
                                 {/* Close Button */}
                                 <button 
