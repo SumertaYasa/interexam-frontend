@@ -58,8 +58,8 @@ export default function DashboardLayout({ children }) {
         className={`h-s p-2  transition-all duration-200 ease-in-out py-20  min-h-screen bg-gray-50 
        ${marginClass}`}
       >
-        <main className=" pt-15 ">{children}</main>
-        <p></p>
+
+        <main className=" pt-18 ">{children}</main>
       </div>
     </div>
   );

@@ -43,6 +43,11 @@ export default [
 
     //  -------------------- BATAS KATEGORI ------------------------
 
+    // soal
+    route("soal", "routes/dashboard/soal/data.soal.jsx"),
+    route("soal/add", "routes/dashboard/soal/add.soal.jsx"),
+    route("soal/edit/:id", "routes/dashboard/soal/edit.soal.jsx"),
+
     // Paket Soal
     route("paket-soal", "routes/dashboard/paket-soal/data.paket.soal.jsx"),
     route("paket-soal/add", "routes/dashboard/paket-soal/add.paket.soal.jsx"),
