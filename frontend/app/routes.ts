@@ -1,4 +1,9 @@
-import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import {
+  type RouteConfig,
+  index,
+  layout,
+  route,
+} from "@react-router/dev/routes";
 
 export default [
   index("routes/landing.tsx"),
@@ -9,7 +14,6 @@ export default [
   route("/coba-gratis", "landing/cobaGratis/cobaGratis.tsx"),
   route("/login", "landing/loginSubscriber/loginSubcriber.tsx"),
 
-
   // Khusus Dashboard
   route("dashboard", "routes/dashboard.jsx", [
     index("routes/dashboard/dashboard.home.jsx"),
@@ -19,9 +23,18 @@ export default [
 
     //  -------------------- KHUSUS KATEGORI ------------------------
     // Kategori Mata Pelajaran
-    route("mata-pelajaran", "routes/dashboard/mata-pelajaran/data.mata-pelajaran.jsx"),
-    route("mata-pelajaran/add", "routes/dashboard/mata-pelajaran/add.mata-pelajaran.jsx"),
-    route("mata-pelajaran/edit/:id", "routes/dashboard/mata-pelajaran/edit.mata-pelajaran.jsx"),
+    route(
+      "mata-pelajaran",
+      "routes/dashboard/mata-pelajaran/data.mata-pelajaran.jsx"
+    ),
+    route(
+      "mata-pelajaran/add",
+      "routes/dashboard/mata-pelajaran/add.mata-pelajaran.jsx"
+    ),
+    route(
+      "mata-pelajaran/edit/:id",
+      "routes/dashboard/mata-pelajaran/edit.mata-pelajaran.jsx"
+    ),
 
     // Kategori Topik
     route("topik", "routes/dashboard/topik/data.topik.jsx"),
@@ -29,6 +42,10 @@ export default [
     route("topik/edit/:id", "routes/dashboard/topik/edit.topik.jsx"),
 
     //  -------------------- BATAS KATEGORI ------------------------
+
+    // Paket Soal
+    route("paket-soal", "routes/dashboard/paket-soal/data.paket.soal.jsx"),
+    route("paket-soal/add", "routes/dashboard/paket-soal/add.paket.soal.jsx"),
 
     // user
     route("users", "routes/dashboard/users/data.user.jsx"),
@@ -40,8 +57,12 @@ export default [
     route("artikel/add", "routes/dashboard/artikel/add.artikel.jsx"),
   ]),
 
-  route("dashboard-subscriber", "routes/dashboardSubscriber.jsx", [
-    index("routes/dashboardSubscriber/dashboardHome/dashboard.home.jsx"),
-
-  ]),
+  route(
+    "dashboard-subscriber/status-ujian-terakhir",
+    "components/DashboardSubcriber/Features/Dashboard/StatusAllCourse.jsx"
+  ),
+  route(
+    "dashboard-subscriber/status-ujian-terakhir/:id",
+    "components/DashboardSubcriber/Common/DetailExam.jsx"
+  ),
 ] satisfies RouteConfig;

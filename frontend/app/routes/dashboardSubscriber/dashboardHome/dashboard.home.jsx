@@ -11,7 +11,7 @@ export function meta() {
 
 export default function DashboardHome() {
   return (
-    <div className=" w-full">
+    <div className="w-full pb-7-5">
       <div className="">
         <h1 className="text-heading-4 font-bold mb-2.5">Dashboard</h1>
         <div className="w-full h-full flex flex-col gap-5">

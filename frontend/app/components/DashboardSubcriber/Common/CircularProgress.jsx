@@ -5,7 +5,6 @@ function CircularProgress({
   strokeWidth = 8,
   value = 0,
   maxValue = 10,
-  colorClass = "text-primary",
 }) {
   const center = size / 2;
   const radius = center - strokeWidth / 2;
@@ -28,7 +27,7 @@ function CircularProgress({
         />
 
         <circle
-          className={`${colorClass} transition-all duration-1000 ease-out`}
+          className={`text-success transition-all duration-1000 ease-out`}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}

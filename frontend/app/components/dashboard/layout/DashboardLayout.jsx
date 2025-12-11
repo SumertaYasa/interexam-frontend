@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { initFlowbite } from "flowbite";
+// import { initFlowbite } from "flowbite";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
@@ -19,26 +19,43 @@ export default function DashboardLayout({ children }) {
   else menuList = [];
 
   const [isWide, setIsWide] = useState(true);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // 2. Fungsi Toggle untuk Desktop
+  // Fungsi Toggle untuk Desktop
   const toggleSidebar = () => {
     setIsWide(!isWide);
   };
 
-  useEffect(() => {
-    initFlowbite();
-  }, []);
+  // Toggle Mobile
+  const toggleMobileSidebar = () => {
+    setIsMobileOpen(!isMobileOpen);
+  };
+
+  // useEffect(() => {
+  //   initFlowbite();
+  // }, []);
 
   const marginClass = isWide ? "sm:ml-64" : "sm:ml-20";
 
   return (
-    <div className="antialiased">
-      <Header toggleDesktopSidebar={toggleSidebar} />
-      <Sidebar isWide={isWide} menuData={menuList} />
+    <div className="antialiased bg-gray-50 min-h-screen">
+      <Header toggleDesktopSidebar={toggleSidebar} toggleMobileSidebar={toggleMobileSidebar} />
+      <Sidebar isWide={isWide}
+        isMobileOpen={isMobileOpen}
+        setIsMobileOpen={setIsMobileOpen}
+        menuData={menuList}
+        userRole={userRole} />
 
+      {isMobileOpen && (
+        <div 
+            onClick={() => setIsMobileOpen(false)}
+            className="fixed inset-0 z-30 sm:hidden"
+        />
+      )}
+      
       <div
         id="main-content"
-        className={`h-s p-4  transition-all duration-200 ease-in-out py-20  h-screen bg-gray-50 
+        className={`h-s p-2  transition-all duration-200 ease-in-out py-20  min-h-screen bg-gray-50 
        ${marginClass}`}
       >
         <main className=" pt-15 ">{children}</main>
