@@ -122,7 +122,7 @@ export default function AddUser() {
             <div className="pb-6">
                 <div className="sm:flex sm:justify-between sm:items-center mb-6">
                     <div className="mb-4 sm:mb-0">
-                    <h1 className="text-2xl md:text-3xl text-dark-primary font-bold font-sora">Data User</h1>
+                    <h1 className="text-2xl md:text-3xl text-dark-primary font-bold font-sora">Add User</h1>
                     </div>
 
                     <div className="mb-4 sm:mb-0">
