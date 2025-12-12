@@ -1,67 +1,155 @@
-import { Link } from "react-router";
+import { Link } from "react-router"; 
 import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function SoalTable() {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-    const dataSoal = [
-    {
-      id: 1,
-      mataPelajaran: "Matematika",
-      tipeSoal: "Pilihan ganda",
-      levelKesulitan: "Sulit",
-      status: "Disetujui",
-    },
-    {
-      id: 2,
-      mataPelajaran: "Bahasa Indonesia",
-      tipeSoal: "Pilihan ganda",
-      levelKesulitan: "Sedang",
-      status: "Draft",
-    },
-    {
-      id: 3,
-      mataPelajaran: "Matematika",
-      tipeSoal: "Multi jawban",
-      levelKesulitan: "Mudah",
-      status: "Need Verification",
-    },
-    {
-      id: 4,
-      mataPelajaran: "Matematika",
-      tipeSoal: "Pilihan ganda",
-      levelKesulitan: "Sulit",
-      status: "Ditolak",
-    },
-    {
-      id: 5,
-      mataPelajaran: "Matematika",
-      tipeSoal: "Multi jawban",
-      levelKesulitan: "Sedang",
-      status: "Need Verification",
-    },
-    {
-      id: 6,
-      mataPelajaran: "Bahasa Indonesia",
-      tipeSoal: "Pilihan ganda",
-      levelKesulitan: "Mudah",
-      status: "Ditolak",
-    },
-  ];
+    const [dataSoal, setDataSoal] = useState([]);
+    const [statistics, setStatistics] = useState({
+        total_dibuat: 0,
+        total_tervalidasi: 0,
+        total_draft: 0,
+        total_ditolak: 0,
+        total_need_verification: 0
+    });
+    const [isLoading, setIsLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
 
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case "Disetujui":
-        return "bg-green-100 text-green-600";
-      case "Draft":
-        return "bg-gray-200 text-gray-600";
-      case "Need Verification":
-        return "bg-orange-100 text-orange-600";
-      case "Ditolak":
-        return "bg-red-100 text-red-600";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [isDuplicating, setIsDuplicating] = useState(false);
+
+    const truncateText = (text, maxLength) => {
+        if (!text) return "-";
+        return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+    };
+
+   const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.get(`${API_BASE_URL}/contributor/my-questions`);
+            setDataSoal(response.data.data || []);
+            setStatistics(response.data.statistics || {});
+        } catch (error) {
+            console.error("Gagal ambil data:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const getStatusStyle = (status) => {
+        const lowerStatus = status ? status.toLowerCase() : "";
+        switch (lowerStatus) {
+            case "disetujui":
+                return "bg-green-100 text-green-600";
+            case "draft":
+                return "bg-gray-200 text-gray-600";
+            case "need_verification":
+            case "need verification":
+                return "bg-orange-100 text-orange-600";
+            case "ditolak":
+                return "bg-red-100 text-red-600";
+            default:
+                return "bg-gray-100 text-gray-800";
+        }
+    };
+
+    const formatStatus = (status) => {
+        if (!status) return "";
+        return status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Apakah Anda yakin ingin menghapus soal ini?")) {
+            try {
+                await axios.delete(`${API_BASE_URL}/contributor/question/${id}`);
+                alert("Soal berhasil dihapus.");
+                fetchData();
+            } catch (error) {
+                console.error("Gagal menghapus:", error);
+                alert("Gagal menghapus soal.");
+            }
+        }
+    };
+
+    const handleCheckboxChange = (id) => {
+        if (selectedIds.includes(id)) {
+            setSelectedIds(selectedIds.filter((itemId) => itemId !== id));
+        } else {
+            setSelectedIds([...selectedIds, id]);
+        }
+    };
+
+    const handleDuplicate = async () => {
+        if (selectedIds.length === 0) return alert("Pilih minimal satu soal.");
+        if (!window.confirm(`Duplikasi ${selectedIds.length} soal?`)) return;
+
+        setIsDuplicating(true);
+        try {
+            await Promise.all(selectedIds.map(async (id) => {
+                const itemToCopy = dataSoal.find(item => item.id === id);
+                if (!itemToCopy) return;
+
+                const formData = new FormData();
+                const tipeBackend = itemToCopy.tipe_soal === "multiple_choice" ? "pilihan_ganda" : "multi_jawaban";
+                
+                formData.append("tipe_soal", tipeBackend);
+                formData.append("text_soal", `(Salinan) ${itemToCopy.text_soal}`);
+                formData.append("id_topik", itemToCopy.id_topik || "1"); 
+                formData.append("level_kesulitan", itemToCopy.level_kesulitan);
+                formData.append("pembahasan_umum", itemToCopy.pembahasan_umum || "");
+                formData.append("action_type", "Draft");
+
+                if (itemToCopy.gambar) {
+                    formData.append("old_image_soal", itemToCopy.gambar);
+                }
+
+                if (itemToCopy.list_jawaban && itemToCopy.list_jawaban.length > 0) {
+                    const formattedOpsi = itemToCopy.list_jawaban.map(jw => ({
+                        text: jw.opsi_jawaban_text,
+                        is_correct: jw.status,
+                        has_image: false,
+                        old_path: jw.path_gambar_jawaban 
+                    }));
+                    formData.append("opsi_jawaban", JSON.stringify(formattedOpsi));
+                } else {
+                    formData.append("opsi_jawaban", JSON.stringify([{text: "A", is_correct: true}, {text: "B", is_correct: false}]));
+                }
+                
+                return axios.post(`${API_BASE_URL}/contributor/question`, formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
+            }));
+
+            alert("Duplikat berhasil!");
+            setSelectedIds([]); 
+
+            await fetchData(); 
+
+        } catch (error) {
+            console.error("Error duplikat:", error);
+            alert("Gagal duplikat.");
+        } finally {
+            setIsDuplicating(false);
+        }
+    };
+
+    // --- SEARCH FILTER ---
+    const filteredData = dataSoal.filter((item) => {
+        const term = searchTerm.toLowerCase();
+        const textSoal = item.text_soal ? item.text_soal.toLowerCase() : "";
+        
+        return (
+            (item.mata_pelajaran && item.mata_pelajaran.toLowerCase().includes(term)) ||
+            (item.tipe_soal && item.tipe_soal.toLowerCase().includes(term)) ||
+            (item.level_kesulitan && item.level_kesulitan.toLowerCase().includes(term)) ||
+            (textSoal.includes(term))
+        );
+    });
 
     return(
         <div className="px-4 sm:px-6 lg:px-8 py-6 w-full max-w-9xl mx-auto h-auto">
@@ -101,8 +189,9 @@ export default function SoalTable() {
             </div>
 
 
-            {/* Card laporan soal */}
+            {/* Card Statistik */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
+                {/* CARD TOTAL */}
                 <div className="bg-white rounded-2xl p-3 lg:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-4 lg:mb-4">
                         <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-blue-100 flex items-center justify-center text-primary">
@@ -116,17 +205,20 @@ export default function SoalTable() {
                     </div>
                     
                     <div className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-3">
-                        <span className="text-5xl lg:text-5xl font-bold text-gray-900 font-noto-sans">30</span>
+                        <span className="text-5xl lg:text-5xl font-bold text-gray-900 font-noto-sans">
+                            {statistics.total_dibuat}
+                        </span>
                         <div className="flex flex-col pb-1">
                             <span className="font-noto-sans inline-flex items-center px-2 py-0.5 rounded text-[10px] lg:text-xs font-medium bg-green-100 text-green-700 mb-1 w-max">
                                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-                                +15 Soal bulan ini
+                                Semua Soal
                             </span>
                             <span className="text-[10px] text-gray-600 leading-tight font-noto-sans">setiap soal bermakna</span>
                         </div>
                     </div>
                 </div>
 
+                {/* TERVALIDASI */}
                 <div className="bg-white rounded-2xl p-3 lg:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-4 lg:mb-4">
                         <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
@@ -141,16 +233,19 @@ export default function SoalTable() {
                     </div>
                     
                     <div className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-3">
-                        <span className="text-5xl lg:text-5xl font-bold text-gray-900 font-noto-sans">25</span>
+                        <span className="text-5xl lg:text-5xl font-bold text-gray-900 font-noto-sans">
+                            {statistics.total_tervalidasi}
+                        </span>
                         <div className="flex flex-col pb-1">
                             <span className="font-noto-sans inline-flex items-center px-2 py-0.5 rounded text-[10px] lg:text-xs font-medium bg-warning/10 text-warning mb-1 w-max">
-                                5 belum tervalidasi
+                                {statistics.total_need_verification} belum tervalidasi
                             </span>
-                            <span className="text-[10px] text-gray-600 leading-tight font-noto-sans">Pastikan soal dan jawaban benar</span>
+                            <span className="text-[10px] text-gray-600 leading-tight font-noto-sans">Pastikan soal benar</span>
                         </div>
                     </div>
                 </div>
 
+                {/* DRAFT */}
                 <div className="bg-white rounded-2xl p-3 lg:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-4 lg:mb-4">
                         <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
@@ -165,16 +260,19 @@ export default function SoalTable() {
                     </div>
                     
                     <div className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-3">
-                        <span className="text-5xl lg:text-5xl font-bold text-gray-900 font-noto-sans">4</span>
+                        <span className="text-5xl lg:text-5xl font-bold text-gray-900 font-noto-sans">
+                            {statistics.total_draft}
+                        </span>
                         <div className="flex flex-col pb-1">
                             <span className="font-noto-sans inline-flex items-center px-2 py-0.5 rounded text-[10px] lg:text-xs font-medium bg-gray-300 text-gray-700 mb-1 w-max">
-                                4 soal status draft
+                                {statistics.total_draft} soal status draft
                             </span>
-                            <span className="text-[10px] text-gray-600 leading-tight font-noto-sans">Ayo ajukan soal ke validator!</span>
+                            <span className="text-[10px] text-gray-600 leading-tight font-noto-sans">Ayo ajukan soal!</span>
                         </div>
                     </div>
                 </div>
 
+                {/* DITOLAK */}
                 <div className="bg-white rounded-2xl p-3 lg:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-4 lg:mb-4">
                         <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
@@ -189,10 +287,12 @@ export default function SoalTable() {
                     </div>
                     
                     <div className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-3">
-                        <span className="text-5xl lg:text-5xl font-bold text-gray-900 font-noto-sans">1</span>
+                        <span className="text-5xl lg:text-5xl font-bold text-gray-900 font-noto-sans">
+                            {statistics.total_ditolak}
+                        </span>
                         <div className="flex flex-col pb-1">
                             <span className="font-noto-sans inline-flex items-center px-2 py-0.5 rounded text-[10px] lg:text-xs font-medium bg-red-200 text-red-700 mb-1 w-max">
-                                1 soal ditolak
+                                {statistics.total_ditolak} soal ditolak
                             </span>
                             <span className="text-[10px] text-gray-600 leading-tight font-noto-sans">Segera perbaiki soal!</span>
                         </div>
@@ -205,7 +305,7 @@ export default function SoalTable() {
             <div className="mx-auto p-4 bg-white rounded-2xl shadow-xl mt-10">
                 <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div className="relative w-full sm:w-auto flex  flex-row items-center gap-4">
-                        <form method="GET" action="#" className="relative w-full sm:w-auto">
+                        <div className="relative w-full sm:w-auto">
                             <span className="absolute inset-y-0 left-0 pl-3 flex items-center ">
                             <svg className="h-5 w-5 text-gray-400 " viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" 
@@ -213,17 +313,26 @@ export default function SoalTable() {
                                 clipRule="evenodd" />
                             </svg>
                             </span>
-                            <input className="font-noto-sans block w-full sm:w-64 md:w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-3xl h-10 leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-pr-900 focus:border-pr-900 sm:text-sm"
-                            type="search" name="q"  placeholder="Cari soal..." />
-                        </form>
+                            <input 
+                                className="font-noto-sans block w-full sm:w-64 md:w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-3xl h-10 leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-pr-900 focus:border-pr-900 sm:text-sm"
+                                type="search" 
+                                name="q"  
+                                placeholder="Cari soal..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
                             <svg className="w-10 h-10 ring-1 sm-start ring-gray-300 rounded-xl text-gray-700 p-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M3 8L15 8M15 8C15 9.65686 16.3431 11 18 11C19.6569 11 21 9.65685 21 8C21 6.34315 19.6569 5 18 5C16.3431 5 15 6.34315 15 8ZM9 16L21 16M9 16C9 17.6569 7.65685 19 6 19C4.34315 19 3 17.6569 3 16C3 14.3431 4.34315 13 6 13C7.65685 13 9 14.3431 9 16Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                     </div>
                     
                     <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                        <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-primary text-sm font-medium rounded-2xl h-10 shadow-sm text-primary">
-                            Duplikat
+                        <button 
+                            onClick={handleDuplicate}
+                            disabled={isDuplicating || selectedIds.length === 0}
+                            className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-primary text-sm font-medium rounded-2xl h-10 shadow-sm text-primary transition-colors ${selectedIds.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'}`}>
+                            {isDuplicating ? "Proses..." : "Duplikat"}
                         </button>
 
                         <Link to="add" className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-2xl h-10 shadow-sm text-white bg-primary ">
@@ -244,86 +353,100 @@ export default function SoalTable() {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                            {["NO", "MATA PELAJARAN", "TIPE SOAL", "LEVEL KESULITAN", "STATUS", "AKSI"].map((head) => (
-                                <th key={head} scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-900 font-noto-sans uppercase tracking-wider">
-                                {head}
-                                </th>
-                            ))}
+                                {["NO", "SOAL", "MATA PELAJARAN", "TIPE SOAL", "LEVEL KESULITAN", "STATUS", "AKSI"].map((head) => (
+                                    <th key={head} scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-900 font-noto-sans uppercase tracking-wider">
+                                    {head}
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {dataSoal.map((item, index) => (
-                            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
-                                {index + 1}
-                                </td>
-
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
-                                {item.mataPelajaran}
-                                </td>
-
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
-                                {item.tipeSoal}
-                                </td>
-
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
-                                {item.levelKesulitan}
-                                </td>
-
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-md ${getStatusStyle(item.status)}`}>
-                                    {item.status}
-                                </span>
-                                </td>
-
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div className="flex gap-2 items-center">
-                                                
-                                        {/* TOMBOL EDIT*/}
-                                         <Link 
-                                            to={`edit/:id`} 
-                                            className="flex items-center justify-center text-neu-900 bg-amber-300 hover:bg-amber-400 rounded-base h-8 w-8 transition-colors">
-                                            <svg className="w-5 h-5 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z" />
-                                             </svg>
-                                        </Link>
-
-                                        {/* TOMBOL DELETE*/}
-                                        <button 
-                                            type="button" 
-                                            className="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 h-8 w-8 rounded-base transition-colors">
-                                            <svg className="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
-                                            </svg>
-                                                </button>
-
-                                        {/* Tombol Cheklist*/}
-                                        <input
-                                            id="default-checkbox"
-                                            type="checkbox"
-                                            value=""
-                                            className="
-                                                w-8 h-8 
-                                                rounded-xl 
-                                                border-1 border-primary 
-                                                bg-white 
-                                                text-primary 
-                                                cursor-pointer"/>
-
-                                     </div>
-                                </td>
-
-                            </tr>
-                            ))}
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan="7" className="px-6 py-10 text-center text-gray-500 font-noto-sans">Memuat data...</td>
+                                </tr>
+                            ) : filteredData.length === 0 ? (
+                                <tr>
+                                    <td colSpan="7" className="px-6 py-10 text-center text-gray-500 font-noto-sans">Tidak ada soal ditemukan.</td>
+                                </tr>
+                            ) : (
+                                filteredData.map((item, index) => (
+                                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+        
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
+                                            {index + 1}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
+                                        
+                                            {truncateText(item.text_soal || item.soal || "-", 15)} 
+                                        </td>
+        
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
+                                            {item.mata_pelajaran || "N/A"}
+                                        </td>
+        
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
+                                            {item.tipe_soal === 'multiple_choice' ? 'Pilihan Ganda' : (item.tipe_soal === 'multiple_answer' ? 'Multi Jawaban' : item.tipe_soal)}
+                                        </td>
+        
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900 capitalize">
+                                            {item.level_kesulitan}
+                                        </td>
+        
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-md ${getStatusStyle(item.status)}`}>
+                                                {formatStatus(item.status)}
+                                            </span>
+                                        </td>
+        
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <div className="flex gap-2 items-center">
+                                                        
+                                                    {/* TOMBOL EDIT*/}
+                                                    <Link 
+                                                        to={`edit/${item.id}`}
+                                                        className="flex items-center justify-center text-neu-900 bg-amber-300 hover:bg-amber-400 rounded-base h-8 w-8 transition-colors">
+                                                        <svg className="w-5 h-5 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z" />
+                                                        </svg>
+                                                    </Link>
+        
+                                                    {/* TOMBOL DELETE*/}
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => handleDelete(item.id)}
+                                                        className="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 h-8 w-8 rounded-base transition-colors">
+                                                        <svg className="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
+                                                        </svg>
+                                                    </button>
+        
+                                                    {/* Tombol Cheklist*/}
+                                                    <input
+                                                        id={`checkbox-${item.id}`}
+                                                        type="checkbox"
+                                                        checked={selectedIds.includes(item.id)}
+                                                        onChange={() => handleCheckboxChange(item.id)}
+                                                        className="
+                                                            w-8 h-8 
+                                                            rounded-xl 
+                                                            border-1 border-primary 
+                                                            bg-white 
+                                                            text-primary 
+                                                            cursor-pointer"
+                                                    />
+                                            </div>
+                                        </td>
+        
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
                 
             </div>
-                         
-
-
+                        
         </div>
     );
 }

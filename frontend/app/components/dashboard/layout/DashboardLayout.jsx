@@ -21,12 +21,10 @@ export default function DashboardLayout({ children }) {
   const [isWide, setIsWide] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Fungsi Toggle untuk Desktop
   const toggleSidebar = () => {
     setIsWide(!isWide);
   };
 
-  // Toggle Mobile
   const toggleMobileSidebar = () => {
     setIsMobileOpen(!isMobileOpen);
   };

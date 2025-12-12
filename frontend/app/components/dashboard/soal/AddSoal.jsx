@@ -1,20 +1,26 @@
-import { Link } from "react-router";
-import { useState, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import axios from "axios";
 
 export default function AddSoal() {
+    const navigate = useNavigate();
+
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     const [tipeSoal, setTipeSoal] = useState("Pilihan Ganda");
-    const [isTipeSoalOpen, setIsTipeSoalOpen] = useState(false); 
-    
+    const [isTipeSoalOpen, setIsTipeSoalOpen] = useState(false);
     const [soalText, setSoalText] = useState("");
-
-    const [soalImage, setSoalImage] = useState(null); 
-    const [soalPreview, setSoalPreview] = useState(null); 
-
+    const [soalImage, setSoalImage] = useState(null);
+    const [soalPreview, setSoalPreview] = useState(null);
     const [pembahasan, setPembahasan] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const [subjectList, setSubjectList] = useState([]);
+    const [topikList, setTopikList] = useState([]);
+    const [levelList, setLevelList] = useState([]);
 
     const [opsiJawaban, setOpsiJawaban] = useState([
-        { id: 1, text: "", isCorrect: false, image: null, preview: null }, 
+        { id: 1, text: "", isCorrect: false, image: null, preview: null },
         { id: 2, text: "", isCorrect: false, image: null, preview: null },
         { id: 3, text: "", isCorrect: false, image: null, preview: null },
         { id: 4, text: "", isCorrect: false, image: null, preview: null },
@@ -22,7 +28,13 @@ export default function AddSoal() {
 
     const soalFileInputRef = useRef(null);
 
-    const [formData, setFormData] = useState({
+    const [formDataIDs, setFormDataIDs] = useState({
+        id_mata_pelajaran: "",
+        id_topik: "",
+        level_kesulitan: ""
+    });
+
+    const [formDataDisplay, setFormDataDisplay] = useState({
         nama_subject_display: "",
         nama_topik_display: "",
         level_kesulitan_display: "",
@@ -32,21 +44,60 @@ export default function AddSoal() {
     const [isTopikOpen, setIsTopikOpen] = useState(false);
     const [isLevelOpen, setIsLevelOpen] = useState(false);
 
-    const subjectList = [ { id_subject: 1, nama_subject: "Matematika" }, { id_subject: 2, nama_subject: "Bahasa Indonesia" }, { id_subject: 3, nama_subject: "IPA" } ];
-    const topikList = [ { id: 1, nama: "Aljabar" }, { id: 2, nama: "Geometri" }, { id: 3, nama: "Statistika" } ];
-    const levelList = ["Mudah", "Sedang", "Sulit"];
-    const tipeSoalList = ["Pilihan Ganda", "Multi Jawaban"]; 
+    const tipeSoalList = ["Pilihan Ganda", "Multi Jawaban"];
 
-    // HANDLER TIPE SOAL
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const subjectsRes = await axios.get(`${API_BASE_URL}/contributor/lookup/subjects`);
+                setSubjectList(subjectsRes.data.data);
+
+                const levelsRes = await axios.get(`${API_BASE_URL}/contributor/lookup/levels`);
+                setLevelList(levelsRes.data.data);
+            } catch (error) {
+                console.error("Gagal mengambil data lookup:", error);
+                alert("Gagal menghubungkan ke server.");
+            }
+        };
+        fetchData();
+    }, [API_BASE_URL]);
+
+    const handleSelectSubject = async (subject) => {
+        setFormDataDisplay(prev => ({ ...prev, nama_subject_display: subject.name }));
+        setFormDataIDs(prev => ({ ...prev, id_mata_pelajaran: subject.id }));
+        setIsMapelOpen(false);
+
+        setTopikList([]);
+        setFormDataDisplay(prev => ({ ...prev, nama_topik_display: "" }));
+        setFormDataIDs(prev => ({ ...prev, id_topik: "" }));
+
+        try {
+            const res = await axios.get(`${API_BASE_URL}/contributor/lookup/topics/${subject.id}`);
+            setTopikList(res.data.data);
+        } catch (error) {
+            console.error("Gagal mengambil topik:", error);
+        }
+    };
+
+    const handleSelectTopik = (topik) => {
+        setFormDataDisplay(prev => ({ ...prev, nama_topik_display: topik.name }));
+        setFormDataIDs(prev => ({ ...prev, id_topik: topik.id }));
+        setIsTopikOpen(false);
+    };
+
+    const handleSelectLevel = (lvl) => {
+        setFormDataDisplay(prev => ({ ...prev, level_kesulitan_display: lvl.label }));
+        setFormDataIDs(prev => ({ ...prev, level_kesulitan: lvl.value }));
+        setIsLevelOpen(false);
+    };
+
     const handleSelectTipeSoal = (value) => {
         setTipeSoal(value);
-        setIsTipeSoalOpen(false); 
-
-        const resetOpsi = opsiJawaban.map(opsi => ({...opsi, isCorrect: false}));
+        setIsTipeSoalOpen(false);
+        const resetOpsi = opsiJawaban.map(opsi => ({ ...opsi, isCorrect: false }));
         setOpsiJawaban(resetOpsi);
     };
 
-    // HANDLER GAMBAR SOAL
     const handleTriggerSoalFile = () => {
         soalFileInputRef.current.click();
     };
@@ -55,17 +106,16 @@ export default function AddSoal() {
         const file = e.target.files[0];
         if (file) {
             setSoalImage(file);
-            setSoalPreview(URL.createObjectURL(file)); 
+            setSoalPreview(URL.createObjectURL(file));
         }
     };
 
     const handleRemoveSoalImage = () => {
         setSoalImage(null);
         setSoalPreview(null);
-        if (soalFileInputRef.current) soalFileInputRef.current.value = ""; 
+        if (soalFileInputRef.current) soalFileInputRef.current.value = "";
     };
 
-    // HANDLER GAMBAR OPSI (JAWABAN)
     const handleTriggerOpsiFile = (id) => {
         document.getElementById(`file-input-opsi-${id}`).click();
     };
@@ -74,7 +124,7 @@ export default function AddSoal() {
         const file = e.target.files[0];
         if (file) {
             const objectUrl = URL.createObjectURL(file);
-            const newOpsi = opsiJawaban.map((opsi) => 
+            const newOpsi = opsiJawaban.map((opsi) =>
                 opsi.id === id ? { ...opsi, image: file, preview: objectUrl } : opsi
             );
             setOpsiJawaban(newOpsi);
@@ -82,7 +132,7 @@ export default function AddSoal() {
     };
 
     const handleRemoveOpsiImage = (id) => {
-        const newOpsi = opsiJawaban.map((opsi) => 
+        const newOpsi = opsiJawaban.map((opsi) =>
             opsi.id === id ? { ...opsi, image: null, preview: null } : opsi
         );
         setOpsiJawaban(newOpsi);
@@ -90,7 +140,6 @@ export default function AddSoal() {
         if (inputElem) inputElem.value = "";
     };
 
-    // Handler Logika Lainnya
     const handleCheckAnswer = (id) => {
         if (tipeSoal === "Pilihan Ganda") {
             const newOpsi = opsiJawaban.map((opsi) => ({
@@ -99,7 +148,7 @@ export default function AddSoal() {
             }));
             setOpsiJawaban(newOpsi);
         } else {
-            const newOpsi = opsiJawaban.map((opsi) => 
+            const newOpsi = opsiJawaban.map((opsi) =>
                 opsi.id === id ? { ...opsi, isCorrect: !opsi.isCorrect } : opsi
             );
             setOpsiJawaban(newOpsi);
@@ -111,6 +160,66 @@ export default function AddSoal() {
             opsi.id === id ? { ...opsi, text: value } : opsi
         );
         setOpsiJawaban(newOpsi);
+    };
+
+    const handleSubmit = async (actionType) => {
+
+        if (!soalText || !formDataIDs.id_mata_pelajaran || !formDataIDs.level_kesulitan || !formDataIDs.id_topik) {
+            alert("Mohon lengkapi Soal, Mata Pelajaran, Topik, dan Level Kesulitan!");
+            return;
+        }
+
+        setIsLoading(true);
+
+        const formData = new FormData();
+
+        const backendTipeSoal = tipeSoal === "Pilihan Ganda" ? "pilihan_ganda" : "multi_jawaban";
+
+        formData.append("tipe_soal", backendTipeSoal);
+        formData.append("text_soal", soalText);
+        formData.append("id_topik", formDataIDs.id_topik);
+        formData.append("level_kesulitan", formDataIDs.level_kesulitan);
+        formData.append("pembahasan_umum", pembahasan);
+        formData.append("action_type", actionType);
+
+        if (soalImage) {
+            formData.append("image_soal", soalImage);
+        }
+
+        const formattedOpsi = opsiJawaban.map(opsi => {
+            if (opsi.image) {
+                formData.append("image_jawaban", opsi.image);
+            }
+            return {
+                text: opsi.text,
+                is_correct: opsi.isCorrect,
+                has_image: !!opsi.image
+            };
+        });
+
+        formData.append("opsi_jawaban", JSON.stringify(formattedOpsi));
+
+        try {
+            const response = await axios.post(
+                `${API_BASE_URL}/contributor/question`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    }
+                }
+            );
+
+            alert(response.data.message);
+            navigate("../soal");
+
+        } catch (error) {
+            console.error("Error submit:", error);
+            const errMsg = error.response?.data?.message || error.message || "Terjadi kesalahan.";
+            alert(`Gagal menyimpan: ${errMsg}`);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -129,7 +238,7 @@ export default function AddSoal() {
                                     <Link to="/dashboard" className="inline-flex items-center font-noto-sans text-sm font-medium text-gray-500">Dashboard</Link>
                                 </li>
                                 <li className="inline-flex items-center">
-                                    <svg className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 9 4-4-4-4"/></svg>
+                                    <svg className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 9 4-4-4-4" /></svg>
                                     <Link to="../soal" className="inline-flex items-center text-gray-500 text-sm font-noto-sans font-medium hover:text-primary-hover">
                                         Data Soal
                                     </Link>
@@ -156,8 +265,8 @@ export default function AddSoal() {
                             <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
                                 Tipe Soal<span className="text-red-500">*</span>
                             </label>
-                            
-                            <button 
+
+                            <button
                                 type="button"
                                 onClick={() => setIsTipeSoalOpen(!isTipeSoalOpen)}
                                 className="relative w-full text-left font-noto-sans bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl p-3.5 flex justify-between items-center"
@@ -165,7 +274,7 @@ export default function AddSoal() {
                                 <span className="text-gray-900">
                                     {tipeSoal}
                                 </span>
-                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isTipeSoalOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isTipeSoalOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>
 
                             {/* Dropdown Menu Tipe Soal */}
@@ -174,7 +283,7 @@ export default function AddSoal() {
                                     <ul className="py-1 text-sm text-gray-700">
                                         {tipeSoalList.map((type, index) => (
                                             <li key={index}>
-                                                <button type="button" 
+                                                <button type="button"
                                                     onClick={() => handleSelectTipeSoal(type)}
                                                     className={`block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans ${tipeSoal === type ? 'bg-gray-50 text-primary font-medium' : ''}`}
                                                 >
@@ -193,24 +302,24 @@ export default function AddSoal() {
                                 Soal<span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     value={soalText}
                                     onChange={(e) => setSoalText(e.target.value)}
-                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl block w-full p-3.5 pr-12 font-noto-sans placeholder-gray-400" 
-                                    placeholder="Masukan soal" 
+                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl block w-full p-3.5 pr-12 font-noto-sans placeholder-gray-400"
+                                    placeholder="Masukan soal"
                                 />
-                                
-                                <input 
-                                    type="file" 
+
+                                <input
+                                    type="file"
                                     ref={soalFileInputRef}
                                     onChange={handleFileChangeSoal}
                                     accept="image/*"
                                     className="hidden"
                                 />
 
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={handleTriggerSoalFile}
                                     className={`absolute inset-y-0 right-0 flex items-center pr-4 transition-transform ${soalPreview ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
                                     title="Upload Gambar Soal"
@@ -223,12 +332,12 @@ export default function AddSoal() {
 
                             {soalPreview && (
                                 <div className="mt-4 relative group w-fit">
-                                    <img 
-                                        src={soalPreview} 
-                                        alt="Preview Soal" 
+                                    <img
+                                        src={soalPreview}
+                                        alt="Preview Soal"
                                         className="h-auto max-h-[300px] w-auto max-w-full rounded-lg border border-gray-200 object-contain"
                                     />
-                                    <button 
+                                    <button
                                         onClick={handleRemoveSoalImage}
                                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
                                         title="Hapus Gambar"
@@ -248,12 +357,13 @@ export default function AddSoal() {
                             </label>
                             <p className="block text-sm font-medium text-gray-400  font-noto-sans">Pilih jawaban yang benar.</p>
                         </div>
-                        
+
                         <div className="space-y-6">
                             {opsiJawaban.map((opsi) => (
                                 <div key={opsi.id} className="flex flex-col gap-2">
                                     <div className="flex items-center gap-3">
-                                        <button 
+                                        {/* Radio / Checkbox Indicator */}
+                                        <button
                                             type="button"
                                             onClick={() => handleCheckAnswer(opsi.id)}
                                             className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors 
@@ -263,7 +373,7 @@ export default function AddSoal() {
                                             {opsi.isCorrect && (
                                                 <div className={`primary ${tipeSoal === 'Pilihan Ganda' ? 'w-2.5 h-2.5 rounded-full' : 'w-full h-full flex items-center justify-center text-white bg-transparent'}`}>
                                                     {tipeSoal !== 'Pilihan Ganda' && (
-                                                        <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                                                        <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                                                     )}
                                                 </div>
                                             )}
@@ -271,24 +381,24 @@ export default function AddSoal() {
 
                                         {/* Input Field Opsi */}
                                         <div className="relative w-full">
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 value={opsi.text}
                                                 onChange={(e) => handleInputOpsi(opsi.id, e.target.value)}
-                                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl block w-full p-3.5 pr-12 font-noto-sans placeholder-gray-400" 
-                                                placeholder={`Masukan jawaban ${String.fromCharCode(64 + opsi.id)}`} 
+                                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl block w-full p-3.5 pr-12 font-noto-sans placeholder-gray-400"
+                                                placeholder={`Masukan jawaban ${String.fromCharCode(64 + opsi.id)}`}
                                             />
 
-                                            <input 
-                                                type="file" 
+                                            <input
+                                                type="file"
                                                 id={`file-input-opsi-${opsi.id}`}
                                                 onChange={(e) => handleFileChangeOpsi(opsi.id, e)}
                                                 accept="image/*"
                                                 className="hidden"
                                             />
 
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => handleTriggerOpsiFile(opsi.id)}
                                                 className={`absolute inset-y-0 right-0 flex items-center pr-2 transition-colors ${opsi.preview ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
                                                 title="Upload Gambar Jawaban"
@@ -302,12 +412,12 @@ export default function AddSoal() {
 
                                     {opsi.preview && (
                                         <div className="ml-9 mt-1 relative w-fit">
-                                            <img 
-                                                src={opsi.preview} 
-                                                alt={`Preview Opsi ${opsi.id}`} 
+                                            <img
+                                                src={opsi.preview}
+                                                alt={`Preview Opsi ${opsi.id}`}
                                                 className="h-24 w-auto rounded-lg border border-gray-200 object-cover"
                                             />
-                                            <button 
+                                            <button
                                                 onClick={() => handleRemoveOpsiImage(opsi.id)}
                                                 className="absolute -top-2 -right-2 bg-white text-red-500 border border-gray-200 rounded-full p-0.5 shadow-sm hover:bg-red-50"
                                             >
@@ -325,7 +435,7 @@ export default function AddSoal() {
                         <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
                             Pembahasan<span className="text-red-500">*</span>
                         </label>
-                        <textarea 
+                        <textarea
                             rows="4"
                             value={pembahasan}
                             onChange={(e) => setPembahasan(e.target.value)}
@@ -337,14 +447,22 @@ export default function AddSoal() {
 
                 {/* --- KOLOM KANAN --- */}
                 <div className="w-full lg:max-w-[400px] space-y-4">
-                    
+
                     {/* Button Simpan & Ajukan */}
                     <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-                        <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-primary text-sm font-medium rounded-2xl h-10 shadow-sm text-primary">
-                            Simpan Soal
+                        <button
+                            disabled={isLoading}
+                            onClick={() => handleSubmit("Simpan")}
+                            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-primary text-sm font-medium rounded-2xl h-10 shadow-sm text-primary hover:bg-gray-50 disabled:opacity-50"
+                        >
+                            {isLoading ? "Menyimpan..." : "Simpan Soal"}
                         </button>
-                        <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-2xl h-10 shadow-sm text-white bg-primary">
-                            Ajukan Soal
+                        <button
+                            disabled={isLoading}
+                            onClick={() => handleSubmit("Ajukan")}
+                            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-2xl h-10 shadow-sm text-white bg-primary hover:bg-primary-hover disabled:opacity-50"
+                        >
+                            {isLoading ? "Mengajukan..." : "Ajukan Soal"}
                         </button>
                     </div>
 
@@ -356,33 +474,34 @@ export default function AddSoal() {
                             <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
                                 Mata Pelajaran <span className="text-red-500">*</span>
                             </label>
-                            <button 
+                            <button
                                 type="button"
                                 onClick={() => setIsMapelOpen(!isMapelOpen)}
                                 className="relative w-full text-left font-noto-sans bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl  p-3.5 flex justify-between items-center"
                             >
-                                <span className={formData.nama_subject_display ? "text-gray-900" : "text-gray-500"}>
-                                    {formData.nama_subject_display || "Pilih mata pelajaran"}
+                                <span className={formDataDisplay.nama_subject_display ? "text-gray-900" : "text-gray-500"}>
+                                    {formDataDisplay.nama_subject_display || "Pilih mata pelajaran"}
                                 </span>
-                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isMapelOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isMapelOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>
-                            
+
                             {isMapelOpen && (
                                 <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
                                     <ul className="py-1 text-sm text-gray-700">
-                                        {subjectList.map((subject) => (
-                                            <li key={subject.id_subject}>
-                                                <button type="button" 
-                                                    onClick={() => {
-                                                        setFormData({...formData, nama_subject_display: subject.nama_subject});
-                                                        setIsMapelOpen(false);
-                                                    }}
-                                                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans"
-                                                >
-                                                    {subject.nama_subject}
-                                                </button>
-                                            </li>
-                                        ))}
+                                        {subjectList.length > 0 ? (
+                                            subjectList.map((subject) => (
+                                                <li key={subject.id}>
+                                                    <button type="button"
+                                                        onClick={() => handleSelectSubject(subject)}
+                                                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans"
+                                                    >
+                                                        {subject.name}
+                                                    </button>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="px-4 py-2 text-gray-400">Memuat...</li>
+                                        )}
                                     </ul>
                                 </div>
                             )}
@@ -393,33 +512,34 @@ export default function AddSoal() {
                             <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
                                 Topik <span className="text-red-500">*</span>
                             </label>
-                            <button 
+                            <button
                                 type="button"
                                 onClick={() => setIsTopikOpen(!isTopikOpen)}
                                 className="relative w-full text-left font-noto-sans bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl p-3.5 flex justify-between items-center"
                             >
-                                <span className={formData.nama_topik_display ? "text-gray-900" : "text-gray-500"}>
-                                    {formData.nama_topik_display || "Pilih topik"}
+                                <span className={formDataDisplay.nama_topik_display ? "text-gray-900" : "text-gray-500"}>
+                                    {formDataDisplay.nama_topik_display || "Pilih topik"}
                                 </span>
-                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isTopikOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isTopikOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>
-                            
+
                             {isTopikOpen && (
                                 <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
                                     <ul className="py-1 text-sm text-gray-700">
-                                        {topikList.map((topik) => (
-                                            <li key={topik.id}>
-                                                <button type="button" 
-                                                    onClick={() => {
-                                                        setFormData({...formData, nama_topik_display: topik.nama});
-                                                        setIsTopikOpen(false);
-                                                    }}
-                                                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans"
-                                                >
-                                                    {topik.nama}
-                                                </button>
-                                            </li>
-                                        ))}
+                                        {topikList.length > 0 ? (
+                                            topikList.map((topik) => (
+                                                <li key={topik.id}>
+                                                    <button type="button"
+                                                        onClick={() => handleSelectTopik(topik)}
+                                                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans"
+                                                    >
+                                                        {topik.name}
+                                                    </button>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="px-4 py-2 text-gray-400">Pilih mata pelajaran dulu</li>
+                                        )}
                                     </ul>
                                 </div>
                             )}
@@ -430,33 +550,34 @@ export default function AddSoal() {
                             <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
                                 Level Kesulitan Soal <span className="text-red-500">*</span>
                             </label>
-                            <button 
+                            <button
                                 type="button"
                                 onClick={() => setIsLevelOpen(!isLevelOpen)}
                                 className="relative w-full text-left font-noto-sans bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl p-3.5 flex justify-between items-center"
                             >
-                                <span className={formData.level_kesulitan_display ? "text-gray-900" : "text-gray-500"}>
-                                    {formData.level_kesulitan_display || "Pilih level kesulitan"}
+                                <span className={formDataDisplay.level_kesulitan_display ? "text-gray-900" : "text-gray-500"}>
+                                    {formDataDisplay.level_kesulitan_display || "Pilih level kesulitan"}
                                 </span>
-                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isLevelOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isLevelOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>
-                            
+
                             {isLevelOpen && (
                                 <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
                                     <ul className="py-1 text-sm text-gray-700">
-                                        {levelList.map((lvl, index) => (
-                                            <li key={index}>
-                                                <button type="button" 
-                                                    onClick={() => {
-                                                        setFormData({...formData, level_kesulitan_display: lvl});
-                                                        setIsLevelOpen(false);
-                                                    }}
-                                                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans"
-                                                >
-                                                    {lvl}
-                                                </button>
-                                            </li>
-                                        ))}
+                                        {levelList.length > 0 ? (
+                                            levelList.map((lvl, index) => (
+                                                <li key={index}>
+                                                    <button type="button"
+                                                        onClick={() => handleSelectLevel(lvl)}
+                                                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans"
+                                                    >
+                                                        {lvl.label}
+                                                    </button>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="px-4 py-2 text-gray-400">Memuat...</li>
+                                        )}
                                     </ul>
                                 </div>
                             )}
