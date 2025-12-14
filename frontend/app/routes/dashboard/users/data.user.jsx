@@ -1,4 +1,4 @@
-import UserTable from "../../../components/dashboard/users/UserTable";
+import UserPage from "../../../components/dashboard/users/UserPage";
 
 export function meta() {
   return [{ title: "Manajemen User - InterExam" }];
@@ -9,7 +9,7 @@ export default function UsersPage() {
     <div className="">
       {/* <h1 className="text-2xl font-bold mb-4">Manajemen User</h1> */}
 
-      <UserTable />
+      <UserPage />
     </div>
   );
 }

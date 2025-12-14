@@ -1,222 +1,180 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+
+import { soalService } from "../../../services/soalService";
+import { lookupService } from "../../../services/lookupService";
+
+import PageHeader from "../common/PageHeader";
+import InputField from "../common/InputField";
+import Dropdown from "../common/Dropdown";
+import ImageUploadBox from "../common/ImageUploadBox";
+import ButtonSave from "../common/ButtonSave";
+import ButtonCancel from "../common/ButtonCancel";
+import AnswerOption from "../common/AnswerOption";
 
 export default function AddSoal() {
     const navigate = useNavigate();
 
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
     const [tipeSoal, setTipeSoal] = useState("Pilihan Ganda");
-    const [isTipeSoalOpen, setIsTipeSoalOpen] = useState(false);
     const [soalText, setSoalText] = useState("");
     const [soalImage, setSoalImage] = useState(null);
     const [soalPreview, setSoalPreview] = useState(null);
+    
     const [pembahasan, setPembahasan] = useState("");
+    const [pembahasanImage, setPembahasanImage] = useState(null);
+    const [pembahasanPreview, setPembahasanPreview] = useState(null);
+
     const [isLoading, setIsLoading] = useState(false);
 
+    // Dropdown Data
     const [subjectList, setSubjectList] = useState([]);
     const [topikList, setTopikList] = useState([]);
-    const [levelList, setLevelList] = useState([]);
+    
+    // Level Kesulitan
+    const levelList = [
+        { label: "Mudah", value: "mudah" },
+        { label: "Sedang", value: "sedang" },
+        { label: "Sulit", value: "sulit" }
+    ];
 
-    const [opsiJawaban, setOpsiJawaban] = useState([
-        { id: 1, text: "", isCorrect: false, image: null, preview: null },
-        { id: 2, text: "", isCorrect: false, image: null, preview: null },
-        { id: 3, text: "", isCorrect: false, image: null, preview: null },
-        { id: 4, text: "", isCorrect: false, image: null, preview: null },
-    ]);
+    const [selectedSubject, setSelectedSubject] = useState("");
+    const [selectedTopik, setSelectedTopik] = useState("");
+    const [selectedLevel, setSelectedLevel] = useState("");
 
-    const soalFileInputRef = useRef(null);
-
-    const [formDataIDs, setFormDataIDs] = useState({
-        id_mata_pelajaran: "",
-        id_topik: "",
-        level_kesulitan: ""
-    });
-
-    const [formDataDisplay, setFormDataDisplay] = useState({
-        nama_subject_display: "",
-        nama_topik_display: "",
-        level_kesulitan_display: "",
-    });
-
-    const [isMapelOpen, setIsMapelOpen] = useState(false);
-    const [isTopikOpen, setIsTopikOpen] = useState(false);
-    const [isLevelOpen, setIsLevelOpen] = useState(false);
-
-    const tipeSoalList = ["Pilihan Ganda", "Multi Jawaban"];
+    const [opsiJawaban, setOpsiJawaban] = useState([]);
 
     useEffect(() => {
-        const fetchData = async () => {
+        const initData = async () => {
             try {
-                const subjectsRes = await axios.get(`${API_BASE_URL}/contributor/lookup/subjects`);
-                setSubjectList(subjectsRes.data.data);
+                // Fetch Subjects
+                const subjects = await lookupService.getSubjects();
 
-                const levelsRes = await axios.get(`${API_BASE_URL}/contributor/lookup/levels`);
-                setLevelList(levelsRes.data.data);
+                setSubjectList(subjects.map(s => ({ 
+                    label: s.name, 
+                    value: s.id  
+                })));
+
+                resetOpsiJawaban("Pilihan Ganda");
             } catch (error) {
-                console.error("Gagal mengambil data lookup:", error);
-                alert("Gagal menghubungkan ke server.");
+                console.error("Error init:", error);
             }
         };
-        fetchData();
-    }, [API_BASE_URL]);
+        initData();
+    }, []);
 
-    const handleSelectSubject = async (subject) => {
-        setFormDataDisplay(prev => ({ ...prev, nama_subject_display: subject.name }));
-        setFormDataIDs(prev => ({ ...prev, id_mata_pelajaran: subject.id }));
-        setIsMapelOpen(false);
 
-        setTopikList([]);
-        setFormDataDisplay(prev => ({ ...prev, nama_topik_display: "" }));
-        setFormDataIDs(prev => ({ ...prev, id_topik: "" }));
-
-        try {
-            const res = await axios.get(`${API_BASE_URL}/contributor/lookup/topics/${subject.id}`);
-            setTopikList(res.data.data);
-        } catch (error) {
-            console.error("Gagal mengambil topik:", error);
-        }
-    };
-
-    const handleSelectTopik = (topik) => {
-        setFormDataDisplay(prev => ({ ...prev, nama_topik_display: topik.name }));
-        setFormDataIDs(prev => ({ ...prev, id_topik: topik.id }));
-        setIsTopikOpen(false);
-    };
-
-    const handleSelectLevel = (lvl) => {
-        setFormDataDisplay(prev => ({ ...prev, level_kesulitan_display: lvl.label }));
-        setFormDataIDs(prev => ({ ...prev, level_kesulitan: lvl.value }));
-        setIsLevelOpen(false);
-    };
-
-    const handleSelectTipeSoal = (value) => {
-        setTipeSoal(value);
-        setIsTipeSoalOpen(false);
-        const resetOpsi = opsiJawaban.map(opsi => ({ ...opsi, isCorrect: false }));
-        setOpsiJawaban(resetOpsi);
-    };
-
-    const handleTriggerSoalFile = () => {
-        soalFileInputRef.current.click();
-    };
-
-    const handleFileChangeSoal = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setSoalImage(file);
-            setSoalPreview(URL.createObjectURL(file));
-        }
-    };
-
-    const handleRemoveSoalImage = () => {
-        setSoalImage(null);
-        setSoalPreview(null);
-        if (soalFileInputRef.current) soalFileInputRef.current.value = "";
-    };
-
-    const handleTriggerOpsiFile = (id) => {
-        document.getElementById(`file-input-opsi-${id}`).click();
-    };
-
-    const handleFileChangeOpsi = (id, e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            const newOpsi = opsiJawaban.map((opsi) =>
-                opsi.id === id ? { ...opsi, image: file, preview: objectUrl } : opsi
-            );
-            setOpsiJawaban(newOpsi);
-        }
-    };
-
-    const handleRemoveOpsiImage = (id) => {
-        const newOpsi = opsiJawaban.map((opsi) =>
-            opsi.id === id ? { ...opsi, image: null, preview: null } : opsi
-        );
+    const resetOpsiJawaban = (tipe) => {
+        const count = tipe === "Pilihan Ganda" ? 4 : 6;
+        const newOpsi = Array.from({ length: count }, (_, i) => ({
+            id: i + 1,
+            text: "",
+            isCorrect: false,
+            image: null,
+            preview: null
+        }));
         setOpsiJawaban(newOpsi);
-        const inputElem = document.getElementById(`file-input-opsi-${id}`);
-        if (inputElem) inputElem.value = "";
+    };
+
+    const handleTipeSoalChange = (val) => {
+        setTipeSoal(val);
+        resetOpsiJawaban(val);
+    };
+
+    const handleSelectSubject = async (subjectId) => {
+        setSelectedSubject(subjectId);
+        setSelectedTopik(""); 
+        
+        try {
+            const topics = await lookupService.getTopicsBySubject(subjectId);
+            
+            setTopikList(topics.map(t => ({
+                value: t.id,
+                label: `${t.name} (${t.jenjang_name || 'Umum'})` 
+            })));
+        } catch (error) {
+            console.error("Gagal load topik:", error);
+            setTopikList([]);
+        }
+    };
+
+    // Handler Image
+    const handleImageChange = (file, setImg, setPrev) => {
+        if (file) {
+            setImg(file);
+            setPrev(URL.createObjectURL(file));
+        }
+    };
+    const handleRemoveImage = (setImg, setPrev) => {
+        setImg(null);
+        setPrev(null);
+    };
+
+    // Handler Opsi
+    const handleOpsiTextChange = (id, val) => {
+        setOpsiJawaban(prev => prev.map(o => o.id === id ? { ...o, text: val } : o));
+    };
+
+    const handleOpsiImageChange = (id, file) => {
+        if (file) {
+            setOpsiJawaban(prev => prev.map(o => 
+                o.id === id ? { ...o, image: file, preview: URL.createObjectURL(file) } : o
+            ));
+        }
+    };
+
+    const handleOpsiImageRemove = (id) => {
+        setOpsiJawaban(prev => prev.map(o => 
+            o.id === id ? { ...o, image: null, preview: null } : o
+        ));
     };
 
     const handleCheckAnswer = (id) => {
         if (tipeSoal === "Pilihan Ganda") {
-            const newOpsi = opsiJawaban.map((opsi) => ({
-                ...opsi,
-                isCorrect: opsi.id === id ? true : false,
-            }));
-            setOpsiJawaban(newOpsi);
+            setOpsiJawaban(prev => prev.map(o => ({ ...o, isCorrect: o.id === id })));
         } else {
-            const newOpsi = opsiJawaban.map((opsi) =>
-                opsi.id === id ? { ...opsi, isCorrect: !opsi.isCorrect } : opsi
-            );
-            setOpsiJawaban(newOpsi);
+            setOpsiJawaban(prev => prev.map(o => o.id === id ? { ...o, isCorrect: !o.isCorrect } : o));
         }
     };
 
-    const handleInputOpsi = (id, value) => {
-        const newOpsi = opsiJawaban.map((opsi) =>
-            opsi.id === id ? { ...opsi, text: value } : opsi
-        );
-        setOpsiJawaban(newOpsi);
-    };
-
+    // Submit
     const handleSubmit = async (actionType) => {
-
-        if (!soalText || !formDataIDs.id_mata_pelajaran || !formDataIDs.level_kesulitan || !formDataIDs.id_topik) {
-            alert("Mohon lengkapi Soal, Mata Pelajaran, Topik, dan Level Kesulitan!");
-            return;
+        if (!soalText || !selectedSubject || !selectedTopik || !selectedLevel) {
+            return alert("Harap lengkapi Soal, Mapel, Topik, dan Level!");
         }
+        
+        const hasCorrect = opsiJawaban.some(o => o.isCorrect);
+        if (!hasCorrect) return alert("Pilih minimal satu jawaban benar!");
 
         setIsLoading(true);
-
-        const formData = new FormData();
-
-        const backendTipeSoal = tipeSoal === "Pilihan Ganda" ? "pilihan_ganda" : "multi_jawaban";
-
-        formData.append("tipe_soal", backendTipeSoal);
-        formData.append("text_soal", soalText);
-        formData.append("id_topik", formDataIDs.id_topik);
-        formData.append("level_kesulitan", formDataIDs.level_kesulitan);
-        formData.append("pembahasan_umum", pembahasan);
-        formData.append("action_type", actionType);
-
-        if (soalImage) {
-            formData.append("image_soal", soalImage);
-        }
-
-        const formattedOpsi = opsiJawaban.map(opsi => {
-            if (opsi.image) {
-                formData.append("image_jawaban", opsi.image);
-            }
-            return {
-                text: opsi.text,
-                is_correct: opsi.isCorrect,
-                has_image: !!opsi.image
-            };
-        });
-
-        formData.append("opsi_jawaban", JSON.stringify(formattedOpsi));
-
         try {
-            const response = await axios.post(
-                `${API_BASE_URL}/contributor/question`,
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    }
-                }
-            );
+            const formData = new FormData();
+            const backendTipe = tipeSoal === "Pilihan Ganda" ? "pilihan_ganda" : "multi_jawaban";
+            formData.append("tipe_soal", backendTipe);
+            formData.append("text_soal", soalText);
+            formData.append("id_topik", selectedTopik);
+            formData.append("level_kesulitan", selectedLevel);
+            formData.append("pembahasan_umum", pembahasan);
+            formData.append("action_type", actionType);
 
-            alert(response.data.message);
+            if (soalImage) formData.append("image_soal", soalImage);
+            if (pembahasanImage) formData.append("image_pembahasan", pembahasanImage);
+
+            const opsiData = opsiJawaban.map(o => ({
+                text: o.text,
+                is_correct: o.isCorrect,
+                has_image: !!o.image
+            }));
+            formData.append("opsi_jawaban", JSON.stringify(opsiData));
+
+            opsiJawaban.forEach(o => {
+                if (o.image) formData.append("image_jawaban", o.image);
+            });
+
+            await soalService.createQuestion(formData);
+            alert(`Berhasil ${actionType === 'Ajukan' ? 'diajukan' : 'disimpan'}!`);
             navigate("../soal");
-
         } catch (error) {
-            console.error("Error submit:", error);
-            const errMsg = error.response?.data?.message || error.message || "Terjadi kesalahan.";
-            alert(`Gagal menyimpan: ${errMsg}`);
+            alert("Gagal menyimpan data.");
         } finally {
             setIsLoading(false);
         }
@@ -224,366 +182,141 @@ export default function AddSoal() {
 
     return (
         <div className="px-4 sm:px-6 lg:px-8 py-6 w-full max-w-9xl mx-auto h-auto min-h-screen bg-gray-50">
-
-            {/* --- Head Navigasi --- */}
-            <div className="pb-6">
-                <div className="sm:flex sm:justify-between sm:items-center mb-6">
-                    <div className="mb-4 sm:mb-0">
-                        <h1 className="text-2xl md:text-3xl text-dark-primary font-bold font-sora">Add Soal</h1>
-                    </div>
-                    <div className="mb-4 sm:mb-0">
-                        <nav className="flex" aria-label="Breadcrumb">
-                            <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-                                <li className="inline-flex items-center">
-                                    <Link to="/dashboard" className="inline-flex items-center font-noto-sans text-sm font-medium text-gray-500">Dashboard</Link>
-                                </li>
-                                <li className="inline-flex items-center">
-                                    <svg className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 9 4-4-4-4" /></svg>
-                                    <Link to="../soal" className="inline-flex items-center text-gray-500 text-sm font-noto-sans font-medium hover:text-primary-hover">
-                                        Data Soal
-                                    </Link>
-                                </li>
-                                <li aria-current="page">
-                                    <div className="flex items-center">
-                                        <svg className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 9 4-4-4-4" /></svg>
-                                        <span className="ms-1 text-sm font-medium text-dark-secondary font-noto-sans md:ms-2 dark:text-gray-900">Add Soal</span>
-                                    </div>
-                                </li>
-                            </ol>
-                        </nav>
-                    </div>
-                </div>
-            </div>
-
+            
+            <PageHeader 
+                title="Add Soal"
+                breadcrumbs={[
+                    { label: "Dashboard", link: "/dashboard" },
+                    { label: "Data Soal", link: "../soal" },
+                    { label: "Add", link: null }
+                ]}
+            />
 
             <div className="flex flex-col lg:flex-row gap-10">
-                {/* --- KOLOM KIRI --- */}
+                
+                {/* --- KOLOM KIRI  --- */}
                 <div className="w-full lg:flex-1 space-y-6">
+                    
+                    {/* TIPE & SOAL */}
                     <div className="bg-white shadow-lg rounded-2xl p-6">
-                        {/* --- TIPE SOAL--- */}
-                        <div className="mb-6 relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
-                                Tipe Soal<span className="text-red-500">*</span>
-                            </label>
+                        <Dropdown 
+                            label="Tipe Soal"
+                            options={[{label: "Pilihan Ganda", value: "Pilihan Ganda"}, {label: "Multi Jawaban", value: "Multi Jawaban"}]}
+                            selectedText={tipeSoal}
+                            onSelect={handleTipeSoalChange}
+                            selectedValues={tipeSoal}
+                        />
 
-                            <button
-                                type="button"
-                                onClick={() => setIsTipeSoalOpen(!isTipeSoalOpen)}
-                                className="relative w-full text-left font-noto-sans bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl p-3.5 flex justify-between items-center"
-                            >
-                                <span className="text-gray-900">
-                                    {tipeSoal}
-                                </span>
-                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isTipeSoalOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-
-                            {/* Dropdown Menu Tipe Soal */}
-                            {isTipeSoalOpen && (
-                                <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                                    <ul className="py-1 text-sm text-gray-700">
-                                        {tipeSoalList.map((type, index) => (
-                                            <li key={index}>
-                                                <button type="button"
-                                                    onClick={() => handleSelectTipeSoal(type)}
-                                                    className={`block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans ${tipeSoal === type ? 'bg-gray-50 text-primary font-medium' : ''}`}
-                                                >
-                                                    {type}
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Input Soal */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
-                                Soal<span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    value={soalText}
-                                    onChange={(e) => setSoalText(e.target.value)}
-                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl block w-full p-3.5 pr-12 font-noto-sans placeholder-gray-400"
-                                    placeholder="Masukan soal"
-                                />
-
-                                <input
-                                    type="file"
-                                    ref={soalFileInputRef}
-                                    onChange={handleFileChangeSoal}
-                                    accept="image/*"
-                                    className="hidden"
-                                />
-
-                                <button
-                                    type="button"
-                                    onClick={handleTriggerSoalFile}
-                                    className={`absolute inset-y-0 right-0 flex items-center pr-4 transition-transform ${soalPreview ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
-                                    title="Upload Gambar Soal"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            {soalPreview && (
-                                <div className="mt-4 relative group w-fit">
-                                    <img
-                                        src={soalPreview}
-                                        alt="Preview Soal"
-                                        className="h-auto max-h-[300px] w-auto max-w-full rounded-lg border border-gray-200 object-contain"
-                                    />
-                                    <button
-                                        onClick={handleRemoveSoalImage}
-                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
-                                        title="Hapus Gambar"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                    </button>
-                                </div>
-                            )}
+                        <div className="mt-4">
+                            <InputField 
+                                label="Soal"
+                                type="textarea"
+                                rows={4}
+                                value={soalText}
+                                onChange={(e) => setSoalText(e.target.value)}
+                                placeholder="Masukan soal"
+                                required
+                            />
+                            <ImageUploadBox 
+                                label="Gambar Soal (Opsional)"
+                                previewUrl={soalPreview}
+                                onChange={(e) => handleImageChange(e.target.files[0], setSoalImage, setSoalPreview)}
+                                onRemove={() => handleRemoveImage(setSoalImage, setSoalPreview)}
+                            />
                         </div>
                     </div>
 
-                    {/* Opsi Jawaban */}
+                    {/* OPSI JAWABAN */}
                     <div className="bg-white shadow-lg rounded-2xl p-6">
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
+                            <label className="block text-sm font-medium text-gray-700 font-noto-sans">
                                 Opsi Jawaban<span className="text-red-500">*</span>
                             </label>
-                            <p className="block text-sm font-medium text-gray-400  font-noto-sans">Pilih jawaban yang benar.</p>
+                            <p className="text-sm text-gray-400 font-noto-sans">Pilih jawaban yang benar.</p>
                         </div>
 
                         <div className="space-y-6">
-                            {opsiJawaban.map((opsi) => (
-                                <div key={opsi.id} className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-3">
-                                        {/* Radio / Checkbox Indicator */}
-                                        <button
-                                            type="button"
-                                            onClick={() => handleCheckAnswer(opsi.id)}
-                                            className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors 
-                                                ${opsi.isCorrect ? 'border-primary bg-primary' : 'border-primary bg-white hover:border-primary'}
-                                            `}
-                                        >
-                                            {opsi.isCorrect && (
-                                                <div className={`primary ${tipeSoal === 'Pilihan Ganda' ? 'w-2.5 h-2.5 rounded-full' : 'w-full h-full flex items-center justify-center text-white bg-transparent'}`}>
-                                                    {tipeSoal !== 'Pilihan Ganda' && (
-                                                        <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </button>
-
-                                        {/* Input Field Opsi */}
-                                        <div className="relative w-full">
-                                            <input
-                                                type="text"
-                                                value={opsi.text}
-                                                onChange={(e) => handleInputOpsi(opsi.id, e.target.value)}
-                                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl block w-full p-3.5 pr-12 font-noto-sans placeholder-gray-400"
-                                                placeholder={`Masukan jawaban ${String.fromCharCode(64 + opsi.id)}`}
-                                            />
-
-                                            <input
-                                                type="file"
-                                                id={`file-input-opsi-${opsi.id}`}
-                                                onChange={(e) => handleFileChangeOpsi(opsi.id, e)}
-                                                accept="image/*"
-                                                className="hidden"
-                                            />
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleTriggerOpsiFile(opsi.id)}
-                                                className={`absolute inset-y-0 right-0 flex items-center pr-2 transition-colors ${opsi.preview ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
-                                                title="Upload Gambar Jawaban"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {opsi.preview && (
-                                        <div className="ml-9 mt-1 relative w-fit">
-                                            <img
-                                                src={opsi.preview}
-                                                alt={`Preview Opsi ${opsi.id}`}
-                                                className="h-24 w-auto rounded-lg border border-gray-200 object-cover"
-                                            />
-                                            <button
-                                                onClick={() => handleRemoveOpsiImage(opsi.id)}
-                                                className="absolute -top-2 -right-2 bg-white text-red-500 border border-gray-200 rounded-full p-0.5 shadow-sm hover:bg-red-50"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                            {opsiJawaban.map((opsi, index) => (
+                                <AnswerOption 
+                                    key={opsi.id}
+                                    index={index}
+                                    data={opsi}
+                                    inputType={tipeSoal === "Pilihan Ganda" ? "radio" : "checkbox"}
+                                    onTextChange={handleOpsiTextChange}
+                                    onImageChange={handleOpsiImageChange}
+                                    onRemoveImage={handleOpsiImageRemove}
+                                    onCheck={handleCheckAnswer}
+                                />
                             ))}
                         </div>
                     </div>
 
-                    {/* Pembahasan */}
+                    {/* PEMBAHASAN */}
                     <div className="bg-white shadow-lg rounded-2xl p-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
-                            Pembahasan<span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                            rows="4"
+                        <InputField 
+                            label="Pembahasan"
+                            type="textarea"
+                            rows={4}
                             value={pembahasan}
                             onChange={(e) => setPembahasan(e.target.value)}
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl block w-full p-3.5 font-noto-sans placeholder-gray-400"
-                            placeholder="Tuliskan pembahasan lengkap untuk jawaban yang benar"
-                        ></textarea>
+                            placeholder="Tuliskan pembahasan lengkap..."
+                        />
+                        <ImageUploadBox 
+                            label="Gambar Pembahasan (Opsional)"
+                            previewUrl={pembahasanPreview}
+                            onChange={(e) => handleImageChange(e.target.files[0], setPembahasanImage, setPembahasanPreview)}
+                            onRemove={() => handleRemoveImage(setPembahasanImage, setPembahasanPreview)}
+                        />
                     </div>
                 </div>
 
                 {/* --- KOLOM KANAN --- */}
                 <div className="w-full lg:max-w-[400px] space-y-4">
-
-                    {/* Button Simpan & Ajukan */}
+                    
+                    {/* BUTTONS */}
                     <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-                        <button
+                        <ButtonCancel 
+                            text={isLoading ? "Menyimpan..." : "Simpan"}
+                            onClick={() => handleSubmit("Draft")}
                             disabled={isLoading}
-                            onClick={() => handleSubmit("Simpan")}
-                            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-primary text-sm font-medium rounded-2xl h-10 shadow-sm text-primary hover:bg-gray-50 disabled:opacity-50"
-                        >
-                            {isLoading ? "Menyimpan..." : "Simpan Soal"}
-                        </button>
-                        <button
-                            disabled={isLoading}
+                            type="button" 
+                        />
+                        <ButtonSave 
+                            text="Ajukan Soal"
+                            loadingText="Mengajukan..."
+                            isLoading={isLoading}
                             onClick={() => handleSubmit("Ajukan")}
-                            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-2xl h-10 shadow-sm text-white bg-primary hover:bg-primary-hover disabled:opacity-50"
-                        >
-                            {isLoading ? "Mengajukan..." : "Ajukan Soal"}
-                        </button>
+                        />
                     </div>
 
-                    {/* Form Kanan */}
+                    {/* METADATA CARD */}
                     <div className="bg-white shadow-lg w-full rounded-2xl p-6 space-y-4">
+                        <Dropdown 
+                            label="Mata Pelajaran"
+                            options={subjectList}
+                            selectedText={subjectList.find(s => s.value === selectedSubject)?.label || "Pilih mata pelajaran"}
+                            onSelect={handleSelectSubject}
+                            selectedValues={selectedSubject}
+                        />
 
-                        {/* MATA PELAJARAN */}
-                        <div className="relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
-                                Mata Pelajaran <span className="text-red-500">*</span>
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => setIsMapelOpen(!isMapelOpen)}
-                                className="relative w-full text-left font-noto-sans bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl  p-3.5 flex justify-between items-center"
-                            >
-                                <span className={formDataDisplay.nama_subject_display ? "text-gray-900" : "text-gray-500"}>
-                                    {formDataDisplay.nama_subject_display || "Pilih mata pelajaran"}
-                                </span>
-                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isMapelOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                            </button>
+                        <Dropdown 
+                            label="Topik"
+                            options={topikList}
+                            selectedText={topikList.find(t => t.value === selectedTopik)?.label || "Pilih topik"}
+                            onSelect={(val) => setSelectedTopik(val)}
+                            selectedValues={selectedTopik}
+                        />
 
-                            {isMapelOpen && (
-                                <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
-                                    <ul className="py-1 text-sm text-gray-700">
-                                        {subjectList.length > 0 ? (
-                                            subjectList.map((subject) => (
-                                                <li key={subject.id}>
-                                                    <button type="button"
-                                                        onClick={() => handleSelectSubject(subject)}
-                                                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans"
-                                                    >
-                                                        {subject.name}
-                                                    </button>
-                                                </li>
-                                            ))
-                                        ) : (
-                                            <li className="px-4 py-2 text-gray-400">Memuat...</li>
-                                        )}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* TOPIK */}
-                        <div className="relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
-                                Topik <span className="text-red-500">*</span>
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => setIsTopikOpen(!isTopikOpen)}
-                                className="relative w-full text-left font-noto-sans bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl p-3.5 flex justify-between items-center"
-                            >
-                                <span className={formDataDisplay.nama_topik_display ? "text-gray-900" : "text-gray-500"}>
-                                    {formDataDisplay.nama_topik_display || "Pilih topik"}
-                                </span>
-                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isTopikOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-
-                            {isTopikOpen && (
-                                <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
-                                    <ul className="py-1 text-sm text-gray-700">
-                                        {topikList.length > 0 ? (
-                                            topikList.map((topik) => (
-                                                <li key={topik.id}>
-                                                    <button type="button"
-                                                        onClick={() => handleSelectTopik(topik)}
-                                                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans"
-                                                    >
-                                                        {topik.name}
-                                                    </button>
-                                                </li>
-                                            ))
-                                        ) : (
-                                            <li className="px-4 py-2 text-gray-400">Pilih mata pelajaran dulu</li>
-                                        )}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* LEVEL KESULITAN */}
-                        <div className="relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
-                                Level Kesulitan Soal <span className="text-red-500">*</span>
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => setIsLevelOpen(!isLevelOpen)}
-                                className="relative w-full text-left font-noto-sans bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-2xl p-3.5 flex justify-between items-center"
-                            >
-                                <span className={formDataDisplay.level_kesulitan_display ? "text-gray-900" : "text-gray-500"}>
-                                    {formDataDisplay.level_kesulitan_display || "Pilih level kesulitan"}
-                                </span>
-                                <svg className={`w-5 h-5 text-gray-900 transition-transform ${isLevelOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-
-                            {isLevelOpen && (
-                                <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
-                                    <ul className="py-1 text-sm text-gray-700">
-                                        {levelList.length > 0 ? (
-                                            levelList.map((lvl, index) => (
-                                                <li key={index}>
-                                                    <button type="button"
-                                                        onClick={() => handleSelectLevel(lvl)}
-                                                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-noto-sans"
-                                                    >
-                                                        {lvl.label}
-                                                    </button>
-                                                </li>
-                                            ))
-                                        ) : (
-                                            <li className="px-4 py-2 text-gray-400">Memuat...</li>
-                                        )}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
+                        <Dropdown 
+                            label="Level Kesulitan Soal"
+                            options={levelList}
+                            selectedText={levelList.find(l => l.value === selectedLevel)?.label || "Pilih level kesulitan"}
+                            onSelect={(val) => setSelectedLevel(val)}
+                            selectedValues={selectedLevel}
+                        />
                     </div>
                 </div>
+
             </div>
         </div>
     );
