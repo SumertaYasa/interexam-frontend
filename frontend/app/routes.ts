@@ -67,6 +67,13 @@ export default [
     route("artikel/add", "routes/dashboard/artikel/add.artikel.jsx"),
   ]),
 
+  layout("routes/dashboardSubscriber.jsx", [
+    route(
+      "dashboard-subscriber",
+      "routes/dashboardSubscriber/dashboardHome/dashboard.home.jsx"
+    ),
+  ]),
+
   route(
     "dashboard-subscriber/status-ujian-terakhir",
     "components/DashboardSubcriber/Features/Dashboard/StatusAllCourse.jsx"
@@ -75,4 +82,9 @@ export default [
     "dashboard-subscriber/status-ujian-terakhir/:id",
     "components/DashboardSubcriber/Common/DetailExam.jsx"
   ),
+
+  route("login-internal", "routes/auth/internal/formInternal.jsx", [
+    index("components/Auth/Internal/LoginForm.jsx"),
+    route("register", "components/Auth/Internal/RegisFormWrapper.jsx"),
+  ]),
 ] satisfies RouteConfig;

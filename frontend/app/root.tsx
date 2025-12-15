@@ -7,10 +7,15 @@ import {
   ScrollRestoration,
 } from "react-router";
 
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import type { Route } from "./+types/root";
 import "./styles/app.css";
 import "flowbite";
 
+// Ambil Client ID dari env frontend
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+// Link Google Fonts & preconnect
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -24,6 +29,7 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+// Layout untuk HTML & body
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -32,6 +38,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          src="https://accounts.google.com/gsi/client"
+          async
+          defer
+        ></script>
       </head>
       <body>
         {children}
@@ -42,10 +53,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+// App root tanpa BrowserRouter
 export default function App() {
-  return <Outlet />;
+  return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <Outlet /> {/* Semua route children sekarang punya router context */}
+    </GoogleOAuthProvider>
+  );
 }
 
+// ErrorBoundary
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
