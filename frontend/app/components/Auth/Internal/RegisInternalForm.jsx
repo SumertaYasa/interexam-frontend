@@ -6,19 +6,17 @@ function RegisForm() {
   const [googleToken, setGoogleToken] = useState("");
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigateRef = useRef(null);
 
-  // Initialize navigate hook safely
-  useEffect(() => {
-    try {
-      navigateRef.current = useNavigate();
-    } catch (error) {
-      console.log("Router context not available during SSR");
-    }
-  }, []);
+  // Safely obtain navigate function — catch when Router isn't available (SSR)
+  let navigateFn = null;
+  try {
+    navigateFn = useNavigate();
+  } catch (err) {
+    navigateFn = null;
+  }
 
   const handleGoogleLoginSuccess = (res) => {
-    setGoogleToken(res.credential); 
+    setGoogleToken(res.credential);
   };
 
   const handleRegister = async () => {
@@ -37,15 +35,18 @@ function RegisForm() {
           requestRole: role,
         }),
       });
-
       const data = await response.json();
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        alert("Registrasi & login sukses!");
-        if (navigateRef.current) navigateRef.current("/dashboard");
+      // After registering an internal user we shouldn't auto-login them.
+      // Instead, inform them to wait for admin verification and
+      // redirect to the internal login page.
+      if (response.ok) {
+        alert(
+          "Registrasi sukses! Silakan tunggu verifikasi admin, lalu login melalui halaman internal."
+        );
+        if (navigateFn) navigateFn("/login-internal");
       } else {
-        alert(data.message);
+        alert(data.message || "Registrasi gagal");
       }
     } catch (err) {
       console.error(err);
@@ -88,12 +89,12 @@ function RegisForm() {
             disabled={loading}
             className="flex items-center justify-center gap-2.5 border rounded-[10px] px-[15px] py-[10px]"
           >
-            {loading ? "Loading..." : "Daftar & Login"}
+            {loading ? "Loading..." : "Daftar (tunggu verifikasi)"}
           </button>
 
-          <Link to={"/login-internal"} className="mt-2">
+          <a href={"/login-internal"} className="mt-2">
             Kembali ke login
-          </Link>
+          </a>
         </div>
       )}
     </div>

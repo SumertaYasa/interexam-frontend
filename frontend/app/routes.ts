@@ -58,9 +58,14 @@ export default [
     route("users/edit/:id", "routes/dashboard/users/edit.user.jsx"),
 
     //paket langganan
-    route("paket-langganan", "routes/dashboard/paket-langganan/data.paket.langganan.jsx"),
-    route("paket-langganan/add", "routes/dashboard/paket-langganan/add.paket.langganan.jsx"),
-
+    route(
+      "paket-langganan",
+      "routes/dashboard/paket-langganan/data.paket.langganan.jsx"
+    ),
+    route(
+      "paket-langganan/add",
+      "routes/dashboard/paket-langganan/add.paket.langganan.jsx"
+    ),
 
     // konten
     route("artikel", "routes/dashboard/artikel/data.artikel.jsx"),
@@ -84,7 +89,7 @@ export default [
   ),
 
   route("login-internal", "routes/auth/internal/formInternal.jsx", [
-    index("components/Auth/Internal/LoginForm.jsx"),
+    index("components/Auth/Internal/LoginInternalForm.jsx"),
     route("register", "components/Auth/Internal/RegisFormWrapper.jsx"),
   ]),
 ] satisfies RouteConfig;
