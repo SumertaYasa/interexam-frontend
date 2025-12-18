@@ -49,9 +49,11 @@ export default function AddSoal() {
                 // Fetch Subjects
                 const subjects = await lookupService.getSubjects();
 
+                console.log("DATA SUBJECT ADD SOAL:", subjects); // Debugging
+
                 setSubjectList(subjects.map(s => ({ 
-                    label: s.name, 
-                    value: s.id  
+                    label: s.nama_subject, 
+                    value: s.id_subject   
                 })));
 
                 resetOpsiJawaban("Pilihan Ganda");
@@ -88,8 +90,8 @@ export default function AddSoal() {
             const topics = await lookupService.getTopicsBySubject(subjectId);
             
             setTopikList(topics.map(t => ({
-                value: t.id,
-                label: `${t.name} (${t.jenjang_name || 'Umum'})` 
+                value: t.id_topics,    // DULU: t.id (Salah)
+                label: `${t.nama_topics} (${t.jenjang ? t.jenjang.nama_jenjang : '-'})`
             })));
         } catch (error) {
             console.error("Gagal load topik:", error);

@@ -51,9 +51,12 @@ export default function EditSoal() {
     useEffect(() => {
         const initData = async () => {
             try {
-                // Ambil List Mata Pelajaran
+                //  Ambil List Mata Pelajaran
                 const subjects = await lookupService.getSubjects();
-                const formattedSubjects = subjects.map(s => ({ label: s.name, value: s.id }));
+                const formattedSubjects = subjects.map(s => ({ 
+                    label: s.nama_subject, 
+                    value: s.id_subject 
+                }));
                 setSubjectList(formattedSubjects);
 
                 // Ambil Detail Soal
@@ -69,7 +72,12 @@ export default function EditSoal() {
 
                 setStatusSoal(data.status || "");
 
-                setTipeSoal(data.tipe_soal === 'multiple_choice' ? 'Pilihan Ganda' : 'Multi Jawaban');
+                // Cek tipe soal dari backend
+                const backendTipe = data.tipe_soal === 'multiple_choice' || data.tipe_soal === 'pilihan_ganda' 
+                    ? 'Pilihan Ganda' 
+                    : 'Multi Jawaban';
+                setTipeSoal(backendTipe);
+                
                 setSelectedLevel(data.level_kesulitan || "mudah");
 
                 // Handle Preview Gambar
@@ -83,10 +91,12 @@ export default function EditSoal() {
                 if (data.id_subject) {
                     setSelectedSubject(data.id_subject);
                   
+                    // Ambil Topik sesuai Subject yang tersimpan
                     const topics = await lookupService.getTopicsBySubject(data.id_subject);
                     const formattedTopics = topics.map(t => ({
-                        value: t.id,
-                        label: `${t.name} (${t.jenjang_name || '-'})`
+                        value: t.id_topics, // Pakai id_topics
+                        // Tampilkan nama topik + jenjang
+                        label: `${t.nama_topics} (${t.jenjang ? t.jenjang.nama_jenjang : '-'})`
                     }));
                     setTopikList(formattedTopics);
 
@@ -104,11 +114,13 @@ export default function EditSoal() {
                         oldPath: jw.path_gambar_jawaban 
                     }));
 
-                    // minimal 4 opsi
-                    while (mappedOpsi.length < 4) mappedOpsi.push(createEmptyOpsi(mappedOpsi.length + 1));
+                    // minimal 4 opsi jika pilihan ganda
+                    const targetCount = backendTipe === "Pilihan Ganda" ? 4 : 6;
+                    while (mappedOpsi.length < targetCount) mappedOpsi.push(createEmptyOpsi(mappedOpsi.length + 1));
+                    
                     setOpsiJawaban(mappedOpsi);
                 } else {
-                    resetOpsiJawaban("Pilihan Ganda");
+                    resetOpsiJawaban(backendTipe);
                 }
 
             } catch (error) {
@@ -129,7 +141,6 @@ export default function EditSoal() {
         setOpsiJawaban(Array.from({ length: count }, (_, i) => createEmptyOpsi(i + 1)));
     };
 
-    
     // Ganti Tipe Soal
     const handleTipeSoalChange = (val) => {
         setTipeSoal(val);
@@ -151,8 +162,8 @@ export default function EditSoal() {
         try {
             const topics = await lookupService.getTopicsBySubject(subjectId);
             setTopikList(topics.map(t => ({
-                value: t.id,
-                label: `${t.name} (${t.jenjang_name || '-'})`
+                value: t.id_topics,
+                label: `${t.nama_topics} (${t.jenjang ? t.jenjang.nama_jenjang : '-'})`
             })));
         } catch (error) {
             setTopikList([]);
@@ -187,6 +198,9 @@ export default function EditSoal() {
         if (!soalText || !selectedTopik || !selectedLevel) {
             return alert("Harap lengkapi Soal, Topik, dan Level!");
         }
+
+        const hasCorrect = opsiJawaban.some(o => o.isCorrect);
+        if (!hasCorrect) return alert("Pilih minimal satu jawaban benar!");
 
         setIsSubmitting(true);
         const formData = new FormData();
@@ -244,8 +258,8 @@ export default function EditSoal() {
             />
 
             <ValidatorNote 
-            note={catatanRevisi} 
-            status={statusSoal} 
+                note={catatanRevisi} 
+                status={statusSoal} 
             />
 
             <div className="flex flex-col lg:flex-row gap-10">
@@ -280,7 +294,7 @@ export default function EditSoal() {
                         </div>
                     </div>
 
-                    {/*  OPSI JAWABAN */}
+                    {/* OPSI JAWABAN */}
                     <div className="bg-white shadow-lg rounded-2xl p-6">
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 font-noto-sans">
@@ -303,7 +317,7 @@ export default function EditSoal() {
                         </div>
                     </div>
 
-                    {/*  PEMBAHASAN */}
+                    {/* PEMBAHASAN */}
                     <div className="bg-white shadow-lg rounded-2xl p-6">
                         <InputField 
                             label="Pembahasan"
