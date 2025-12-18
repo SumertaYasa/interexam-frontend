@@ -1,160 +1,181 @@
 import { Link } from "react-router";
-import { useState, useRef, useEffect } from "react"; 
+import { useState, useRef, useEffect } from "react";
 
+// --- MOCK DATA ---
 const initialPaketSoalData = [
-    {
-        id: 1,
-        nama_soal: "Tentukan hasil integral parsial",
-        tipe_soal: "Pilihan Ganda",
-        level: "Sulit",
-    },
-    {
-        id: 2,
-        nama_soal: "Jelaskan proses fotosintesis!",
-        tipe_soal: "Multi Jawaban",
-        level: "Sedang",
-    },
-    {
-        id: 3,
-        nama_soal: "Sebutkan 3 senyawa kimia organik!",
-        tipe_soal: "Pilihan Ganda",
-        level: "Mudah",
-    },
+    { id: 1, nama_soal: "Tentukan hasil integral parsial", tipe_soal: "Pilihan Ganda", level: "Sulit" },
+    { id: 2, nama_soal: "Jelaskan proses fotosintesis!", tipe_soal: "Multi Jawaban", level: "Sedang" },
+    { id: 3, nama_soal: "Sebutkan 3 senyawa kimia organik!", tipe_soal: "Pilihan Ganda", level: "Mudah" },
 ];
 
 const availableSoalData = [
-    { id: 10, matapelajaran: "Matematika", nama_soal: "Hitung volume kerucut dengan jari-jari 7 dan tinggi 10.", tipe_soal: "Pilihan Ganda", level: "Mudah", status: "Aktif" },
-    { id: 11, matapelajaran: "Biologi", nama_soal: "Sebutkan tahapan siklus Krebs!", tipe_soal: "Multi Jawaban", level: "Sulit", status: "Aktif" },
-    { id: 12, matapelajaran: "Kimia", nama_soal: "Apa yang dimaksud dengan ikatan kovalen?", tipe_soal: "Pilihan Ganda", level: "Sedang", status: "Draft" },
-    { id: 13, matapelajaran: "Fisika", nama_soal: "Hitung percepatan benda jatuh bebas.", tipe_soal: "Multi Jawaban", level: "Mudah", status: "Aktif" },
+    { id: 10, matapelajaran: "Matematika", nama_soal: "Hitung volume kerucut...", tipe_soal: "Pilihan Ganda", level: "Mudah", status: "Disetujui" },
+    { id: 11, matapelajaran: "Biologi", nama_soal: "Sebutkan tahapan siklus Krebs!", tipe_soal: "Multi Jawaban", level: "Sulit", status: "Disetujui" },
+    { id: 12, matapelajaran: "Kimia", nama_soal: "Apa yang dimaksud dengan ikatan kovalen?", tipe_soal: "Pilihan Ganda", level: "Sedang", status: "Disetujui" },
+    { id: 13, matapelajaran: "Fisika", nama_soal: "Hitung percepatan benda jatuh bebas.", tipe_soal: "Multi Jawaban", level: "Mudah", status: "Disetujui" },
 ];
 
-const cleanupVisuals = (target) => {
-    if (!target) return;
-    const rows = target.parentNode?.children || [];
-    Array.from(rows).forEach(row => {
-        row.classList.remove('border-b-4', 'border-t-4', 'border-blue-500', 'bg-gray-200', 'shadow-2xl', 'opacity-30', 'scale-[1.01]', 'z-10');
-    });
+const mataPelajaranOptions = [
+    { label: "Matematika", value: "Matematika" },
+    { label: "Bahasa Indonesia", value: "Bahasa Indonesia" },
+    { label: "Fisika", value: "Fisika" },
+    { label: "Biologi", value: "Biologi" },
+];
+
+const statusOptions = [
+    { label: "Active", value: "Active" },
+    { label: "Inactive", value: "Inactive" },
+];
+
+// ==========================================================================
+// KOMPONEN UI (Bisa dipindah ke file terpisah: components/common/...)
+// ==========================================================================
+
+const InputField = ({ label, value, onChange, placeholder, required, name }) => (
+    <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
+            {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        <input
+            type="text"
+            name={name}
+            value={value}
+            onChange={onChange}
+            className="bg-white border font-noto-sans border-gray-300 text-gray-900 text-sm rounded-2xl focus:ring-primary focus:border-primary block w-full p-3.5 outline-none transition-all"
+            placeholder={placeholder}
+        />
+    </div>
+);
+
+const Dropdown = ({ label, options, selectedText, onSelect, required }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className="mb-4 relative">
+            <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
+                {label} {required && <span className="text-red-500">*</span>}
+            </label>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="relative w-full text-left bg-white border border-gray-300 text-gray-900 text-sm rounded-2xl focus:ring-1 focus:ring-primary font-medium px-4 py-3.5 flex justify-between items-center font-noto-sans"
+            >
+                <span className={`truncate ${!selectedText ? 'text-gray-400' : ''}`}>{selectedText || "Pilih..."}</span>
+                <svg className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {isOpen && (
+                <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                    <ul className="py-1 text-sm text-gray-700 font-noto-sans">
+                        {options.map((opt, idx) => (
+                            <li key={idx}>
+                                <button type="button" onClick={() => { onSelect(opt.value); setIsOpen(false); }} className="block w-full text-left px-4 py-2 hover:bg-gray-100 hover:text-primary">
+                                    {opt.label}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
 };
 
+const ImageUploadBox = ({ label, previewUrl, onChange, onRemove, required }) => (
+    <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
+            {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        <div className="border border-dashed border-gray-300 rounded-2xl p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+            <div className="flex items-center gap-4">
+                <div className="shrink-0 w-16 h-16 bg-white rounded-xl border border-gray-200 overflow-hidden flex items-center justify-center">
+                    {previewUrl ? (
+                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                        <svg className="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" /></svg>
+                    )}
+                </div>
+                <div className="flex-1 overflow-hidden">
+                    <div className="flex gap-2 items-center">
+                        <label className="cursor-pointer inline-block bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl shadow-sm hover:bg-primary/90 transition-all font-noto-sans">
+                            Pilih file
+                            <input type="file" className="hidden" accept="image/*" onChange={onChange} />
+                        </label>
+                        {previewUrl && (
+                            <button type="button" onClick={onRemove} className="text-red-500 text-sm font-medium hover:underline font-noto-sans">Hapus</button>
+                        )}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500 truncate">Format JPG, PNG, WEBP. Maks 2MB.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+const SearchInput = ({ placeholder }) => (
+    <div className="relative w-full sm:w-80">
+        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </span>
+        <input 
+            type="search" 
+            className="block w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-primary focus:border-primary font-noto-sans outline-none" 
+            placeholder={placeholder} 
+        />
+    </div>
+);
+
+const FilterButton = () => (
+    <button type="button" className="p-2.5 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors text-gray-600">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+    </button>
+);
+
+// ==========================================================================
+// MAIN PAGE
+// ==========================================================================
 
 export default function AddPaketSoal() {
-
-    const [formData, setFormData] = useState({
-        matapelajaran: "",
-        topik: "",
-        jenjang: "",
-        fotoSampul: null, 
-    });
-
+    // --- STATE ---
+    const [formData, setFormData] = useState({ matapelajaran: "", topik: "", status: "", fotoSampul: null });
     const [paketSoal, setPaketSoal] = useState(initialPaketSoalData);
-    const [selectedSoal, setSelectedSoal] = useState({}); 
+    const [selectedSoal, setSelectedSoal] = useState({});
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [previewImage, setPreviewImage] = useState(null);
 
-    const [previewImage, setPreviewImage] = useState("/profile-default.png");
-    const [previousObjectUrl, setPreviousObjectUrl] = useState(null); 
-
-    useEffect(() => {
-        if (previousObjectUrl && previousObjectUrl !== "/profile-default.png") {
-            URL.revokeObjectURL(previousObjectUrl);
-        }
-        
-        if (previewImage !== "/profile-default.png") {
-            setPreviousObjectUrl(previewImage);
-        } else {
-            setPreviousObjectUrl(null);
-        }
-
-        return () => {
-            if (previewImage && previewImage !== "/profile-default.png") {
-                URL.revokeObjectURL(previewImage);
-            }
-        };
-    }, [previewImage]);
-
-
+    // Refs untuk Drag & Drop
     const dragItem = useRef(null);
     const dragOverItem = useRef(null);
 
+    // --- HANDLERS ---
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleSelectMapel = (val) => setFormData({ ...formData, matapelajaran: val });
+    const handleSelectStatus = (val) => setFormData({ ...formData, status: val });
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value
-        });
-    };
-    
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             setFormData({ ...formData, fotoSampul: file });
-            setPreviewImage(URL.createObjectURL(file)); 
-        } else {
-            setFormData({ ...formData, fotoSampul: null });
-            setPreviewImage("/profile-default.png");
+            setPreviewImage(URL.createObjectURL(file));
         }
     };
-
-    const [isNewSoalModalOpen, setIsNewSoalModalOpen] = useState(false);
-    const toggleNewSoalModal = () => setIsNewSoalModalOpen(prev => !prev);
-    const closeNewSoalModal = () => {
-        setIsNewSoalModalOpen(false);
+    const handleRemoveImage = () => {
+        setFormData({ ...formData, fotoSampul: null });
+        setPreviewImage(null);
     };
 
-    const handleSoalSelection = (id, soal) => {
-        setSelectedSoal(prev => {
-            const newSelection = { ...prev };
-            if (newSelection[id]) {
-                delete newSelection[id];
-            } else {
-                newSelection[id] = soal;
-            }
-            return newSelection;
+    // --- DRAG AND DROP (Logika Asli Anda) ---
+    const cleanupVisuals = (target) => {
+        if (!target) return;
+        const rows = target.parentNode?.children || [];
+        Array.from(rows).forEach(row => {
+            row.classList.remove('border-b-4', 'border-t-4', 'border-blue-500', 'bg-gray-200', 'shadow-2xl', 'opacity-30', 'scale-[1.01]', 'z-10');
         });
     };
-
-    const handleAddToPackage = () => {
-        const soalToAdd = Object.values(selectedSoal);
-        const existingIds = new Set(paketSoal.map(s => s.id));
-        const uniqueSoalToAdd = soalToAdd.filter(soal => !existingIds.has(soal.id));
-
-        setPaketSoal(prevSoal => [...prevSoal, ...uniqueSoalToAdd]);
-
-        setSelectedSoal({});
-        closeNewSoalModal();
-    };
-
-    const modalPrimaryButtonClasses = 'text-white bg-primary box-border border border-transparent shadow-xs font-medium leading-5 rounded-xl text-sm px-4 py-2.5 focus:outline-none';
-    const modalSecondaryButtonClasses = 'text-gray-900 bg-gray-100 box-border border border-gray-300  shadow-xs font-medium leading-5 rounded-xl text-sm px-4 py-2.5 focus:outline-none';
-
-    const [isMapelOpen, setIsMapelOpen] = useState(false);
-    const mataPelajaranList = ["Matematika", "Bahasa Indonesia", "Fisika", "Kimia", "Biologi", "Sejarah", "Geografi"];
-
-    const handleSelectMapel = (subject) => {
-        setFormData({ ...formData, matapelajaran: subject });
-        setIsMapelOpen(false);
-    };
-
-    const [isJenjangOpen, setIsJenjangOpen] = useState(false);
-    const jenjangList = ["Sulit", "Sedang", "Mudah"];
-
-    const handleSelectJenjang = (value) => {
-        setFormData({ ...formData, jenjang: value });
-        setIsJenjangOpen(false);
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log("Form submitted with:", {
-            ...formData,
-            paketSoalIds: paketSoal.map(s => s.id)
-        });
-    }
 
     const handleDragStart = (e, index) => {
         dragItem.current = index;
         if (!e.dataTransfer || !e.currentTarget) return;
-        e.currentTarget.classList.add('bg-gray-200', 'shadow-2xl', 'opacity-30', 'scale-[1.01]', 'z-10'); 
+        // Efek visual item yang ditarik
+        e.currentTarget.classList.add('bg-gray-200', 'shadow-2xl', 'opacity-30', 'scale-[1.01]', 'z-10');
         const emptyImg = new Image();
         e.dataTransfer.setDragImage(emptyImg, 0, 0); 
         e.dataTransfer.setData('text/plain', index);
@@ -164,6 +185,7 @@ export default function AddPaketSoal() {
         e.preventDefault();
         dragOverItem.current = index;
         if (dragItem.current === null) return;
+        
         const rows = e.currentTarget.parentNode?.children || [];
         Array.from(rows).forEach(row => row.classList.remove('border-b-4', 'border-t-4', 'border-blue-500'));
         
@@ -176,14 +198,8 @@ export default function AddPaketSoal() {
         }
     };
 
-    const handleDragLeave = (e) => {
-        e.currentTarget.classList.remove('border-b-4', 'border-t-4', 'border-blue-500');
-    };
-
     const handleDragEnd = (e) => {
-        if (e.currentTarget) {
-            cleanupVisuals(e.currentTarget); 
-        }
+        if (e.currentTarget) cleanupVisuals(e.currentTarget);
         dragItem.current = null;
         dragOverItem.current = null;
     };
@@ -192,426 +208,241 @@ export default function AddPaketSoal() {
         e.preventDefault();
         const dragIndex = dragItem.current;
         const dropIndex = dragOverItem.current;
-
         if (dragIndex === null || dropIndex === null || dragIndex === dropIndex) {
-            handleDragEnd(e); 
-            return;
+            handleDragEnd(e); return;
         }
-
-        try {
-            const listCopy = [...paketSoal];
-            const draggedItemContent = listCopy[dragIndex];
-
-            listCopy.splice(dragIndex, 1);
-            listCopy.splice(dropIndex, 0, draggedItemContent);
-
-            setPaketSoal(listCopy);
-        } catch (error) {
-            console.error("Error during DND splice operation:", error);
-        }
-        
+        const listCopy = [...paketSoal];
+        const draggedItem = listCopy[dragIndex];
+        listCopy.splice(dragIndex, 1);
+        listCopy.splice(dropIndex, 0, draggedItem);
+        setPaketSoal(listCopy);
+        if (e.currentTarget) cleanupVisuals(e.currentTarget);
         dragOverItem.current = null;
     };
 
-    const handleDeleteSoal = (idToDelete) => {
-        setPaketSoal(currentSoal => 
-            currentSoal.filter(soal => soal.id !== idToDelete)
-        );
-        console.log(`Menghapus soal dengan ID: ${idToDelete} dari paket.`);
+    const handleDeleteSoal = (id) => setPaketSoal(prev => prev.filter(s => s.id !== id));
+
+    // --- MODAL LOGIC ---
+    const toggleSelection = (soal) => {
+        setSelectedSoal(prev => {
+            const newState = { ...prev };
+            if (newState[soal.id]) delete newState[soal.id];
+            else newState[soal.id] = soal;
+            return newState;
+        });
     };
 
+    const addSelectedToPaket = () => {
+        const newItems = Object.values(selectedSoal).filter(s => !paketSoal.some(p => p.id === s.id));
+        setPaketSoal([...paketSoal, ...newItems]);
+        setSelectedSoal({});
+        setIsModalOpen(false);
+    };
 
     return (
-        <form onSubmit={handleSubmit} className="px-4 sm:px-6 lg:px-8 py-6 w-full max-w-9xl mx-auto h-auto">
-
-            {/* Navigasi Head */}
-            <div className="pb-6">
-                <div className="sm:flex sm:justify-between sm:items-center mb-6">
-                    <div className="mb-4 sm:mb-0">
-                        <h1 className="text-2xl md:text-3xl text-gray-900 font-bold font-sora">Add Paket Soal</h1>
-                    </div>
-                    {/* Breadcrumb Navigation*/}
-                    <div className="mb-4 sm:mb-0">
-                        <nav className="flex" aria-label="Breadcrumb">
-                            <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-                                <li className="inline-flex items-center">
-                                    <Link to="/dashboard" className="inline-flex items-center font-noto-sans text-sm font-medium text-gray-500">Dashboard</Link>
-                                </li>
-                                <li className="inline-flex items-center">
-                                    <svg className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 9 4-4-4-4"/></svg>
-                                    <Link to="../paket-soal" className="inline-flex text-gray-500 items-center text-sm font-noto-sans font-medium  ">
-                                        Data Paket Soal
-                                    </Link>
-                                </li>
-                                <li aria-current="page">
-                                    <div className="flex items-center">
-                                        <svg className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1" aria-hidden="true"
-                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
-                                                strokeWidth="2" d="m1 9 4-4-4-4" />
-                                        </svg>
-                                        <span className="ms-1 text-sm font-medium text-gray-900 font-noto-sans md:ms-2">Add Paket Soal</span>
-                                    </div>
-                                </li>
-                            </ol>
-                        </nav>
-                    </div>
-                </div>
+        <div className="px-4 sm:px-6 lg:px-8 py-6 w-full max-w-9xl mx-auto min-h-screen bg-gray-50">
+            {/* HEADERS */}
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
+                <h1 className="text-2xl md:text-3xl text-gray-900 font-bold font-sora">Add Paket Soal</h1>
+                <nav className="flex text-sm font-medium text-gray-500 font-noto-sans">
+                    <Link to="/dashboard" className="hover:text-gray-900">Dashboard</Link>
+                    <span className="mx-2">/</span>
+                    <Link to="../paket-soal" className="hover:text-gray-900">Data Paket Soal</Link>
+                    <span className="mx-2">/</span>
+                    <span className="text-gray-900">Add</span>
+                </nav>
             </div>
 
-            {/* Tombol Simpan/Batal */}
-            <div className="mt-4 flex gap-4 justify-between">
-                <button type="submit"
-                    className="text-white bg-primary box-border border border-transparent shadow-xs font-medium leading-5 rounded-2xl text-sm px-6 py-2.5 focus:outline-none font-noto-sans ">
-                    Simpan
-                </button>
-                <Link
-                    to="/dashboard/paket-soal"
-                    className="text-primary bg-white box-border border border-primary shadow-xs font-medium leading-5 rounded-2xl text-sm px-8 py-2.5 focus:outline-none font-noto-sans ">
-                    Batal
-                </Link>
-            </div>
-
-            {/* --- Form Detail Paket Soal --- */}
-            <div className="bg-white shadow-lg flex-1 mt-4 h-auto rounded-2xl w-full">
-                <div className="p-6">
-                    {/* Mata Pelajaran Dropdown */}
-                    <div className="relative ">
-                        <label htmlFor="id_matapelajaran"
-                            className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">Mata Pelajaran<span
-                            className="text-red-500">*</span></label>
-                            <button id="dropdownDefaultButton"
-                                type="button"
-                                onClick={() => setIsMapelOpen(!isMapelOpen)}
-                                className="relative z-20 truncate w-full font-noto-sans inline-flex text-gray-900 bg-white focus:ring-1 ring-1 ring-gray-300 shadow-xs font-medium leading-5 rounded-2xl text-sm px-4 py-3.5 focus:outline-none justify-between">
-                                {formData.matapelajaran || "Pilih Mata Pelajaran"}
-                                <svg className={`w-5 h-5 ms-1.5 -me-0.5 flex-shrink-0 text-gray-900 transition-transform ${isMapelOpen ? "rotate-180" : ""}`} aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 9-7 7-7-7"/></svg>
+            <form onSubmit={(e) => { e.preventDefault(); console.log(formData); }}>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                    
+                    {/* --- KIRI: TABEL SOAL (Drag & Drop) --- */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="flex justify-between items-center">
+                            <button type="button" onClick={() => setIsModalOpen(true)} className="text-white bg-primary rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-primary/90 transition font-noto-sans shadow-sm border border-transparent">
+                                + Soal Dari Bank Soal
                             </button>
-                            {isMapelOpen && (
-                                <div className="absolute z-20 mt-2 w-full ring-1 ring-gray-300 rounded-xl shadow-lg bg-white max-h-60 overflow-y-auto">
-                                    <ul className="p-2 text-sm text-gray-600 font-medium">
-                                        {mataPelajaranList.map((subject) => (
-                                            <li key={subject}>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleSelectMapel(subject)}
-                                                    className="flex items-center w-full p-2 hover:bg-gray-100 rounded-lg text-left font-noto-sans">
-                                                    <span className="text-gray-900">{subject}</span>
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                        <p className="text-red-500 text-xs mt-1 font-noto-sans"></p>
-                    </div>
-
-                    {/* Nama Paket Soal Input */}
-                    <div className="mt-4">
-                        <label htmlFor="id_topik"
-                            className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">Nama Paket Soal<span
-                            className="text-red-500">*</span></label>
-                        <input type="text" id="id_topik" name="topik"
-                            value={formData.topik}
-                            onChange={handleChange}
-                            className="bg-gray-50 border font-noto-sans border-gray-300 placeholder:text-gray-400 text-gray-900 text-sm rounded-2xl   block w-full p-3.5"
-                            placeholder="Masukan nama paket soal" required />
-                        <p className="text-red-500 text-xs mt-1 font-noto-sans"></p>
-                    </div>
-
-                    {/* Status Paket Soal Dropdown */}
-                    <div className="relative mt-4 ">
-                        <label htmlFor="id_jenjang"
-                            className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">Status Paket Soal<span
-                            className="text-red-500">*</span></label>
-                            <button id="dropdownDefaultButton"
-                                type="button"
-                                onClick={() => setIsJenjangOpen(!isJenjangOpen)}
-                                className="relative z-10 truncate w-full font-noto-sans inline-flex text-gray-900 bg-white focus:ring-1 ring-1 ring-gray-300 shadow-xs font-medium leading-5 rounded-2xl text-sm px-4 py-3.5 focus:outline-none justify-between">
-                                {formData.jenjang || "Pilih status paket soal"}
-                                <svg className={`w-5 h-5 ms-1.5 -me-0.5 flex-shrink-0 text-gray-900 transition-transform ${isJenjangOpen ? "rotate-180" : ""}`} aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 9-7 7-7-7"/></svg>
+                            <button type="button" className="text-primary bg-white border border-primary rounded-xl px-6 py-2.5 text-sm font-medium hover:bg-gray-50 transition font-noto-sans shadow-sm">
+                                PUBLISH
                             </button>
-                            {isJenjangOpen && (
-                                <div className="absolute z-10 mt-2 w-full ring-1 ring-gray-300 rounded-xl shadow-lg bg-white max-h-60 overflow-y-auto">
-                                    <ul className="p-2 text-sm text-gray-600 font-medium">
-                                        {jenjangList.map((item) => (
-                                            <li key={item}>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleSelectJenjang(item)}
-                                                    className="flex items-center w-full p-2 hover:bg-gray-100 rounded-lg text-left font-noto-sans">
-                                                    <span className="text-gray-900">{item}</span>
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                            
-                        {/* --- FOTO SAMPUL --- */}
-                        <div className="mt-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
-                                Foto Sampul <span className="text-gray-400 text-xs">(Opsional)</span>
-                            </label>
-                            
-                            {/* Preview Image */}
-                            <div className="mb-4 flex justify-start">
-                                <img 
-                                    src={previewImage} 
-                                    alt="Preview Sampul" 
-                                    className=" h-48 sm:w-64 sm:h-40 rounded-xl object-cover border border-gray-300" 
-                                    onError={(e) => { e.target.src = '/profile-default.png'; }} 
-                                />
-                            </div>
-
-                            <div className="flex items-center w-full">
-                                <label className="flex items-center w-full p-2 bg-white border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:bg-gray-50  transition-colors">
-                                    {/* Tombol Pilih File */}
-                                    <span className="w-1/2 sm:w-auto text-center px-4 py-2 text-sm font-medium text-white bg-primary rounded-xl transition-colors hover:bg-primary/90 ">
-                                        Pilih file
-                                    </span>
-                                    
-                                    {/* Nama File yang Dipilih */}
-                                    <span className="ml-4 text-sm text-gray-600  font-noto-sans truncate">
-                                        {formData.fotoSampul ? formData.fotoSampul.name : "Maks. 2MB"}
-                                    </span>
-                                    
-                                    {/* Input File Sebenarnya */}
-                                    <input 
-                                        type="file" 
-                                        className="hidden" 
-                                        accept="image/jpeg,image/png,image/webp" 
-                                        onChange={handleFileChange} 
-                                        name="fotoSampul"
-                                        value="" 
-                                    />
-                                </label>
-                            </div>
                         </div>
-                        
+
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden h-fit">
+                            <table className="w-full text-sm text-left text-gray-500 font-noto-sans">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
+                                    <tr>
+                                        <th className="px-6 py-3 font-bold">NO</th>
+                                        <th className="px-6 py-3 font-bold">SOAL</th>
+                                        <th className="px-6 py-3 font-bold">TIPE SOAL</th>
+                                        <th className="px-6 py-3 font-bold">LEVEL</th>
+                                        <th className="px-6 py-3 font-bold text-center">AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 bg-white">
+                                    {paketSoal.map((item, index) => (
+                                        <tr 
+                                            key={item.id}
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, index)}
+                                            onDragEnter={(e) => handleDragEnter(e, index)}
+                                            onDragLeave={(e) => e.currentTarget.classList.remove('border-b-4', 'border-t-4', 'border-blue-500')}
+                                            onDragEnd={handleDragEnd}
+                                            onDrop={handleDrop}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            className="hover:bg-gray-50 cursor-move transition-all duration-200"
+                                        >
+                                            <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
+                                            <td className="px-6 py-4 truncate max-w-xs text-gray-900 font-medium">{item.nama_soal}</td>
+                                            <td className="px-6 py-4">{item.tipe_soal}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2.5 py-0.5 rounded-lg text-xs font-medium ${
+                                                    item.level === 'Mudah' ? 'bg-green-100 text-green-800' :
+                                                    item.level === 'Sedang' ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-red-100 text-red-800'
+                                                }`}>
+                                                    {item.level}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <button type="button" onClick={() => handleDeleteSoal(item.id)} className="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-lg transition shadow-sm">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            {paketSoal.length === 0 && (
+                                <div className="p-8 text-center text-gray-500 italic font-noto-sans">Belum ada soal ditambahkan.</div>
+                            )}
+                        </div>
                     </div>
-                </div>
-            </div>
-            
 
-            
-            {/* --- MODAL DAFTAR SOAL TERSEDIA --- */}
-            {isNewSoalModalOpen && (
-                <div 
-                    id="static-modal" 
-                    tabIndex="-1" 
-                    aria-hidden={!isNewSoalModalOpen}
-                    className="fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-gray-100/50 backdrop-blur-sm overflow-y-auto">
-                    <div className="relative p-4 max-w-4xl w-full transition-transform duration-300 ease-out scale-100">
-                        <div className="relative bg-white rounded-xl shadow-2xl">
+                    {/* --- KANAN: FORM DETAIL --- */}
+                    <div className="lg:col-span-1">
+                        <div className="bg-white p-6 rounded-2xl shadow-xl sticky top-6 border border-gray-100">
                             
-                            {/* Modal Header */}
-                            <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-gray-200">
+                            <Dropdown 
+                                label="Mata Pelajaran"
+                                required
+                                options={mataPelajaranOptions}
+                                selectedText={formData.matapelajaran}
+                                onSelect={handleSelectMapel}
+                            />
 
-                                {/* form search dan filter */}
-                                <div className="relative w-full sm:w-auto flex flex-row items-center gap-4">
-                                    <form method="GET" action="#" className="relative w-full sm:w-auto">
-                                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center ">
-                                            <svg className="h-5 w-5 text-gray-400 " viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd"
-                                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                                                clipRule="evenodd" />
-                                            </svg>
-                                        </span>
-                                        <input className="font-noto-sans block w-full sm:w-64 md:w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-3xl h-10 leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-pr-900 focus:border-pr-900 sm:text-sm"
-                                            type="search" name="q"  placeholder="Cari soal..." />
-                                    </form>
-                                    <svg className="w-10 h-10 ring-1 sm-start ring-gray-300 rounded-xl text-gray-700 p-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M3 8L15 8M15 8C15 9.65686 16.3431 11 18 11C19.6569 11 21 9.65685 21 8C21 6.34315 19.6569 5 18 5C16.3431 5 15 6.34315 15 8ZM9 16L21 16M9 16C9 17.6569 7.65685 19 6 19C4.34315 19 3 17.6569 3 16C3 14.3431 4.34315 13 6 13C7.65685 13 9 14.3431 9 16Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                    </svg>
-                                </div>
-                                
-                                {/* Close Button */}
-                                <button 
-                                    type="button" 
-                                    className="text-gray-500 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-9 h-9 ms-auto inline-flex justify-center items-center" 
-                                    onClick={closeNewSoalModal}
-                                    aria-label="Close modal"
-                                >
-                                    <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                        <path 
-                                            stroke="currentColor" 
-                                            strokeLinecap="round" 
-                                            strokeLinejoin="round" 
-                                            strokeWidth="2" 
-                                            d="M6 18 17.94 6M18 18 6.06 6"
-                                        />
-                                    </svg>
-                                    <span className="sr-only">Close modal</span>
+                            <InputField 
+                                label="Nama Paket Soal"
+                                name="topik"
+                                required
+                                value={formData.topik}
+                                onChange={handleChange}
+                                placeholder="Masukan nama paket soal"
+                            />
+
+                            <Dropdown 
+                                label="Status Paket Soal"
+                                required
+                                options={statusOptions}
+                                selectedText={formData.status}
+                                onSelect={handleSelectStatus}
+                            />
+
+                            <ImageUploadBox 
+                                label="Gambar Card Soal"
+                                required
+                                previewUrl={previewImage}
+                                onChange={handleFileChange}
+                                onRemove={handleRemoveImage}
+                            />
+
+                            <div className="mt-6 flex gap-3">
+                                <button type="submit" className="w-full bg-primary text-white font-medium py-3 rounded-2xl shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all font-noto-sans">
+                                    Simpan
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
 
-                            {/* Modal Body (Tabel Soal Tersedia) */}
-                            <div className="p-4 md:p-5">
-                                <div className="bg-white shadow-md rounded-lg overflow-x-auto">
-                                    <table className="w-full divide-y divide-gray-200 font-noto-sans">
-                                    <thead className="bg-gray-100">
+            {/* --- MODAL OVERLAY: BANK SOAL --- */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
+                        
+                        {/* Modal Header */}
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+                            <div className="flex items-center gap-3 w-full">
+                                <SearchInput placeholder="Cari Soal..." />
+                                <FilterButton />
+                            </div>
+                            <button onClick={() => setIsModalOpen(false)} className="ml-4 bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-primary/90 transition shadow-sm whitespace-nowrap font-noto-sans">
+                                + Add Soal
+                            </button>
+                        </div>
+
+                        {/* Modal Body (Table) */}
+                        <div className="p-6 overflow-y-auto bg-gray-50 flex-1">
+                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                                <table className="w-full text-sm text-left text-gray-500 font-noto-sans">
+                                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
                                         <tr>
-                                            <th scope="col" className="px-3 py-3 font-noto-sans text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">NO</th>
-                                            <th scope="col" className="px-3 py-3 font-noto-sans text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">MATA PELAJARAN</th>
-                                            <th scope="col" className="px-3 py-3 font-noto-sans text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">SOAL</th>
-                                            <th scope="col" className="px-3 py-3 font-noto-sans text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">TIPE SOAL</th>
-                                            <th scope="col" className="px-3 py-3 font-noto-sans text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">LEVEL KESULITAN</th>
-                                            <th scope="col" className="px-3 py-3 font-noto-sans text-center text-xs font-semibold text-gray-900 uppercase tracking-wider">AKSI</th> 
+                                            <th className="px-6 py-3 font-bold text-gray-600">NO</th>
+                                            <th className="px-6 py-3 font-bold text-gray-600">MATA PELAJARAN</th>
+                                            <th className="px-6 py-3 font-bold text-gray-600">SOAL</th>
+                                            <th className="px-6 py-3 font-bold text-gray-600">TIPE SOAL</th>
+                                            <th className="px-6 py-3 font-bold text-gray-600">LEVEL KESULITAN</th>
+                                            <th className="px-6 py-3 font-bold text-gray-600">STATUS</th>
+                                            <th className="px-6 py-3 font-bold text-gray-600 text-center">AKSI</th>
                                         </tr>
                                     </thead>
-
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {availableSoalData.map((soal, index) => (
-                                            <tr key={soal.id} className="hover:bg-gray-50">
-                                                <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
-                                                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">{soal.matapelajaran}</td>
-                                                <td className="px-3 py-4 text-sm text-gray-900 max-w-xs truncate">{soal.nama_soal}</td>
-                                                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">{soal.tipe_soal}</td>
-                                                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    <span className={`font-noto-sans p-1 rounded-lg ${
-                                                        soal.level === 'Mudah' ? 'text-green-600 bg-green-100' : 
-                                                        soal.level === 'Sedang' ? 'text-amber-600 bg-amber-100' : 
-                                                        'text-red-600 bg-red-100'
-                                                    }`}>
-                                                        {soal.level}
+                                    <tbody className="divide-y divide-gray-100">
+                                        {availableSoalData.map((soal, idx) => (
+                                            <tr key={soal.id} className="bg-white hover:bg-gray-50 transition-colors">
+                                                <td className="px-6 py-4 font-medium text-gray-900">{idx + 1}</td>
+                                                <td className="px-6 py-4 text-gray-900">{soal.matapelajaran}</td>
+                                                <td className="px-6 py-4 text-gray-900 max-w-xs truncate" title={soal.nama_soal}>{soal.nama_soal}</td>
+                                                <td className="px-6 py-4 text-gray-500">{soal.tipe_soal}</td>
+                                                <td className="px-6 py-4 text-gray-900">{soal.level}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-200">
+                                                        {soal.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-3 py-4 whitespace-nowrap text-sm text-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={!!selectedSoal[soal.id]}
-                                                        onChange={() => handleSoalSelection(soal.id, soal)}
-                                                        className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary"
-                                                    />
+                                                <td className="px-6 py-4 text-center">
+                                                    <label className="inline-flex items-center cursor-pointer">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            className="sr-only peer"
+                                                            checked={!!selectedSoal[soal.id]}
+                                                            onChange={() => toggleSelection(soal)}
+                                                        />
+                                                        <div className="w-6 h-6 border-2 border-gray-300 rounded-full peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center transition-all">
+                                                            {selectedSoal[soal.id] && (
+                                                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
+                                                            )}
+                                                        </div>
+                                                    </label>
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
-                                    </table>
-                                </div>
+                                </table>
                             </div>
-                            
-                            {/* Modal footer */}
-                            <div className="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b justify-between">
-                                <span className="text-sm font-medium text-gray-700">
-                                    Dipilih: {Object.keys(selectedSoal).length} Soal
-                                </span>
-                                <div>
-                                    <button
-                                        onClick={closeNewSoalModal} 
-                                        type="button" 
-                                        className={modalSecondaryButtonClasses}>
-                                        Tutup
-                                    </button>
-                                    <button
-                                        onClick={handleAddToPackage}
-                                        type="button" 
-                                        className={`${modalPrimaryButtonClasses} ml-3`}
-                                        disabled={Object.keys(selectedSoal).length === 0}>
-                                        Tambah ke Paket
-                                    </button>
-                                </div>
-                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="px-6 py-4 border-t border-gray-100 bg-white flex justify-end gap-3 rounded-b-2xl">
+                            <button onClick={() => setIsModalOpen(false)} className="px-5 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition font-noto-sans">
+                                Batal
+                            </button>
+                            <button onClick={addSelectedToPaket} disabled={Object.keys(selectedSoal).length === 0} className={`px-5 py-2 text-sm font-medium text-white rounded-xl transition font-noto-sans shadow-sm ${Object.keys(selectedSoal).length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary hover:bg-primary/90'}`}>
+                                Simpan Selection ({Object.keys(selectedSoal).length})
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
-
-
-            {/* --- Tabel Paket Soal yang Telah Ditambahkan --- */}
-            <div className=" mx-auto p-4 bg-white rounded-2xl shadow-xl mt-4 w-full">
-
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 mt-4 justify-between w-full">
-                <button
-                    type="button"
-                    className="text-primary bg-white box-border border border-primary shadow-xs font-medium leading-5 rounded-3xl text-sm px-6 py-2.5 focus:outline-none font-noto-sans"
-                >
-                    PUBLISH
-                </button>
-                <button
-                    type="button"
-                    onClick={toggleNewSoalModal}
-                    className="text-white bg-primary box-border border border-transparent shadow-xs font-medium leading-5 rounded-3xl text-sm px-6 py-2.5 focus:outline-none font-noto-sans"
-                >
-                    Tambah Soal Baru
-                </button>
-            </div>
-
-                <div className="bg-white shadow-md rounded-lg overflow-x-auto mt-5">
-                    <table className="w-full divide-y divide-gray-200 font-noto-sans">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            <th scope="col" className="px-6 py-3 font-noto-sans text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">NO</th>
-                            <th scope="col" className="px-6 py-3 font-noto-sans text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">SOAL</th>
-                            <th scope="col" className="px-6 py-3 font-noto-sans text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">TIPE SOAL</th>
-                            <th scope="col" className="px-6 py-3 font-noto-sans text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">LEVEL</th>
-                            <th scope="col" className="px-6 py-3 font-noto-sans text-center text-xs font-semibold text-gray-900 uppercase tracking-wider">AKSI</th> 
-                        </tr>
-                    </thead>
-
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {paketSoal.map((paket, index) => (
-                            <tr
-                                key={paket.id}
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, index)}
-                                onDragEnter={(e) => handleDragEnter(e, index)}
-                                onDragLeave={handleDragLeave}
-                                onDragEnd={handleDragEnd}
-                                onDrop={handleDrop}
-                                onDragOver={(e) => e.preventDefault()}
-                                className="cursor-move transition-all duration-300 ease-in-out hover:bg-gray-50"
-                            >
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
-                                    {index + 1}
-                                </td>
-                                <td className="px-6 py-4 text-sm font-medium font-noto-sans text-gray-900 max-w-xs truncate">
-                                    {paket.nama_soal}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
-                                    {paket.tipe_soal}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
-                                    <span className={`font-noto-sans p-1 rounded-lg ${
-                                        paket.level === 'Mudah' ? 'text-green-600 bg-green-100' : 
-                                        paket.level === 'Sedang' ? 'text-amber-600 bg-amber-100' : 
-                                        'text-red-600 bg-red-100'
-                                    }`}>
-                                        {paket.level}
-                                    </span>
-                                </td>
-
-                                {/* Kolom Aksi: Tombol Hapus */}
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900 text-center">
-
-                                    <div className="flex gap-2 items-center justify-center">
-
-                                    <button 
-                                        type="button" 
-                                        className="text-white bg-red-600 h-8 w-8 rounded-xl hover:bg-red-700 p-1 transition-colors" 
-                                        onClick={() => handleDeleteSoal(paket.id)}
-                                        title="Hapus Soal"
-                                    >
-                                        <svg className="w-full h-full text-white dark:text-white"
-                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                        viewBox="0 0 24 24">
-
-                                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
-                                        </svg>
-                                    </button>
-
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </form>
+        </div>
     );
 }
