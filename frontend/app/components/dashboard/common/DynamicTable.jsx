@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function DynamicTable({ columns, data, isLoading, itemsPerPage = 5 }) {
+export default function DynamicTable({ columns, onRowClick, data, isLoading, itemsPerPage = 5 }) {
     const [currentPage, setCurrentPage] = useState(1);
 
     const totalPages = Math.ceil((data?.length || 0) / itemsPerPage);
@@ -47,14 +47,26 @@ export default function DynamicTable({ columns, data, isLoading, itemsPerPage = 
                             </tr>
                         ) : (
                             currentData.map((row, index) => (
-                                <tr key={index} className="hover:bg-gray-50 transition-colors">
+                                <tr key={index}
+                                onClick={() => onRowClick && onRowClick(row)}
+                                // className={`hover:bg-gray-50 transition-colors`}
+                                className={`transition-colors border-b last:border-b-0 ${
+                                        onRowClick ? "cursor-pointer hover:bg-blue-50" : "hover:bg-gray-50"
+                                }`}
+                                >
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
                                         {indexOfFirstItem + index + 1}
                                     </td>
 
                                     {columns.map((col, colIndex) => (
                                         <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm font-medium font-noto-sans text-gray-900">
-                                            {col.render ? col.render(row) : (row[col.accessor] || "-")}
+                                            {(() => {
+                                                const cellValue = col.accessor ? row[col.accessor] : row;
+                                                if (col.render) {
+                                                return col.render(cellValue, row);
+                                                }
+                                                return cellValue;
+                                            })()}
                                         </td>
                                     ))}
                                 </tr>
