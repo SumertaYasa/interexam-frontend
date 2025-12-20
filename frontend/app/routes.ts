@@ -20,6 +20,8 @@ export default [
 
     // bank soal
     route("bank-soal", "routes/dashboard/bank-soal/data.bank.jsx"),
+    route("bank-soal/edit/:id", "routes/dashboard/bank-soal/edit.bank.soal.jsx"),
+    route("bank-soal/detail/:id", "routes/dashboard/bank-soal/detail.soal.jsx"),
 
     //  -------------------- KHUSUS KATEGORI ------------------------
     // Kategori Mata Pelajaran
