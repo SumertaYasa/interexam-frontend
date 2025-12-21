@@ -49,11 +49,19 @@ export default function MataPelajaranTable() {
         { 
             header: "KETERANGAN", 
             accessor: "keterangan",
-            render: (row) => (
-                <span className="text-gray-600 max-w-sm truncate block" title={row.keterangan}>
-                    {row.keterangan || "—"}
-                </span>
-            )
+            render: (val, row) => {
+                const teks = val; 
+
+                if (!teks) {
+                    return <span className="text-gray-400 italic">—</span>;
+                }
+
+                return (
+                    <span className="text-gray-600 max-w-sm truncate block" title={teks}>
+                        {teks}
+                    </span>
+                );
+            }
         },
         {
             header: "AKSI",

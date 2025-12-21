@@ -66,9 +66,12 @@ export default function UserPage() {
         { header: "NAMA", accessor: "nama_user" },
         { header: "EMAIL", accessor: "email_user" },
         { 
-            header: "NO HP", 
-            accessor: "phone",
-            render: (row) => row.phone || "-" 
+            header: "NO HP",
+            render: (row) => {
+                const noHp = row.phone || row.no_hp || row.phoneNumber || row.telephone || row.hp;
+                
+                return <span className="text-gray-700">{noHp || "-"}</span>;
+            }
         },
         { 
             header: "JABATAN", 
