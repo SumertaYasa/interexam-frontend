@@ -54,7 +54,7 @@ export default function EditSoalApproved() {
                         level: raw.level_kesulitan || "mudah",
                         
                         contributor_name: raw.contributor?.nama_user || "-",
-                        validator_name: "Admin / Validator", // Backend belum kirim nama validator, masih hardcode dulu 
+                        validator_name: raw.validator_name || "-",
                         
                         // List paket dimana soal ini berada 
                         existing_packages: [], 
@@ -271,7 +271,7 @@ export default function EditSoalApproved() {
                             readOnly={true}
                         />
                         <InputField 
-                            label="Subtopik"
+                            label="Topik"
                             value={dataSoal.topik_label}
                             readOnly={true}
                         />

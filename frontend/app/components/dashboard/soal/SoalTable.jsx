@@ -8,6 +8,7 @@ import SearchInput from "../common/SearchInput";
 import ButtonAdd from "../common/ButtonAdd";
 import DynamicTable from "../common/DynamicTable";
 import StatCard from "../common/StatCard"; 
+import DynamicFilter from "../common/DynamicFilter";
 
 export default function SoalPage() {
     const [dataSoal, setDataSoal] = useState([]);
@@ -19,6 +20,43 @@ export default function SoalPage() {
 
     const [selectedIds, setSelectedIds] = useState([]);
     const [isDuplicating, setIsDuplicating] = useState(false);
+
+    const [filterState, setFilterState] = useState({
+        status: "all",      
+        sort: "newest"      
+    });
+
+    const soalFilterConfig = [
+        {
+            key: "sort",
+            label: "Urutkan Data",
+            type: "radio",
+            defaultValue: "newest",
+            options: [
+                { label: "Terbaru (Default)", value: "newest" },
+                { label: "Terlama", value: "oldest" },
+                { label: "Abjad Soal (A-Z)", value: "a-z" },
+                { label: "Abjad Soal (Z-A)", value: "z-a" }
+            ]
+        },
+        {
+            key: "status",
+            label: "Filter Status",
+            type: "radio",
+            defaultValue: "all",
+            options: [
+                { label: "Semua Status", value: "all" },
+                { label: "Draft", value: "draft" },
+                { label: "Menunggu Verifikasi", value: "pending" },
+                { label: "Disetujui", value: "disetujui" },
+                { label: "Ditolak", value: "ditolak" }
+            ]
+        }
+    ];
+
+    const handleFilterChange = (key, value) => {
+        setFilterState(prev => ({ ...prev, [key]: value }));
+    };
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -37,6 +75,54 @@ export default function SoalPage() {
         fetchData();
     }, 
     []);
+
+    // filter
+    const processedData = dataSoal.filter(item => {
+        // PENCARIAN
+        const term = searchTerm.toLowerCase();
+        
+        // Safety check String()
+        const textSoal = String(item.text_soal || item.soal || "").toLowerCase();
+        const mapel = String(item.mata_pelajaran || "").toLowerCase();
+        const jenjang = String(item.jenjang || "").toLowerCase();
+        const tipe = String(item.tipe_soal || "").toLowerCase();
+        const level = String(item.level_kesulitan || "").toLowerCase();
+
+        const matchesSearch = textSoal.includes(term) || 
+                              mapel.includes(term) || 
+                              jenjang.includes(term) ||
+                              tipe.includes(term) ||
+                              level.includes(term);
+
+        // FILTER STATUS
+        let matchesStatus = true;
+        const st = (item.status || "").toLowerCase();
+        const currentStatus = filterState.status;
+
+        if (currentStatus !== "all") {
+            if (currentStatus === "pending") {
+                matchesStatus = st === 'need verification' || st === 'need_verification' || st === 'menunggu';
+            } else {
+                matchesStatus = st === currentStatus;
+            }
+        }
+
+        return matchesSearch && matchesStatus;
+
+    }).sort((a, b) => {
+        // SORTING
+        const textA = String(a.text_soal || a.soal || "").toLowerCase();
+        const textB = String(b.text_soal || b.soal || "").toLowerCase();
+        const idA = a.id || a.id_soal; 
+        const idB = b.id || b.id_soal;
+
+        switch (filterState.sort) {
+            case "a-z": return textA.localeCompare(textB);
+            case "z-a": return textB.localeCompare(textA);
+            case "oldest": return idA - idB;
+            case "newest": default: return idB - idA;
+        }
+    });
 
     const handleDelete = async (id) => {
         if (window.confirm("Apakah Anda yakin ingin menghapus soal ini?")) {
@@ -104,6 +190,11 @@ export default function SoalPage() {
         },
         { header: "MATA PELAJARAN", accessor: "mata_pelajaran" },
         { 
+            header: "JENJANG", 
+            accessor: "jenjang", 
+            render: (val) => val || "-" 
+        },
+        { 
             header: "TIPE SOAL", 
             render: (row) => row.tipe_soal === 'multiple_choice' ? 'Pilihan Ganda' : (row.tipe_soal === 'multiple_answer' ? 'Multi Jawaban' : row.tipe_soal)
         },
@@ -168,7 +259,7 @@ export default function SoalPage() {
                 ]}
             />
 
-            {/* --- STATISTIK CARDS */}
+            {/* STATISTIK CARDS */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-10">
                 
                 {/* CARD TOTAL */}
@@ -225,9 +316,11 @@ export default function SoalPage() {
                             value={searchTerm} 
                             onChange={(e) => setSearchTerm(e.target.value)} 
                         />
-                        <svg className="w-10 h-10 ring-1 sm-start ring-gray-300 rounded-xl text-gray-700 p-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 8L15 8M15 8C15 9.65686 16.3431 11 18 11C19.6569 11 21 9.65685 21 8C21 6.34315 19.6569 5 18 5C16.3431 5 15 6.34315 15 8ZM9 16L21 16M9 16C9 17.6569 7.65685 19 6 19C4.34315 19 3 17.6569 3 16C3 14.3431 4.34315 13 6 13C7.65685 13 9 14.3431 9 16Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
+                        <DynamicFilter 
+                            filters={soalFilterConfig}        
+                            onFilterChange={handleFilterChange}
+                            currentValues={filterState} 
+                        />
                     </div>
                     
                     <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -244,9 +337,10 @@ export default function SoalPage() {
 
                 <DynamicTable 
                     columns={soalColumns} 
-                    data={filteredData} 
+                    // data={filteredData}
+                    data={processedData} 
                     isLoading={isLoading} 
-                    itemsPerPage={10} 
+                    itemsPerPage={5} 
                 />
             </div>
 

@@ -1,44 +1,78 @@
 import { Link, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 
-// Import Service
 import { bankSoalService } from "../../../services/bankSoalService";
 
-// Import Components
 import PageHeader from "../common/PageHeader";
 import SearchInput from "../common/SearchInput";
-import ButtonAdd from "../common/ButtonAdd"; 
 import DynamicTable from "../common/DynamicTable";
 import StatCard from "../common/StatCard";
+import DynamicFilter from "../common/DynamicFilter";
 
 export default function BankTable() {
   const navigate = useNavigate();
-  
-  // State
+
   const [dataSoal, setDataSoal] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // State Statistik
-  const [stats, setStats] = useState({
-    total: 0,
-    disetujui: 0,
-    ditolak: 0,
-    need_verif: 0
+  // State Filter & Sort
+  const [filterState, setFilterState] = useState({
+      status: "all",      
+      sort: "newest",     
   });
 
-  // --- 1. FETCH DATA ---
+  // Konfigurasi Filter
+  const filterConfig = [
+      {
+          key: "sort",
+          label: "Urutkan Data",
+          type: "radio",
+          defaultValue: "newest",
+          options: [
+              { label: "Terbaru", value: "newest" },
+              { label: "Terlama", value: "oldest" },
+              { label: "Abjad Soal (A-Z)", value: "a-z" },
+              { label: "Abjad Soal (Z-A)", value: "z-a" }
+          ]
+      },
+      {
+          key: "status",
+          label: "Filter Status",
+          type: "radio",
+          defaultValue: "all",
+          options: [
+              { label: "Semua Status", value: "all" },
+              { label: "Menunggu Verifikasi", value: "pending" },
+              { label: "Disetujui", value: "disetujui" },
+              { label: "Ditolak", value: "ditolak" }
+          ]
+      }
+  ];
+
+  // Handler Perubahan Filter
+  const handleFilterChange = (key, value) => {
+      setFilterState(prev => ({
+          ...prev,
+          [key]: value
+      }));
+  };
+
+  // State Statistik
+  const [stats, setStats] = useState({
+    total: 0, disetujui: 0, ditolak: 0, need_verif: 0
+  });
+
+  // Fetch Data
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Role default validator
       const response = await bankSoalService.getBankSoal('validator');
       
       if (response.status === 'success') {
         const fetchedData = response.data;
         setDataSoal(fetchedData);
 
-        // Hitung Statistik
         const counts = fetchedData.reduce((acc, item) => {
           acc.total++;
           const st = (item.status || "").toLowerCase();
@@ -63,9 +97,47 @@ export default function BankTable() {
     fetchData();
   }, []);
 
-  // --- 2. LOGIKA AKSI ---
+  // logika filter
+  const processedData = dataSoal.filter(item => {
+    // SEARCHING
+    const search = searchTerm.toLowerCase();
+    const textSoal = String(item.text_soal || "").toLowerCase();
+    const mapel = String(item.mata_pelajaran || "").toLowerCase();
+    const jenjang = String(item.jenjang || "").toLowerCase();
+    
+    const matchesSearch = textSoal.includes(search) || mapel.includes(search) || jenjang.includes(search);
 
-  // A. Klik Baris (Navigasi ke Detail Validasi)
+    // FILTERING STATUS
+    let matchesStatus = true;
+    const st = (item.status || "").toLowerCase();
+    const currentStatusFilter = filterState.status; 
+
+    if (currentStatusFilter !== "all") {
+        if (currentStatusFilter === "pending") {
+            matchesStatus = st === 'need verification' || st === 'need_verification' || st === 'menunggu';
+        } else {
+            matchesStatus = st === currentStatusFilter;
+        }
+    }
+
+    return matchesSearch && matchesStatus;
+
+  }).sort((a, b) => {
+    // SORTING
+    const textA = String(a.text_soal || "").toLowerCase();
+    const textB = String(b.text_soal || "").toLowerCase();
+    const idA = a.id_soal; 
+    const idB = b.id_soal;
+
+    switch (filterState.sort) {
+        case "a-z": return textA.localeCompare(textB);
+        case "z-a": return textB.localeCompare(textA);
+        case "oldest": return idA - idB; 
+        case "newest": default: return idB - idA;
+    }
+  });
+
+  // Action Handlers
   const handleRowClick = (row) => {
     const st = (row.status || "").toLowerCase();
     if (st === 'need verification' || st === 'need_verification' || st === 'menunggu') {
@@ -73,26 +145,23 @@ export default function BankTable() {
     }
   };
 
-  // B. Quick Verify
   const handleQuickVerify = async (id) => {
     if(confirm("Apakah Anda yakin ingin menyetujui soal ini secara langsung?")) {
         try {
             await bankSoalService.updateSoal(id, { status: 'Disetujui' });
             alert("Soal berhasil disetujui!");
-            fetchData(); // Refresh data
+            fetchData();
         } catch (error) {
             alert("Gagal memverifikasi soal.");
         }
     }
   };
 
-  // C. Delete Permanen
   const handleDelete = async (id) => {
     if(confirm("Yakin hapus soal ini secara permanen?")) {
         try {
             await bankSoalService.deleteSoal(id);
             setDataSoal(prev => prev.filter(item => item.id_soal !== id));
-            // Update stats manual agar responsif
             setStats(prev => ({...prev, total: prev.total - 1})); 
             alert("Data berhasil dihapus");
         } catch (error) {
@@ -101,7 +170,6 @@ export default function BankTable() {
     }
   };
 
-  // --- 3. FILTERING & FORMATTING ---
   const formatTipeSoal = (tipe) => {
       if (!tipe) return "-";
       if (tipe === 'multiple_choice' || tipe === 'pilihan_ganda') return 'Pilihan Ganda';
@@ -109,23 +177,24 @@ export default function BankTable() {
       return tipe;
   };
 
-  const filteredData = dataSoal.filter(item => 
-    (item.text_soal || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.mata_pelajaran || "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // --- 4. KOLOM TABEL ---
+  // Kolom Tabel
   const columns = [
     { 
         header: "SOAL", 
         accessor: "text_soal",
-        render: (text) => (
-            <div className="max-w-[250px] truncate" title={text}>
-                {text ? text.replace(/<[^>]+>/g, '') : '-'}
-            </div>
-        )
+        render: (text) => {
+            const cleanText = text ? String(text).replace(/<[^>]+>/g, '') : '-';
+            const limit = 20; 
+            const displayText = cleanText.length > limit ? cleanText.substring(0, limit) + "..." : cleanText;
+            return <div title={cleanText}>{displayText}</div>;
+        }
     },
     { header: "MATA PELAJARAN", accessor: "mata_pelajaran" },
+    { 
+        header: "JENJANG", 
+        accessor: "jenjang",
+        render: (val) => val || "-"
+    },
     { 
         header: "TIPE SOAL", 
         accessor: "tipe_soal",
@@ -155,11 +224,7 @@ export default function BankTable() {
             text = "Ditolak";
         }
 
-        return (
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>
-            {text}
-          </span>
-        );
+        return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>{text}</span>;
       },
     },
     {
@@ -169,47 +234,27 @@ export default function BankTable() {
         const stopProp = (e) => e.stopPropagation();
         const st = (row.status || "").toLowerCase();
 
-        // KASUS A: Need Verification
         if (st === "need verification" || st === "need_verification" || st === "menunggu") {
           return (
             <div className="flex gap-2">
-              <button 
-                onClick={(e) => { stopProp(e); handleQuickVerify(row.id_soal); }}
-                className="flex items-center justify-center text-white bg-green-600 h-8 w-8 rounded-base transition-colors hover:bg-green-700"
-                title="Verifikasi Langsung"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 12L10.5 15L16.5 9M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <button onClick={(e) => { stopProp(e); handleQuickVerify(row.id_soal); }} className="flex items-center justify-center text-white bg-green-600 h-8 w-8 rounded-base hover:bg-green-700" title="Verifikasi Langsung">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.5 12L10.5 15L16.5 9M22 12C22 17.5 17.5 22 12 22C6.5 22 2 17.5 2 12C2 6.5 6.5 2 12 2C17.5 2 22 6.5 22 12Z"/></svg>
               </button>
-              <button 
-                  onClick={(e) => { stopProp(e); navigate(`detail/${row.id_soal}`); }}
-                  className="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 h-8 w-8 rounded-base transition-colors"
-                  title="Lihat Detail & Tolak"
-              >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.93 4.93L19.07 19.07M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <button onClick={(e) => { stopProp(e); navigate(`detail/${row.id_soal}`); }} className="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 h-8 w-8 rounded-base" title="Lihat Detail & Tolak">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4.93 4.93L19.07 19.07M22 12C22 17.5 17.5 22 12 22C6.5 22 2 17.5 2 12C2 6.5 6.5 2 12 2C17.5 2 22 6.5 22 12Z"/></svg>
               </button>
             </div>
           );
         }
 
-        // KASUS B: Disetujui
         if (st === "disetujui") {
           return (
             <div className="flex gap-2">
-              <Link 
-                to={`edit/${row.id_soal}`}
-                onClick={stopProp}
-                className="flex items-center justify-center text-neu-900 bg-amber-300 hover:bg-amber-400 rounded-base h-8 w-8 transition-colors"
-                title="Edit / Masukkan ke Paket"
-              >
-                  <svg className="w-5 h-5 text-gray-800" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z" /></svg>
+              <Link to={`edit/${row.id_soal}`} onClick={stopProp} className="flex items-center justify-center text-neu-900 bg-amber-300 hover:bg-amber-400 rounded-base h-8 w-8" title="Edit / Masukkan ke Paket">
+                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m14.3 4.8 2.8 2.8M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.4-9.9a2.017 2.017 0 0 1 0 2.8l-6.8 6.8L8 14l.7-3.5 6.8-6.8a2.015 2.015 0 0 1 2.8 0Z"/></svg>
               </Link>
-              <button 
-                  type="button" 
-                  onClick={(e) => { stopProp(e); handleDelete(row.id_soal); }} 
-                  className="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 h-8 w-8 rounded-base transition-colors"
-                  title="Hapus"
-              >
-                  <svg className="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" /></svg>
+              <button onClick={(e) => { stopProp(e); handleDelete(row.id_soal); }} className="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 h-8 w-8 rounded-base" title="Hapus">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/></svg>
               </button>
             </div>
           );
@@ -233,7 +278,6 @@ export default function BankTable() {
       {/* STATISTIK CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         
-        {/* Card 1: Total Soal */}
         <StatCard
           title="Total soal"
           count={stats.total}
@@ -243,17 +287,15 @@ export default function BankTable() {
           badgeContent={`Total ${stats.total} Soal`}
         />
 
-        {/* Card 2: DISETUJUI (Dengan Badge 'Belum Validasi') */}
         <StatCard
           title="Total soal Disetujui"
-          count={stats.disetujui} // Angka Utama: Jumlah Disetujui
+          count={stats.disetujui}
           iconWrapperClass="bg-green-100 text-green-600"
           icon={<svg className="w-6 h-6 min-w-[24px]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 11.0857V12.0057C21.9988 14.1621 21.3005 16.2604 20.0093 17.9875C18.7182 19.7147 16.9033 20.9782 14.8354 21.5896C12.7674 22.201 10.5573 22.1276 8.53447 21.3803C6.51168 20.633 4.78465 19.2518 3.61096 17.4428C2.43727 15.6338 1.87979 13.4938 2.02168 11.342C2.16356 9.19029 2.99721 7.14205 4.39828 5.5028C5.79935 3.86354 7.69279 2.72111 9.79619 2.24587C11.8996 1.77063 14.1003 1.98806 16.07 2.86572M22 4L12 14.01L9 11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-          badgeClass="bg-yellow-100 text-yellow-700" // Warna Kuning
-          badgeContent={`${stats.need_verif} soal belum tervalidasi`} // Badge: Jumlah Pending
+          badgeClass="bg-yellow-100 text-yellow-700" 
+          badgeContent={`${stats.need_verif} soal belum tervalidasi`}
         />
 
-        {/* Card 3: DITOLAK */}
         <StatCard
           title="Total soal ditolak"
           count={stats.ditolak}
@@ -268,21 +310,25 @@ export default function BankTable() {
       <div className="mx-auto p-4 bg-white rounded-2xl shadow-xl">
         <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="relative w-full sm:w-auto flex flex-row items-center gap-4">
+            
             <SearchInput
               placeholder="Cari Soal..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <svg className="w-10 h-10 ring-1 sm-start ring-gray-300 rounded-xl text-gray-700 p-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 8L15 8M15 8C15 9.65686 16.3431 11 18 11C19.6569 11 21 9.65685 21 8C21 6.34315 19.6569 5 18 5C16.3431 5 15 6.34315 15 8ZM9 16L21 16M9 16C9 17.6569 7.65685 19 6 19C4.34315 19 3 17.6569 3 16C3 14.3431 4.34315 13 6 13C7.65685 13 9 14.3431 9 16Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+
+            <DynamicFilter 
+                filters={filterConfig}          
+                onFilterChange={handleFilterChange}
+                currentValues={filterState}
+            />
+
           </div>
         </div>
 
-        {/* Dynamic Table */}
         <DynamicTable
           columns={columns}
-          data={filteredData}
+          data={processedData}
           isLoading={isLoading}
           onRowClick={handleRowClick}
         />
