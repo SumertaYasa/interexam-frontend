@@ -43,6 +43,11 @@ export default [
     route("topik/add", "routes/dashboard/topik/add.topik.jsx"),
     route("topik/edit/:id", "routes/dashboard/topik/edit.topik.jsx"),
 
+    // Kategori Sub Topik
+    route("sub-topik", "routes/dashboard/sub-topik/data.sub.topik.jsx"),
+    route("sub-topik/add", "routes/dashboard/sub-topik/add.sub.topik.jsx"),
+    route("sub-topik/edit/:id", "routes/dashboard/sub-topik/edit.sub.topik.jsx"),
+
     //  -------------------- BATAS KATEGORI ------------------------
 
     // soal

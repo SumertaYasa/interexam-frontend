@@ -1,82 +1,30 @@
-import { Link } from "react-router";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, forwardRef } from "react";
+import { useNavigate } from "react-router";
 
-// --- MOCK DATA ---
-const initialPaketSoalData = [
-    { id: 1, nama_soal: "Tentukan hasil integral parsial", tipe_soal: "Pilihan Ganda", level: "Sulit" },
-    { id: 2, nama_soal: "Jelaskan proses fotosintesis!", tipe_soal: "Multi Jawaban", level: "Sedang" },
-    { id: 3, nama_soal: "Sebutkan 3 senyawa kimia organik!", tipe_soal: "Pilihan Ganda", level: "Mudah" },
-];
+import PageHeader from "../common/PageHeader";
+import InputField from "../common/InputField";
+import Dropdown from "../common/Dropdown";
+import ButtonSave from "../common/ButtonSave";
+import ButtonCancel from "../common/ButtonCancel";
+import SearchInput from "../common/SearchInput";
+import DynamicTable from "../common/DynamicTable";
+import DynamicFilter from "../common/DynamicFilter";
 
-const availableSoalData = [
-    { id: 10, matapelajaran: "Matematika", nama_soal: "Hitung volume kerucut...", tipe_soal: "Pilihan Ganda", level: "Mudah", status: "Disetujui" },
-    { id: 11, matapelajaran: "Biologi", nama_soal: "Sebutkan tahapan siklus Krebs!", tipe_soal: "Multi Jawaban", level: "Sulit", status: "Disetujui" },
-    { id: 12, matapelajaran: "Kimia", nama_soal: "Apa yang dimaksud dengan ikatan kovalen?", tipe_soal: "Pilihan Ganda", level: "Sedang", status: "Disetujui" },
-    { id: 13, matapelajaran: "Fisika", nama_soal: "Hitung percepatan benda jatuh bebas.", tipe_soal: "Multi Jawaban", level: "Mudah", status: "Disetujui" },
-];
+const formatSoalDisplay = (text) => {
+    const cleanText = text ? String(text).replace(/<[^>]+>/g, '') : '-';
+    const limit = 10; 
+    const displayText = cleanText.length > limit ? cleanText.substring(0, limit) + "..." : cleanText;
+    
+    return <div title={cleanText} className="min-w-[100px]">{displayText}</div>;
+};
 
-const mataPelajaranOptions = [
-    { label: "Matematika", value: "Matematika" },
-    { label: "Bahasa Indonesia", value: "Bahasa Indonesia" },
-    { label: "Fisika", value: "Fisika" },
-    { label: "Biologi", value: "Biologi" },
-];
-
-const statusOptions = [
-    { label: "Active", value: "Active" },
-    { label: "Inactive", value: "Inactive" },
-];
-
-// ==========================================================================
-// KOMPONEN UI (Bisa dipindah ke file terpisah: components/common/...)
-// ==========================================================================
-
-const InputField = ({ label, value, onChange, placeholder, required, name }) => (
-    <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
-            {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        <input
-            type="text"
-            name={name}
-            value={value}
-            onChange={onChange}
-            className="bg-white border font-noto-sans border-gray-300 text-gray-900 text-sm rounded-2xl focus:ring-primary focus:border-primary block w-full p-3.5 outline-none transition-all"
-            placeholder={placeholder}
-        />
-    </div>
-);
-
-const Dropdown = ({ label, options, selectedText, onSelect, required }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    return (
-        <div className="mb-4 relative">
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
-                {label} {required && <span className="text-red-500">*</span>}
-            </label>
-            <button
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className="relative w-full text-left bg-white border border-gray-300 text-gray-900 text-sm rounded-2xl focus:ring-1 focus:ring-primary font-medium px-4 py-3.5 flex justify-between items-center font-noto-sans"
-            >
-                <span className={`truncate ${!selectedText ? 'text-gray-400' : ''}`}>{selectedText || "Pilih..."}</span>
-                <svg className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-            </button>
-            {isOpen && (
-                <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-                    <ul className="py-1 text-sm text-gray-700 font-noto-sans">
-                        {options.map((opt, idx) => (
-                            <li key={idx}>
-                                <button type="button" onClick={() => { onSelect(opt.value); setIsOpen(false); }} className="block w-full text-left px-4 py-2 hover:bg-gray-100 hover:text-primary">
-                                    {opt.label}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-        </div>
-    );
+const getLevelBadge = (level) => {
+    const l = level?.toLowerCase() || "";
+    let color = "bg-gray-100 text-gray-800 border-gray-200 rounded-lg";
+    if (l === 'mudah') color = "bg-green-100 text-green-800 border-green-200 rounded-lg";
+    if (l === 'sedang') color = "bg-yellow-100 text-yellow-800 border-yellow-200 rounded-lg";
+    if (l === 'sulit') color = "bg-red-100 text-red-800 border-red-200 rounded-lg";
+    return <span className={`px-2.5 py-0.5 rounded text-xs font-medium ${color}`}>{level}</span>;
 };
 
 const ImageUploadBox = ({ label, previewUrl, onChange, onRemove, required }) => (
@@ -103,52 +51,195 @@ const ImageUploadBox = ({ label, previewUrl, onChange, onRemove, required }) => 
                             <button type="button" onClick={onRemove} className="text-red-500 text-sm font-medium hover:underline font-noto-sans">Hapus</button>
                         )}
                     </div>
-                    <p className="mt-1 text-xs text-gray-500 truncate">Format JPG, PNG, WEBP. Maks 2MB.</p>
+                    <p className="mt-1 text-xs text-gray-500 truncate">Format JPG, PNG. Maks 2MB.</p>
                 </div>
             </div>
         </div>
     </div>
 );
 
-const SearchInput = ({ placeholder }) => (
-    <div className="relative w-full sm:w-80">
-        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        </span>
-        <input 
-            type="search" 
-            className="block w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-primary focus:border-primary font-noto-sans outline-none" 
-            placeholder={placeholder} 
-        />
-    </div>
-);
+const ActionButton = ({ onClick, text, variant = "primary" }) => {
+    const baseClass = "rounded-xl px-5 py-2.5 text-sm font-medium transition font-noto-sans shadow-sm border whitespace-nowrap w-full sm:w-auto text-center";
+    const variants = {
+        primary: "text-white bg-primary hover:bg-primary/90 border-transparent",
+        outline: "text-primary bg-white border-primary hover:bg-gray-50 uppercase tracking-wide",
+    };
+    return (
+        <button type="button" onClick={onClick} className={`${baseClass} ${variants[variant]}`}>
+            {text}
+        </button>
+    );
+};
 
-const FilterButton = () => (
-    <button type="button" className="p-2.5 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors text-gray-600">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-    </button>
-);
+const DraggableTable = forwardRef(({ data, onDragStart, onDragEnter, onDragEnd, onDrop, onDelete }, ref) => {
+    return (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden overflow-x-auto">
+            <table className="w-full text-sm text-left text-gray-500 font-noto-sans min-w-[800px] lg:min-w-0">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th className="px-6 py-3">NO</th>
+                        <th className="px-6 py-3">SOAL</th>
+                        <th className="px-6 py-3">MATA PELAJARAN</th>
+                        <th className="px-6 py-3">JENJANG</th>
+                        <th className="px-6 py-3">TIPE SOAL</th>
+                        <th className="px-6 py-3">LEVEL</th>
+                        <th className="px-6 py-3 text-center">AKSI</th>
+                    </tr>
+                </thead>
+                <tbody ref={ref} className="divide-y divide-gray-100 bg-white">
+                    {data.length === 0 ? (
+                        <tr><td colSpan="7" className="px-6 py-8 text-center">Belum ada soal ditambahkan.</td></tr>
+                    ) : (
+                        data.map((item, index) => (
+                            <tr 
+                                key={item.id}
+                                draggable
+                                onDragStart={(e) => onDragStart(e, index)}
+                                onDragEnter={(e) => onDragEnter(e, index)}
+                                onDragEnd={onDragEnd}
+                                onDrop={onDrop}
+                                onDragOver={(e) => e.preventDefault()}
+                                className="hover:bg-gray-50 cursor-move transition-all duration-200 bg-white"
+                            >
+                                <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
+                                <td className="px-6 py-4 font-medium text-gray-900">
+                                    {formatSoalDisplay(item.nama_soal)}
+                                </td>
+                                <td className="px-6 py-4 text-gray-500">{item.mata_pelajaran}</td>
+                                <td className="px-6 py-4">{item.jenjang || "SMA"}</td>
+                                <td className="px-6 py-4">{item.tipe_soal}</td>
+                                <td className="px-6 py-4">{getLevelBadge(item.level)}</td>
+                                <td className="px-6 py-4 text-center">
+                                <button onClick={(e) => { stopProp(e); handleDelete(row.id_soal); }} className="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 h-8 w-8 rounded-base" title="Hapus">
+                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/></svg>
+                                </button>
+                                </td>
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
+});
 
-// ==========================================================================
-// MAIN PAGE
-// ==========================================================================
+const initialPaketSoalData = [
+    { id: 1, nama_soal: "Tentukan hasil integral parsial dari fungsi berikut ini", mata_pelajaran: "Matematika", jenjang: "SMA", tipe_soal: "Pilihan Ganda", level: "Sulit" },
+    { id: 2, nama_soal: "Jelaskan proses fotosintesis secara detail", mata_pelajaran: "Biologi", jenjang: "SMP", tipe_soal: "Multi Jawaban", level: "Sedang" },
+    { id: 3, nama_soal: "Jelaskan proses fotosintesis secara detail", mata_pelajaran: "Biologi", jenjang: "SMP", tipe_soal: "Multi Jawaban", level: "mudah" },
+];
+
+const availableSoalData = [
+    { id: 10, matapelajaran: "Matematika", jenjang: "SMA", nama_soal: "Hitung volume kerucut jika jari-jari 7cm...", tipe_soal: "Pilihan Ganda", level: "Mudah", status: "Disetujui" },
+    { id: 11, matapelajaran: "Biologi", jenjang: "SMA", nama_soal: "Sebutkan tahapan siklus Krebs secara berurutan!", tipe_soal: "Multi Jawaban", level: "Sulit", status: "Disetujui" },
+    { id: 12, matapelajaran: "Kimia", jenjang: "SMA", nama_soal: "Apa yang dimaksud dengan ikatan kovalen polar?", tipe_soal: "Pilihan Ganda", level: "Sedang", status: "Disetujui" },
+    { id: 13, matapelajaran: "Fisika", jenjang: "SMP", nama_soal: "Hitung percepatan benda jatuh bebas.", tipe_soal: "Multi Jawaban", level: "Mudah", status: "Disetujui" },
+    { id: 14, matapelajaran: "Matematika", jenjang: "SD", nama_soal: "Perkalian dasar 1-10.", tipe_soal: "Pilihan Ganda", level: "Mudah", status: "Disetujui" },
+];
+
+const mataPelajaranOptions = [
+    { label: "Matematika", value: "Matematika" },
+    { label: "Bahasa Indonesia", value: "Bahasa Indonesia" },
+    { label: "Fisika", value: "Fisika" },
+    { label: "Biologi", value: "Biologi" },
+];
+
+const statusOptions = [
+    { label: "Active", value: "Active" },
+    { label: "Inactive", value: "Inactive" },
+    { label: "Draft", value: "Draft" },
+];
+
+const jenisPaketOptions = [
+    { label: "Gratis", value: "Gratis" },
+    { label: "Berbayar", value: "Berbayar" },
+];
+
+const overlayFilterConfig = [
+    {
+        key: "matapelajaran",
+        label: "Mata Pelajaran",
+        type: "radio", 
+        defaultValue: "all",
+        options: [
+            { label: "Semua Mapel", value: "all" },
+            { label: "Matematika", value: "Matematika" },
+            { label: "Fisika", value: "Fisika" },
+            { label: "Biologi", value: "Biologi" },
+            { label: "Bahasa Indonesia", value: "Bahasa Indonesia" }
+        ]
+    },
+    {
+        key: "jenjang",
+        label: "Jenjang",
+        type: "radio",
+        defaultValue: "all",
+        options: [
+            { label: "Semua Jenjang", value: "all" },
+            { label: "SD", value: "SD" },
+            { label: "SMP", value: "SMP" },
+            { label: "SMA", value: "SMA" }
+        ]
+    },
+    {
+        key: "level",
+        label: "Level Kesulitan",
+        type: "radio",
+        defaultValue: "all",
+        options: [
+            { label: "Semua Level", value: "all" },
+            { label: "Mudah", value: "Mudah" },
+            { label: "Sedang", value: "Sedang" },
+            { label: "Sulit", value: "Sulit" }
+        ]
+    }
+];
 
 export default function AddPaketSoal() {
-    // --- STATE ---
-    const [formData, setFormData] = useState({ matapelajaran: "", topik: "", status: "", fotoSampul: null });
-    const [paketSoal, setPaketSoal] = useState(initialPaketSoalData);
-    const [selectedSoal, setSelectedSoal] = useState({});
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const [formData, setFormData] = useState({
+        nama_paket: "",
+        matapelajaran: [], 
+        jenis: "",         
+        status: "",        
+        deskripsi: "", 
+        fotoSampul: null
+    });
+    
+    const [paketSoalList, setPaketSoalList] = useState(initialPaketSoalData);
     const [previewImage, setPreviewImage] = useState(null);
 
-    // Refs untuk Drag & Drop
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalSearch, setModalSearch] = useState("");
+    const [selectedInModal, setSelectedInModal] = useState({}); 
+    
+    const [modalFilters, setModalFilters] = useState({
+        matapelajaran: "all",
+        jenjang: "all",
+        level: "all"
+    });
+
     const dragItem = useRef(null);
     const dragOverItem = useRef(null);
+    const tableBodyRef = useRef(null);
 
-    // --- HANDLERS ---
+    // HANDLERS
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-    const handleSelectMapel = (val) => setFormData({ ...formData, matapelajaran: val });
+    
+    const handleSelectMapel = (val) => {
+        setFormData(prev => {
+            const current = prev.matapelajaran;
+            if (current.includes(val)) {
+                return { ...prev, matapelajaran: current.filter(item => item !== val) };
+            } else {
+                return { ...prev, matapelajaran: [...current, val] };
+            }
+        });
+    };
+
     const handleSelectStatus = (val) => setFormData({ ...formData, status: val });
+    const handleSelectJenis = (val) => setFormData({ ...formData, jenis: val });
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -162,283 +253,300 @@ export default function AddPaketSoal() {
         setPreviewImage(null);
     };
 
-    // --- DRAG AND DROP (Logika Asli Anda) ---
-    const cleanupVisuals = (target) => {
-        if (!target) return;
-        const rows = target.parentNode?.children || [];
-        Array.from(rows).forEach(row => {
-            row.classList.remove('border-b-4', 'border-t-4', 'border-blue-500', 'bg-gray-200', 'shadow-2xl', 'opacity-30', 'scale-[1.01]', 'z-10');
-        });
+    const cleanupVisuals = () => {
+        if (tableBodyRef.current) {
+            const rows = tableBodyRef.current.children;
+            Array.from(rows).forEach(row => {
+                row.classList.remove(
+                    'border-b-4', 'border-t-4', 'border-blue-500', 
+                    'bg-gray-200', 'shadow-2xl', 'opacity-30', 'z-10' 
+                );
+            });
+        }
     };
 
     const handleDragStart = (e, index) => {
         dragItem.current = index;
-        if (!e.dataTransfer || !e.currentTarget) return;
-        // Efek visual item yang ditarik
-        e.currentTarget.classList.add('bg-gray-200', 'shadow-2xl', 'opacity-30', 'scale-[1.01]', 'z-10');
-        const emptyImg = new Image();
-        e.dataTransfer.setDragImage(emptyImg, 0, 0); 
-        e.dataTransfer.setData('text/plain', index);
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = "move";
+            e.currentTarget.classList.add('bg-gray-200', 'shadow-2xl', 'opacity-30', 'z-10');
+            const emptyImg = new Image();
+            e.dataTransfer.setDragImage(emptyImg, 0, 0); 
+        }
     };
 
     const handleDragEnter = (e, index) => {
         e.preventDefault();
         dragOverItem.current = index;
-        if (dragItem.current === null) return;
-        
-        const rows = e.currentTarget.parentNode?.children || [];
-        Array.from(rows).forEach(row => row.classList.remove('border-b-4', 'border-t-4', 'border-blue-500'));
-        
-        if (dragItem.current !== dragOverItem.current) {
+        if (tableBodyRef.current) {
+            const rows = tableBodyRef.current.children;
+            Array.from(rows).forEach(row => row.classList.remove('border-b-4', 'border-t-4', 'border-blue-500'));
+        }
+        const currentTarget = e.currentTarget;
+        if (dragItem.current !== null && dragItem.current !== dragOverItem.current) {
             if (dragItem.current < dragOverItem.current) {
-                e.currentTarget.classList.add('border-b-4', 'border-blue-500');
+                currentTarget.classList.add('border-b-4', 'border-blue-500'); 
             } else {
-                e.currentTarget.classList.add('border-t-4', 'border-blue-500');
+                currentTarget.classList.add('border-t-4', 'border-blue-500'); 
             }
         }
     };
 
-    const handleDragEnd = (e) => {
-        if (e.currentTarget) cleanupVisuals(e.currentTarget);
+    const handleDragEnd = () => {
+        cleanupVisuals();
         dragItem.current = null;
         dragOverItem.current = null;
     };
 
     const handleDrop = (e) => {
         e.preventDefault();
+        cleanupVisuals(); 
         const dragIndex = dragItem.current;
         const dropIndex = dragOverItem.current;
-        if (dragIndex === null || dropIndex === null || dragIndex === dropIndex) {
-            handleDragEnd(e); return;
-        }
-        const listCopy = [...paketSoal];
+        if (dragIndex === null || dropIndex === null || dragIndex === dropIndex) return;
+        const listCopy = [...paketSoalList];
         const draggedItem = listCopy[dragIndex];
         listCopy.splice(dragIndex, 1);
         listCopy.splice(dropIndex, 0, draggedItem);
-        setPaketSoal(listCopy);
-        if (e.currentTarget) cleanupVisuals(e.currentTarget);
+        setPaketSoalList(listCopy);
+        dragItem.current = null;
         dragOverItem.current = null;
     };
 
-    const handleDeleteSoal = (id) => setPaketSoal(prev => prev.filter(s => s.id !== id));
+    const handleDeleteSoal = (id) => {
+        setPaketSoalList(prev => prev.filter(item => item.id !== id));
+    };
 
-    // --- MODAL LOGIC ---
-    const toggleSelection = (soal) => {
-        setSelectedSoal(prev => {
+    // LOGIKA OVERLAY
+    const handleToggleModalSelection = (item) => {
+        setSelectedInModal(prev => {
             const newState = { ...prev };
-            if (newState[soal.id]) delete newState[soal.id];
-            else newState[soal.id] = soal;
+            if (newState[item.id]) delete newState[item.id];
+            else newState[item.id] = item;
             return newState;
         });
     };
 
-    const addSelectedToPaket = () => {
-        const newItems = Object.values(selectedSoal).filter(s => !paketSoal.some(p => p.id === s.id));
-        setPaketSoal([...paketSoal, ...newItems]);
-        setSelectedSoal({});
+    const handleSaveModalSelection = () => {
+        const newItems = Object.values(selectedInModal);
+        const currentIds = new Set(paketSoalList.map(i => i.id));
+        const filteredNewItems = newItems.filter(i => !currentIds.has(i.id));
+        setPaketSoalList([...paketSoalList, ...filteredNewItems]);
         setIsModalOpen(false);
+        setSelectedInModal({});
     };
+
+    const handleOverlayFilterChange = (key, value) => {
+        setModalFilters(prev => ({ ...prev, [key]: value }));
+    };
+
+    const filteredBankSoal = availableSoalData.filter(item => {
+        const term = modalSearch.toLowerCase();
+        const matchesSearch = item.nama_soal.toLowerCase().includes(term);
+        const matchesMapel = modalFilters.matapelajaran !== "all" ? item.matapelajaran === modalFilters.matapelajaran : true;
+        const matchesJenjang = modalFilters.jenjang !== "all" ? item.jenjang === modalFilters.jenjang : true;
+        const matchesLevel = modalFilters.level !== "all" ? item.level === modalFilters.level : true;
+        const alreadyInPacket = paketSoalList.some(p => p.id === item.id);
+        return matchesSearch && matchesMapel && matchesJenjang && matchesLevel && !alreadyInPacket;
+    });
+
+    const modalColumns = [
+        { 
+            header: "SOAL", 
+            accessor: "nama_soal", 
+            render: (row) => formatSoalDisplay(row.nama_soal)
+        },
+        { header: "MATA PELAJARAN", accessor: "matapelajaran" },
+        { header: "JENJANG", accessor: "jenjang" },
+        { header: "TIPE SOAL", accessor: "tipe_soal" },
+        { header: "LEVEL KESULITAN", render: (row) => getLevelBadge(row.level) },
+        { header: "STATUS", render: (row) => <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-lg border border-green-200">{row.status}</span> },
+        {
+            header: "AKSI",
+            render: (row) => (
+                <div className="flex justify-center items-center">
+                    <label className="cursor-pointer relative">
+                        <input 
+                            type="checkbox" 
+                            className="sr-only peer"
+                            checked={!!selectedInModal[row.id]}
+                            onChange={() => handleToggleModalSelection(row)}
+                        />
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                            selectedInModal[row.id] ? 'bg-primary border-primary' : 'border-gray-300 bg-white'
+                        }`}>
+                            {selectedInModal[row.id] && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
+                        </div>
+                    </label>
+                </div>
+            )
+        }
+    ];
 
     return (
         <div className="px-4 sm:px-6 lg:px-8 py-6 w-full max-w-9xl mx-auto min-h-screen bg-gray-50">
-            {/* HEADERS */}
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
-                <h1 className="text-2xl md:text-3xl text-gray-900 font-bold font-sora">Add Paket Soal</h1>
-                <nav className="flex text-sm font-medium text-gray-500 font-noto-sans">
-                    <Link to="/dashboard" className="hover:text-gray-900">Dashboard</Link>
-                    <span className="mx-2">/</span>
-                    <Link to="../paket-soal" className="hover:text-gray-900">Data Paket Soal</Link>
-                    <span className="mx-2">/</span>
-                    <span className="text-gray-900">Add</span>
-                </nav>
-            </div>
+            <PageHeader 
+                title="Add Paket Soal"
+                breadcrumbs={[
+                    { label: "Dashboard", link: "/dashboard" },
+                    { label: "Data Paket Soal", link: "../paket-soal" },
+                    { label: "Add", link: null }
+                ]}
+            />
 
-            <form onSubmit={(e) => { e.preventDefault(); console.log(formData); }}>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                    
-                    {/* --- KIRI: TABEL SOAL (Drag & Drop) --- */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="flex justify-between items-center">
-                            <button type="button" onClick={() => setIsModalOpen(true)} className="text-white bg-primary rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-primary/90 transition font-noto-sans shadow-sm border border-transparent">
-                                + Soal Dari Bank Soal
-                            </button>
-                            <button type="button" className="text-primary bg-white border border-primary rounded-xl px-6 py-2.5 text-sm font-medium hover:bg-gray-50 transition font-noto-sans shadow-sm">
-                                PUBLISH
-                            </button>
-                        </div>
-
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden h-fit">
-                            <table className="w-full text-sm text-left text-gray-500 font-noto-sans">
-                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
-                                    <tr>
-                                        <th className="px-6 py-3 font-bold">NO</th>
-                                        <th className="px-6 py-3 font-bold">SOAL</th>
-                                        <th className="px-6 py-3 font-bold">TIPE SOAL</th>
-                                        <th className="px-6 py-3 font-bold">LEVEL</th>
-                                        <th className="px-6 py-3 font-bold text-center">AKSI</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 bg-white">
-                                    {paketSoal.map((item, index) => (
-                                        <tr 
-                                            key={item.id}
-                                            draggable
-                                            onDragStart={(e) => handleDragStart(e, index)}
-                                            onDragEnter={(e) => handleDragEnter(e, index)}
-                                            onDragLeave={(e) => e.currentTarget.classList.remove('border-b-4', 'border-t-4', 'border-blue-500')}
-                                            onDragEnd={handleDragEnd}
-                                            onDrop={handleDrop}
-                                            onDragOver={(e) => e.preventDefault()}
-                                            className="hover:bg-gray-50 cursor-move transition-all duration-200"
-                                        >
-                                            <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
-                                            <td className="px-6 py-4 truncate max-w-xs text-gray-900 font-medium">{item.nama_soal}</td>
-                                            <td className="px-6 py-4">{item.tipe_soal}</td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-2.5 py-0.5 rounded-lg text-xs font-medium ${
-                                                    item.level === 'Mudah' ? 'bg-green-100 text-green-800' :
-                                                    item.level === 'Sedang' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-red-100 text-red-800'
-                                                }`}>
-                                                    {item.level}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <button type="button" onClick={() => handleDeleteSoal(item.id)} className="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-lg transition shadow-sm">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            {paketSoal.length === 0 && (
-                                <div className="p-8 text-center text-gray-500 italic font-noto-sans">Belum ada soal ditambahkan.</div>
-                            )}
-                        </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                
+                {/* KIRI TABEL UTAMA */}
+                <div className="lg:col-span-2 space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <ActionButton 
+                            text="+ Soal Dari Bank Soal" 
+                            onClick={() => setIsModalOpen(true)}
+                            variant="primary"
+                        />
+                        <ActionButton 
+                            text="PUBLISH" 
+                            onClick={() => alert("Published!")}
+                            variant="outline"
+                        />
                     </div>
 
-                    {/* --- KANAN: FORM DETAIL --- */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white p-6 rounded-2xl shadow-xl sticky top-6 border border-gray-100">
-                            
-                            <Dropdown 
-                                label="Mata Pelajaran"
-                                required
-                                options={mataPelajaranOptions}
-                                selectedText={formData.matapelajaran}
-                                onSelect={handleSelectMapel}
-                            />
+                    <DraggableTable 
+                        ref={tableBodyRef}
+                        data={paketSoalList}
+                        onDragStart={handleDragStart}
+                        onDragEnter={handleDragEnter}
+                        onDragEnd={handleDragEnd}
+                        onDrop={handleDrop}
+                        onDelete={handleDeleteSoal}
+                    />
+                </div>
 
-                            <InputField 
-                                label="Nama Paket Soal"
-                                name="topik"
-                                required
-                                value={formData.topik}
-                                onChange={handleChange}
-                                placeholder="Masukan nama paket soal"
-                            />
+                {/* KANAN FORM DETAIL */}
+                <div className="lg:col-span-1">
+                    <div className="bg-white p-6 rounded-2xl shadow-lg sticky top-6 border border-gray-100 space-y-3">
+                        
+                        <Dropdown 
+                            label="Mata Pelajaran"
+                            required
+                            options={mataPelajaranOptions}
+                            selectedText={
+                                formData.matapelajaran.length > 0 
+                                ? formData.matapelajaran.join(", ") 
+                                : ""
+                            }
+                            onSelect={handleSelectMapel}
+                            multiSelect={true}
+                            selectedValues={formData.matapelajaran}
+                        />
 
-                            <Dropdown 
-                                label="Status Paket Soal"
-                                required
-                                options={statusOptions}
-                                selectedText={formData.status}
-                                onSelect={handleSelectStatus}
-                            />
+                        <InputField 
+                            label="Nama Paket Soal"
+                            name="nama_paket"
+                            required
+                            value={formData.nama_paket}
+                            onChange={handleChange}
+                            placeholder="Masukan nama paket soal"
+                        />
 
-                            <ImageUploadBox 
-                                label="Gambar Card Soal"
-                                required
-                                previewUrl={previewImage}
-                                onChange={handleFileChange}
-                                onRemove={handleRemoveImage}
-                            />
-
-                            <div className="mt-6 flex gap-3">
-                                <button type="submit" className="w-full bg-primary text-white font-medium py-3 rounded-2xl shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all font-noto-sans">
-                                    Simpan
-                                </button>
+                        <div className="flex flex-col sm:flex-row gap-4 w-full">
+                            <div className="w-full sm:w-1/2">
+                                <Dropdown 
+                                    label="Jenis Paket"
+                                    required
+                                    options={jenisPaketOptions}
+                                    selectedText={formData.jenis}
+                                    onSelect={handleSelectJenis}
+                                />
                             </div>
+                            <div className="w-full sm:w-1/2">
+                                <Dropdown 
+                                    label="Status"
+                                    required
+                                    options={statusOptions}
+                                    selectedText={formData.status}
+                                    onSelect={handleSelectStatus}
+                                />
+                            </div>
+                        </div>
+
+                        <InputField 
+                            label="Deskripsi Paket"
+                            name="deskripsi"
+                            type="textarea"
+                            rows={3}
+                            value={formData.deskripsi}
+                            onChange={handleChange}
+                            placeholder="Tuliskan deskripsi singkat..."
+                        />
+
+                        <ImageUploadBox 
+                            label="Gambar Card Soal"
+                            required
+                            previewUrl={previewImage}
+                            onChange={handleFileChange}
+                            onRemove={handleRemoveImage}
+                        />
+
+                        <div className="pt-2">
+                            <ButtonSave text="Simpan" onClick={() => alert("Saved")} className="w-full justify-center" />
                         </div>
                     </div>
                 </div>
-            </form>
+            </div>
 
-            {/* --- MODAL OVERLAY: BANK SOAL --- */}
+            {/* OVERLAY */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+                    
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[500px] flex flex-col relative">
                         
-                        {/* Modal Header */}
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
-                            <div className="flex items-center gap-3 w-full">
-                                <SearchInput placeholder="Cari Soal..." />
-                                <FilterButton />
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white shrink-0 rounded-t-2xl z-50 relative">
+                            <div className="flex items-center gap-4 w-full">
+                                <SearchInput 
+                                    placeholder="Cari Soal..." 
+                                    value={modalSearch} 
+                                    onChange={(e) => setModalSearch(e.target.value)} 
+                                />
+
+                                <DynamicFilter 
+                                    filters={overlayFilterConfig}
+                                    currentValues={modalFilters}
+                                    onFilterChange={handleOverlayFilterChange}
+                                />
                             </div>
-                            <button onClick={() => setIsModalOpen(false)} className="ml-4 bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-primary/90 transition shadow-sm whitespace-nowrap font-noto-sans">
-                                + Add Soal
+                            
+                            {/* Icon X Close */}
+                            <button 
+                                onClick={() => setIsModalOpen(false)} 
+                                className="ml-4 text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-gray-100"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
 
-                        {/* Modal Body (Table) */}
-                        <div className="p-6 overflow-y-auto bg-gray-50 flex-1">
-                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                                <table className="w-full text-sm text-left text-gray-500 font-noto-sans">
-                                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
-                                        <tr>
-                                            <th className="px-6 py-3 font-bold text-gray-600">NO</th>
-                                            <th className="px-6 py-3 font-bold text-gray-600">MATA PELAJARAN</th>
-                                            <th className="px-6 py-3 font-bold text-gray-600">SOAL</th>
-                                            <th className="px-6 py-3 font-bold text-gray-600">TIPE SOAL</th>
-                                            <th className="px-6 py-3 font-bold text-gray-600">LEVEL KESULITAN</th>
-                                            <th className="px-6 py-3 font-bold text-gray-600">STATUS</th>
-                                            <th className="px-6 py-3 font-bold text-gray-600 text-center">AKSI</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {availableSoalData.map((soal, idx) => (
-                                            <tr key={soal.id} className="bg-white hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4 font-medium text-gray-900">{idx + 1}</td>
-                                                <td className="px-6 py-4 text-gray-900">{soal.matapelajaran}</td>
-                                                <td className="px-6 py-4 text-gray-900 max-w-xs truncate" title={soal.nama_soal}>{soal.nama_soal}</td>
-                                                <td className="px-6 py-4 text-gray-500">{soal.tipe_soal}</td>
-                                                <td className="px-6 py-4 text-gray-900">{soal.level}</td>
-                                                <td className="px-6 py-4">
-                                                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-200">
-                                                        {soal.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <label className="inline-flex items-center cursor-pointer">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            className="sr-only peer"
-                                                            checked={!!selectedSoal[soal.id]}
-                                                            onChange={() => toggleSelection(soal)}
-                                                        />
-                                                        <div className="w-6 h-6 border-2 border-gray-300 rounded-full peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center transition-all">
-                                                            {selectedSoal[soal.id] && (
-                                                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
-                                                            )}
-                                                        </div>
-                                                    </label>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                        {/* Body Modal */}
+                        <div className="p-6 overflow-y-auto flex-1 bg-gray-50 z-0">
+                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm h-fit">
+                                
+                                <DynamicTable 
+                                    columns={modalColumns}
+                                    data={filteredBankSoal}
+                                    isLoading={false}
+                                    itemsPerPage={10}
+                                    emptyMessage="Tidak ada soal ditemukan sesuai filter."
+                                />
                             </div>
                         </div>
 
-                        {/* Modal Footer */}
-                        <div className="px-6 py-4 border-t border-gray-100 bg-white flex justify-end gap-3 rounded-b-2xl">
-                            <button onClick={() => setIsModalOpen(false)} className="px-5 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition font-noto-sans">
-                                Batal
-                            </button>
-                            <button onClick={addSelectedToPaket} disabled={Object.keys(selectedSoal).length === 0} className={`px-5 py-2 text-sm font-medium text-white rounded-xl transition font-noto-sans shadow-sm ${Object.keys(selectedSoal).length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary hover:bg-primary/90'}`}>
-                                Simpan Selection ({Object.keys(selectedSoal).length})
-                            </button>
+                        <div className="px-6 py-4 border-t border-gray-100 bg-white flex justify-end gap-3 rounded-b-2xl shrink-0 z-10">
+                            <ButtonCancel text="Batal" onClick={() => setIsModalOpen(false)} type="button"/>
+                            <ButtonSave 
+                                text={`Tambahkan (${Object.keys(selectedInModal).length})`}
+                                onClick={handleSaveModalSelection}
+                                disabled={Object.keys(selectedInModal).length === 0}
+                                className="min-w-[180px] justify-center"
+                            />
                         </div>
                     </div>
                 </div>
