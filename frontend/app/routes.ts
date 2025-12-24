@@ -69,6 +69,10 @@ export default [
       "routes/dashboard/paket-langganan/add.paket.langganan.jsx"
     ),
 
+    //daftar subscriber
+    route("daftar-subscriber", "routes/dashboard/subscriber/daftar.subscriber.jsx"),
+    route("detail-pembayaran", "routes/dashboard/subscriber/detail.pembayaran.jsx"),
+
     // konten
     route("artikel", "routes/dashboard/artikel/data.artikel.jsx"),
     route("artikel/add", "routes/dashboard/artikel/add.artikel.jsx"),
