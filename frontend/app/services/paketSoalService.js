@@ -1,12 +1,19 @@
 import axios from "axios";
 
+// PENTING: Pastikan di .env VITE_API_BASE_URL=http://localhost:5000/api/v1 (Tanpa slash di akhir)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+const getAuthHeader = () => {
+    const token = localStorage.getItem("token");
+    return { headers: { Authorization: `Bearer ${token}` } };
+};
+
 export const paketSoalService = {
-    // Ambil List Paket
+    // 1. Ambil List Paket
     getAllPaket: async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/admin/paket-soal`);
+            // URL: http://localhost:5000/api/v1/admin/paket-soal
+            const response = await axios.get(`${API_BASE_URL}/admin/paket-soal`, getAuthHeader());
             return response.data.data;
         } catch (error) {
             console.error("Gagal ambil paket:", error);
@@ -14,41 +21,37 @@ export const paketSoalService = {
         }
     },
 
-    // Ambil Detail Paket
-    getPaketById: async (id) => {
-        const response = await axios.get(`${API_BASE_URL}/admin/paket-soal/${id}`);
-        return response.data.data;
+    // 2. Ambil Data Bank Soal (Untuk Modal)
+    getBankSoal: async (params) => {
+        try {
+            // URL: http://localhost:5000/api/v1/admin/paket-soal/bank-soal
+            // Pastikan di paketSoalRoutes.js ada router.get('/bank-soal', ...)
+            const response = await axios.get(`${API_BASE_URL}/admin/paket-soal/bank-soal`, {
+                params: params,
+                ...getAuthHeader()
+            });
+            return response.data; 
+        } catch (error) {
+            console.error("Gagal mengambil bank soal:", error);
+            throw error;
+        }
     },
 
-    // Tambahkan Soal ke Paket
-    addQuestionToPacket: async (idPaket, idSoalBaru) => {
+    // 3. Create Paket Soal
+    createPaketSoal: async (formData) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/admin/paket-soal/${idPaket}`);
-            const paketData = response.data.data;
-
-            let currentSoalIds = paketData.list_soal.map(s => s.id);
-
-            // Cek duplikasi (Kalau sudah ada, jangan ditambah)
-            if (currentSoalIds.includes(parseInt(idSoalBaru))) {
-                throw new Error("Soal ini sudah ada di paket tersebut.");
-            }
-
-            currentSoalIds.push(parseInt(idSoalBaru));
-
-            const formData = new FormData();
-            formData.append("nama_paket", paketData.nama_paket);
-            formData.append("id_category", paketData.id_category);
-            formData.append("status", paketData.status);
-            formData.append("soal_ids", JSON.stringify(currentSoalIds));
-
-            await axios.put(`${API_BASE_URL}/admin/paket-soal/${idPaket}`, formData, {
-                headers: { "Content-Type": "multipart/form-data" }
+            // URL: http://localhost:5000/api/v1/admin/paket-soal
+            // Pastikan di paketSoalRoutes.js ada router.post('/', ...)
+            const response = await axios.post(`${API_BASE_URL}/admin/paket-soal`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    ...getAuthHeader().headers
+                }
             });
-
-            return true;
+            return response.data;
         } catch (error) {
-            console.error("Error add question to packet:", error);
-            throw error.response?.data || error.message;
+            console.error("Gagal membuat paket soal:", error);
+            throw error;
         }
     }
 };

@@ -1,6 +1,7 @@
 import { useState, useRef, forwardRef } from "react";
 import { useNavigate } from "react-router";
 
+// --- IMPORT COMMON COMPONENTS ---
 import PageHeader from "../common/PageHeader";
 import InputField from "../common/InputField";
 import Dropdown from "../common/Dropdown";
@@ -10,123 +11,19 @@ import SearchInput from "../common/SearchInput";
 import DynamicTable from "../common/DynamicTable";
 import DynamicFilter from "../common/DynamicFilter";
 
-const formatSoalDisplay = (text) => {
-    const cleanText = text ? String(text).replace(/<[^>]+>/g, '') : '-';
-    const limit = 10; 
-    const displayText = cleanText.length > limit ? cleanText.substring(0, limit) + "..." : cleanText;
-    
-    return <div title={cleanText} className="min-w-[100px]">{displayText}</div>;
-};
+// --- IMPORT CUSTOM COMPONENTS (Fixed Imports) ---
+import ActionButton from "../common/ActionButton";
+import DraggableTable, { formatSoalDisplay, getLevelBadge } from "../common/DraggableTable";
+import ImageUploadCard from "../common/ImageUploadCard";
 
-const getLevelBadge = (level) => {
-    const l = level?.toLowerCase() || "";
-    let color = "bg-gray-100 text-gray-800 border-gray-200 rounded-lg";
-    if (l === 'mudah') color = "bg-green-100 text-green-800 border-green-200 rounded-lg";
-    if (l === 'sedang') color = "bg-yellow-100 text-yellow-800 border-yellow-200 rounded-lg";
-    if (l === 'sulit') color = "bg-red-100 text-red-800 border-red-200 rounded-lg";
-    return <span className={`px-2.5 py-0.5 rounded text-xs font-medium ${color}`}>{level}</span>;
-};
-
-const ImageUploadBox = ({ label, previewUrl, onChange, onRemove, required }) => (
-    <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2 font-noto-sans">
-            {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        <div className="border border-dashed border-gray-300 rounded-2xl p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
-            <div className="flex items-center gap-4">
-                <div className="shrink-0 w-16 h-16 bg-white rounded-xl border border-gray-200 overflow-hidden flex items-center justify-center">
-                    {previewUrl ? (
-                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                        <svg className="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" /></svg>
-                    )}
-                </div>
-                <div className="flex-1 overflow-hidden">
-                    <div className="flex gap-2 items-center">
-                        <label className="cursor-pointer inline-block bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl shadow-sm hover:bg-primary/90 transition-all font-noto-sans">
-                            Pilih file
-                            <input type="file" className="hidden" accept="image/*" onChange={onChange} />
-                        </label>
-                        {previewUrl && (
-                            <button type="button" onClick={onRemove} className="text-red-500 text-sm font-medium hover:underline font-noto-sans">Hapus</button>
-                        )}
-                    </div>
-                    <p className="mt-1 text-xs text-gray-500 truncate">Format JPG, PNG. Maks 2MB.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-);
-
-const ActionButton = ({ onClick, text, variant = "primary" }) => {
-    const baseClass = "rounded-xl px-5 py-2.5 text-sm font-medium transition font-noto-sans shadow-sm border whitespace-nowrap w-full sm:w-auto text-center";
-    const variants = {
-        primary: "text-white bg-primary hover:bg-primary/90 border-transparent",
-        outline: "text-primary bg-white border-primary hover:bg-gray-50 uppercase tracking-wide",
-    };
-    return (
-        <button type="button" onClick={onClick} className={`${baseClass} ${variants[variant]}`}>
-            {text}
-        </button>
-    );
-};
-
-const DraggableTable = forwardRef(({ data, onDragStart, onDragEnter, onDragEnd, onDrop, onDelete }, ref) => {
-    return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-500 font-noto-sans min-w-[800px] lg:min-w-0">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
-                    <tr>
-                        <th className="px-6 py-3">NO</th>
-                        <th className="px-6 py-3">SOAL</th>
-                        <th className="px-6 py-3">MATA PELAJARAN</th>
-                        <th className="px-6 py-3">JENJANG</th>
-                        <th className="px-6 py-3">TIPE SOAL</th>
-                        <th className="px-6 py-3">LEVEL</th>
-                        <th className="px-6 py-3 text-center">AKSI</th>
-                    </tr>
-                </thead>
-                <tbody ref={ref} className="divide-y divide-gray-100 bg-white">
-                    {data.length === 0 ? (
-                        <tr><td colSpan="7" className="px-6 py-8 text-center">Belum ada soal ditambahkan.</td></tr>
-                    ) : (
-                        data.map((item, index) => (
-                            <tr 
-                                key={item.id}
-                                draggable
-                                onDragStart={(e) => onDragStart(e, index)}
-                                onDragEnter={(e) => onDragEnter(e, index)}
-                                onDragEnd={onDragEnd}
-                                onDrop={onDrop}
-                                onDragOver={(e) => e.preventDefault()}
-                                className="hover:bg-gray-50 cursor-move transition-all duration-200 bg-white"
-                            >
-                                <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
-                                <td className="px-6 py-4 font-medium text-gray-900">
-                                    {formatSoalDisplay(item.nama_soal)}
-                                </td>
-                                <td className="px-6 py-4 text-gray-500">{item.mata_pelajaran}</td>
-                                <td className="px-6 py-4">{item.jenjang || "SMA"}</td>
-                                <td className="px-6 py-4">{item.tipe_soal}</td>
-                                <td className="px-6 py-4">{getLevelBadge(item.level)}</td>
-                                <td className="px-6 py-4 text-center">
-                                <button onClick={(e) => { stopProp(e); handleDelete(row.id_soal); }} className="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 h-8 w-8 rounded-base" title="Hapus">
-                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/></svg>
-                                </button>
-                                </td>
-                            </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
-        </div>
-    );
-});
+// ==========================================================================
+// DATA DUMMY
+// ==========================================================================
 
 const initialPaketSoalData = [
     { id: 1, nama_soal: "Tentukan hasil integral parsial dari fungsi berikut ini", mata_pelajaran: "Matematika", jenjang: "SMA", tipe_soal: "Pilihan Ganda", level: "Sulit" },
     { id: 2, nama_soal: "Jelaskan proses fotosintesis secara detail", mata_pelajaran: "Biologi", jenjang: "SMP", tipe_soal: "Multi Jawaban", level: "Sedang" },
-    { id: 3, nama_soal: "Jelaskan proses fotosintesis secara detail", mata_pelajaran: "Biologi", jenjang: "SMP", tipe_soal: "Multi Jawaban", level: "mudah" },
+    { id: 3, nama_soal: "Sebutkan tahapan siklus Krebs secara berurutan!", mata_pelajaran: "Biologi", jenjang: "SMA", tipe_soal: "Multi Jawaban", level: "Sulit" },
 ];
 
 const availableSoalData = [
@@ -142,6 +39,13 @@ const mataPelajaranOptions = [
     { label: "Bahasa Indonesia", value: "Bahasa Indonesia" },
     { label: "Fisika", value: "Fisika" },
     { label: "Biologi", value: "Biologi" },
+];
+
+const kategoriOptions = [
+    { label: "Latihan Soal", value: "Latihan Soal" },
+    { label: "Try Out", value: "Try Out" },
+    { label: "Ujian Nasional", value: "Ujian Nasional" },
+    { label: "Kuis", value: "Kuis" },
 ];
 
 const statusOptions = [
@@ -198,9 +102,11 @@ const overlayFilterConfig = [
 export default function AddPaketSoal() {
     const navigate = useNavigate();
 
+    // --- STATE UTAMA ---
     const [formData, setFormData] = useState({
         nama_paket: "",
-        matapelajaran: [], 
+        matapelajaran: [], // Array (Multi Select)
+        kategori: "",      // String (Single Select) - DIPERBAIKI
         jenis: "",         
         status: "",        
         deskripsi: "", 
@@ -224,9 +130,10 @@ export default function AddPaketSoal() {
     const dragOverItem = useRef(null);
     const tableBodyRef = useRef(null);
 
-    // HANDLERS
+    // --- HANDLERS ---
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
     
+    // Handler Mapel (Tetap Multi Select)
     const handleSelectMapel = (val) => {
         setFormData(prev => {
             const current = prev.matapelajaran;
@@ -236,6 +143,11 @@ export default function AddPaketSoal() {
                 return { ...prev, matapelajaran: [...current, val] };
             }
         });
+    };
+
+    // Handler Kategori (DIPERBAIKI JADI SINGLE SELECT)
+    const handleSelectKategori = (val) => {
+        setFormData({ ...formData, kategori: val });
     };
 
     const handleSelectStatus = (val) => setFormData({ ...formData, status: val });
@@ -253,14 +165,12 @@ export default function AddPaketSoal() {
         setPreviewImage(null);
     };
 
+    // --- LOGIKA DRAG & DROP ---
     const cleanupVisuals = () => {
         if (tableBodyRef.current) {
             const rows = tableBodyRef.current.children;
             Array.from(rows).forEach(row => {
-                row.classList.remove(
-                    'border-b-4', 'border-t-4', 'border-blue-500', 
-                    'bg-gray-200', 'shadow-2xl', 'opacity-30', 'z-10' 
-                );
+                row.classList.remove('border-b-4', 'border-t-4', 'border-blue-500', 'bg-gray-200', 'shadow-2xl', 'opacity-30', 'z-10');
             });
         }
     };
@@ -317,7 +227,7 @@ export default function AddPaketSoal() {
         setPaketSoalList(prev => prev.filter(item => item.id !== id));
     };
 
-    // LOGIKA OVERLAY
+    // --- LOGIKA OVERLAY ---
     const handleToggleModalSelection = (item) => {
         setSelectedInModal(prev => {
             const newState = { ...prev };
@@ -426,6 +336,7 @@ export default function AddPaketSoal() {
                 <div className="lg:col-span-1">
                     <div className="bg-white p-6 rounded-2xl shadow-lg sticky top-6 border border-gray-100 space-y-3">
                         
+                        {/* Mata Pelajaran (Tetap Multi Select) */}
                         <Dropdown 
                             label="Mata Pelajaran"
                             required
@@ -438,6 +349,16 @@ export default function AddPaketSoal() {
                             onSelect={handleSelectMapel}
                             multiSelect={true}
                             selectedValues={formData.matapelajaran}
+                        />
+
+                        {/* Kategori (DIPERBAIKI: Single Select) */}
+                        <Dropdown 
+                            label="Kategori"
+                            required
+                            options={kategoriOptions}
+                            selectedText={formData.kategori}
+                            onSelect={handleSelectKategori}
+                            // Tidak perlu prop multiSelect/selectedValues karena single select
                         />
 
                         <InputField 
@@ -480,7 +401,7 @@ export default function AddPaketSoal() {
                             placeholder="Tuliskan deskripsi singkat..."
                         />
 
-                        <ImageUploadBox 
+                        <ImageUploadCard 
                             label="Gambar Card Soal"
                             required
                             previewUrl={previewImage}
@@ -495,7 +416,7 @@ export default function AddPaketSoal() {
                 </div>
             </div>
 
-            {/* OVERLAY */}
+            {/* OVERLAY / MODAL (TIDAK ADA PERUBAHAN) */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
                     
