@@ -7,7 +7,6 @@ function RegisForm() {
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Safely obtain navigate function — catch when Router isn't available (SSR)
   let navigateFn = null;
   try {
     navigateFn = useNavigate();
@@ -37,9 +36,6 @@ function RegisForm() {
       });
       const data = await response.json();
 
-      // After registering an internal user we shouldn't auto-login them.
-      // Instead, inform them to wait for admin verification and
-      // redirect to the internal login page.
       if (response.ok) {
         alert(
           "Registrasi sukses! Silakan tunggu verifikasi admin, lalu login melalui halaman internal."

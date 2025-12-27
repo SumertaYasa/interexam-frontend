@@ -4,113 +4,109 @@ import CardProgress from "../../Common/CardProgress";
 import CardProgressList from "../../Common/CardProgressList";
 import BreadCrumbs from "../../Common/BreadCrumbs";
 import SearchBar from "../../Common/SearchBar";
-// import Button from "../../Common/Button";
+import { slugify } from "../../../../utils/slugify.ts";
 
 const Courses = [
   {
     id: 1,
     label: "Paket Soal 1 - Logika Dasar",
     image: "/person.jpg",
-    progress: 30,
+    progress: { answered: 15, totalSoal: 50 }, // ~30%
   },
   {
     id: 2,
     label: "Paket Soal 2 - TPA Kuantitatif",
     image: "/person.jpg",
-    progress: 75,
+    progress: { answered: 30, totalSoal: 40 }, // ~75%
   },
   {
     id: 3,
     label: "Paket Soal 3 - Bahasa Inggris",
     image: "/person.jpg",
-    progress: 10,
+    progress: { answered: 6, totalSoal: 60 }, // ~10%
   },
   {
     id: 4,
     label: "Paket Soal 4 - Penalaran Umum",
     image: "/person.jpg",
-    progress: 90,
+    progress: { answered: 45, totalSoal: 50 }, // ~90%
   },
 
   {
     id: 5,
     label: "Paket Soal 5 - Pemahaman Bacaan",
     image: "/person.jpg",
-    progress: 45,
+    progress: { answered: 9, totalSoal: 20 }, // ~45%
   },
   {
     id: 6,
     label: "Paket Soal 6 - Pengetahuan Umum",
     image: "/person.jpg",
-    progress: 5,
+    progress: { answered: 1, totalSoal: 20 }, // ~5%
   },
   {
     id: 7,
     label: "Paket Soal 7 - Matematika Saintek",
     image: "/person.jpg",
-    progress: 60,
+    progress: { answered: 12, totalSoal: 20 }, // ~60%
   },
   {
     id: 8,
     label: "Paket Soal 8 - Fisika Dasar",
     image: "/person.jpg",
-    progress: 25,
+    progress: { answered: 5, totalSoal: 20 }, // ~25%
   },
 
   {
     id: 9,
     label: "Paket Soal 9 - Kimia Organik",
     image: "/person.jpg",
-    progress: 88,
+    progress: { answered: 44, totalSoal: 50 }, // ~88%
   },
   {
     id: 10,
     label: "Paket Soal 10 - Biologi Sel",
     image: "/person.jpg",
-    progress: 15,
+    progress: { answered: 3, totalSoal: 20 }, // ~15%
   },
   {
     id: 11,
     label: "Paket Soal 11 - Sejarah Indonesia",
     image: "/person.jpg",
-    progress: 100,
+    progress: { answered: 40, totalSoal: 40 }, // 100%
   },
   {
     id: 12,
     label: "Paket Soal 12 - Geografi Fisik",
     image: "/person.jpg",
-    progress: 55,
+    progress: { answered: 11, totalSoal: 20 }, // ~55%
   },
 
   {
     id: 13,
     label: "Paket Soal 13 - Ekonomi Makro",
     image: "/person.jpg",
-    progress: 40,
+    progress: { answered: 8, totalSoal: 20 }, // ~40%
   },
   {
     id: 14,
     label: "Paket Soal 14 - Sosiologi",
     image: "/person.jpg",
-    progress: 70,
+    progress: { answered: 14, totalSoal: 20 }, // ~70%
   },
   {
     id: 15,
     label: "Paket Soal 15 - Tes Skolastik",
     image: "/person.jpg",
-    progress: 20,
+    progress: { answered: 4, totalSoal: 20 }, // ~20%
   },
   {
     id: 16,
     label: "Paket Soal 16 - Tryout Akbar",
     image: "/person.jpg",
-    progress: 0,
+    progress: { answered: 0, totalSoal: 20 }, // 0%
   },
 ];
-
-function Filters() {
-  return <div>Filters</div>;
-}
 
 function LoadingCards() {
   return (
@@ -125,7 +121,16 @@ function LoadingCards() {
 function StatusAllCourse() {
   const [searchValue, setSearchValue] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
-  const [isHandleLayout, setIsHandleLayout] = useState(false);
+  const [isHandleLayout, setIsHandleLayout] = useState(() => {
+    // Initialize from localStorage synchronously to avoid initial render mismatch (prevents blink)
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("isHandleLayout");
+      return saved !== null ? saved === "true" : false;
+    }
+
+    // Server-side render fallback
+    return false;
+  });
 
   const isLoading = searchValue !== debouncedValue;
 
@@ -147,18 +152,9 @@ function StatusAllCourse() {
     });
   }, [debouncedValue]);
 
-  // warning
-  // Handle Layout
   useEffect(() => {
-    const savedLayout = localStorage.getItem("isHandleLayout");
-
-    if (savedLayout !== null) {
-      setIsHandleLayout(savedLayout === "false");
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("isHandleLayout", isHandleLayout);
+    // store explicit string so parsing is unambiguous
+    localStorage.setItem("isHandleLayout", String(isHandleLayout));
   }, [isHandleLayout]);
 
   const handleLayout = () => {
@@ -215,7 +211,14 @@ function StatusAllCourse() {
               <CardProgressList
                 key={course.id}
                 label={course.label}
-                path={`/dashboard-subscriber/status-ujian-terakhir/${course.id}`}
+                path={`/dashboard-subscriber/status-ujian-terakhir/${slugify(course.label)}`}
+                linkState={{
+                  from: "status",
+                  badge: {
+                    label: "Status Ujian Terakhir",
+                    classes: "border-yellow-300 bg-yellow-50 text-yellow-800",
+                  },
+                }}
                 image={course.image}
                 progress={course.progress}
               />
@@ -227,7 +230,14 @@ function StatusAllCourse() {
               <CardProgress
                 key={course.id}
                 label={course.label}
-                path={`/dashboard-subscriber/status-ujian-terakhir/${course.id}`}
+                path={`/dashboard-subscriber/status-ujian-terakhir/${slugify(course.label)}`}
+                linkState={{
+                  from: "status",
+                  badge: {
+                    label: "Status Ujian Terakhir",
+                    classes: "border-yellow-300 bg-yellow-50 text-yellow-800",
+                  },
+                }}
                 image={course.image}
                 progress={course.progress}
               />
