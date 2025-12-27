@@ -72,22 +72,43 @@ export default [
     route("artikel/add", "routes/dashboard/artikel/add.artikel.jsx"),
   ]),
 
+  // dashboard subscriber
   layout("routes/dashboardSubscriber.jsx", [
     route(
       "dashboard-subscriber",
       "routes/dashboardSubscriber/dashboardHome/dashboard.home.jsx"
     ),
+    route(
+      "dashboard-subscriber/latihan",
+      "routes/dashboardSubscriber/course/dashboard.course.jsx"
+    ),
   ]),
 
+  // status ujian terakhir
   route(
     "dashboard-subscriber/status-ujian-terakhir",
     "components/DashboardSubcriber/Features/Dashboard/StatusAllCourse.jsx"
   ),
   route(
-    "dashboard-subscriber/status-ujian-terakhir/:id",
-    "components/DashboardSubcriber/Common/DetailExam.jsx"
+    "dashboard-subscriber/status-ujian-terakhir/:label",
+    "components/DashboardSubcriber/Features/Exam/DetailExam.jsx"
+  ),
+  route(
+    "dashboard-subscriber/status-ujian-terakhir/:label/attempt",
+    "components/DashboardSubcriber/Features/Exam/ExamAttemptStatus.jsx"
   ),
 
+  // Latihan
+  route(
+    "dashboard-subscriber/latihan/:label",
+    "components/DashboardSubcriber/Features/Exam/DetailExamLatihan.jsx"
+  ),
+  route(
+    "dashboard-subscriber/latihan/:label/attempt",
+    "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx"
+  ),
+
+  // login internal (admin, validator, contributor)
   route("login-internal", "routes/auth/internal/formInternal.jsx", [
     index("components/Auth/Internal/LoginInternalForm.jsx"),
     route("register", "components/Auth/Internal/RegisFormWrapper.jsx"),

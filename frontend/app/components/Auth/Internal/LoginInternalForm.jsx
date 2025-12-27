@@ -5,7 +5,6 @@ import { GoogleLogin } from "@react-oauth/google";
 function LoginForm() {
   const [loading, setLoading] = useState(false);
 
-  // Safely obtain navigate function — catch when Router isn't available (SSR)
   let navigateFn = null;
   try {
     navigateFn = useNavigate();
@@ -27,7 +26,6 @@ function LoginForm() {
       if (response.ok && data.token) {
         localStorage.setItem("token", data.token);
         alert("Login sukses!");
-        // Prefer single-page navigation, but fall back to full reload if router isn't available
         if (navigateFn) {
           navigateFn("/dashboard");
         } else {

@@ -17,7 +17,12 @@ const sideMenuLists = [
     name: "Dashboard",
     icon: <LayoutDashboard />,
   },
-  { id: 2, link: "/latihan", name: "Latihan", icon: <Book /> },
+  {
+    id: 2,
+    link: "/dashboard-subscriber/latihan",
+    name: "Latihan",
+    icon: <Book />,
+  },
   { id: 3, link: "/perkembangan", name: "Perkembangan", icon: <ChartBar /> },
   { id: 4, link: "/pencapaian", name: "Pencapaian", icon: <Award /> },
   { id: 5, link: "/tersimpan", name: "Tersimpan", icon: <Bookmark /> },

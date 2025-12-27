@@ -1,32 +1,32 @@
 import React from "react";
 import { Link } from "react-router";
 import CardProgress from "../../Common/CardProgress";
-
+import { slugify } from "../../../../utils/slugify.ts";
 function CourseGrid() {
   const dataCardProgress = [
     {
       id: 1,
       label: "Paket Soal 1",
       image: "/person.jpg",
-      progress: 30,
+      progress: { answered: 2, totalSoal: 10 }, // 30%
     },
     {
       id: 2,
       label: "Paket Soal 2",
       image: "/person.jpg",
-      progress: 20,
+      progress: { answered: 2, totalSoal: 20 }, // 20%
     },
     {
       id: 3,
       label: "Paket Soal 3",
       image: "/person.jpg",
-      progress: 9,
+      progress: { answered: 1, totalSoal: 11 }, // ~9%
     },
     {
       id: 4,
       label: "Paket Soal 3",
       image: "/person.jpg",
-      progress: 9,
+      progress: { answered: 1, totalSoal: 11 }, // ~9%
     },
   ];
 
@@ -46,7 +46,14 @@ function CourseGrid() {
           <CardProgress
             key={card.id}
             label={card.label}
-            path={`/dashboard-susbcriber/status-ujian-terakhir/${card.id}`}
+            path={`/dashboard-subscriber/status-ujian-terakhir/${slugify(card.label)}`}
+            linkState={{
+              from: "status",
+              badge: {
+                label: "Status Ujian Terakhir",
+                classes: "border-yellow-300 bg-yellow-50 text-yellow-800",
+              },
+            }}
             image={card.image}
             progress={card.progress}
           />
