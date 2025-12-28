@@ -11,6 +11,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import type { Route } from "./+types/root";
 import "./styles/app.css";
 import "flowbite";
+import { AuthProvider } from "./context/AuthContext";
 
 // Ambil Client ID dari env frontend
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -57,7 +58,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <Outlet /> {/* Semua route children sekarang punya router context */}
+      <AuthProvider>
+        <Outlet /> {/* Semua route children sekarang punya router context */}
+      </AuthProvider>
     </GoogleOAuthProvider>
   );
 }
