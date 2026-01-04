@@ -1,79 +1,54 @@
 import React, { useState, useEffect } from "react";
-import { Bookmark, Bookmark as BookmarkIcon, AlertCircle } from "lucide-react";
+import { Bookmark as BookmarkIcon, AlertCircle } from "lucide-react";
 
 export default function QuestionCard({
   question,
   index,
   onAnswer,
   selectedAnswer = null,
+  onBookmark,
 }) {
-  const [bookmarked, setBookmarked] = useState(false);
-  const [reported, setReported] = useState(false);
   const [selected, setSelected] = useState(selectedAnswer ?? null);
 
-  // Keep internal selected state in sync with persisted/parent state
   useEffect(() => {
     setSelected(selectedAnswer ?? null);
   }, [selectedAnswer]);
 
-  const handleBookmark = (e) => {
-    e.preventDefault();
-    setBookmarked((s) => !s);
-    // TODO: persist bookmark to backend
-  };
-
-  const handleReport = (e) => {
-    e.preventDefault();
-    setReported(true);
-    // TODO: open modal or send report payload
-    alert("Laporan terkirim (mock). Kami akan review soal ini.");
-  };
-
-  const handleSelect = (opt) => {
-    setSelected(opt);
-    onAnswer && onAnswer(index, opt);
-  };
-
   return (
-    <div className="border rounded-md p-4 bg-white">
+    <div className="border rounded-md p-4 bg-white shadow-sm">
       <div className="flex justify-between items-start">
-        <div className="font-semibold">
+        <div className="font-semibold text-lg">
           {index + 1}. {question.text}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleReport}
-            title="Laporkan soal"
-            className="p-2 rounded-full hover:bg-slate-50"
-          >
-            <AlertCircle size={18} />
+          <button className="p-2 rounded-full hover:bg-slate-100">
+            <AlertCircle size={18} className="text-gray-400" />
           </button>
           <button
-            onClick={handleBookmark}
-            title={bookmarked ? "Unbookmark" : "Bookmark"}
-            className="p-2 rounded-full hover:bg-slate-50"
+            onClick={() => onBookmark(question.id)} // Kirim id_question
+            className="p-2 rounded-full hover:bg-slate-100 transition-colors"
           >
-            <BookmarkIcon
-              size={18}
-              className={bookmarked ? "text-primary" : "text-gray-400"}
-            />
+            <BookmarkIcon size={18} className="text-gray-400" />
           </button>
         </div>
       </div>
-
       <div className="mt-4 flex flex-col gap-3">
         {question.options.map((opt, i) => (
           <label
             key={i}
-            className={`flex items-center gap-3 p-2 rounded ${selected === opt ? "bg-slate-50" : ""}`}
+            className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${selected === opt ? "bg-primary-50 border-primary-200" : "hover:bg-slate-50"}`}
           >
             <input
               type="radio"
               name={`q-${index}`}
               checked={selected === opt}
-              onChange={() => handleSelect(opt)}
+              onChange={() => {
+                setSelected(opt);
+                onAnswer(index, opt);
+              }}
+              className="accent-primary"
             />
-            <span>{opt}</span>
+            <span className="text-gray-700">{opt}</span>
           </label>
         ))}
       </div>

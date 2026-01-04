@@ -12,7 +12,10 @@ export default [
   route("/paket", "landing/paket/paket.tsx"),
   route("/tentang-kami", "landing/tentangKami/tentangKami.tsx"),
   route("/coba-gratis", "landing/cobaGratis/cobaGratis.tsx"),
-  route("/login", "landing/loginSubscriber/loginSubcriber.tsx"),
+  route("login", "routes/auth/formSubscriber.jsx", [
+    index("components/Auth/LoginFormSubscriber.jsx"),
+    route("registrasi", "components/Auth/RegisFormSubscriber.jsx"),
+  ]),
 
   // Khusus Dashboard
   route("dashboard", "routes/dashboard.jsx", [
@@ -20,7 +23,10 @@ export default [
 
     // bank soal
     route("bank-soal", "routes/dashboard/bank-soal/data.bank.jsx"),
-    route("bank-soal/edit/:id", "routes/dashboard/bank-soal/edit.bank.soal.jsx"),
+    route(
+      "bank-soal/edit/:id",
+      "routes/dashboard/bank-soal/edit.bank.soal.jsx"
+    ),
     route("bank-soal/detail/:id", "routes/dashboard/bank-soal/detail.soal.jsx"),
 
     //  -------------------- KHUSUS KATEGORI ------------------------
@@ -46,7 +52,10 @@ export default [
     // Kategori Sub Topik
     route("sub-topik", "routes/dashboard/sub-topik/data.sub.topik.jsx"),
     route("sub-topik/add", "routes/dashboard/sub-topik/add.sub.topik.jsx"),
-    route("sub-topik/edit/:id", "routes/dashboard/sub-topik/edit.sub.topik.jsx"),
+    route(
+      "sub-topik/edit/:id",
+      "routes/dashboard/sub-topik/edit.sub.topik.jsx"
+    ),
 
     //  -------------------- BATAS KATEGORI ------------------------
 
@@ -75,8 +84,14 @@ export default [
     ),
 
     //daftar subscriber
-    route("daftar-subscriber", "routes/dashboard/subscriber/daftar.subscriber.jsx"),
-    route("detail-pembayaran", "routes/dashboard/subscriber/detail.pembayaran.jsx"),
+    route(
+      "daftar-subscriber",
+      "routes/dashboard/subscriber/daftar.subscriber.jsx"
+    ),
+    route(
+      "detail-pembayaran",
+      "routes/dashboard/subscriber/detail.pembayaran.jsx"
+    ),
 
     // konten
     route("artikel", "routes/dashboard/artikel/data.artikel.jsx"),
@@ -92,6 +107,10 @@ export default [
     route(
       "dashboard-subscriber/latihan",
       "routes/dashboardSubscriber/course/dashboard.course.jsx"
+    ),
+    route(
+      "dashboard-subscriber/simpan",
+      "routes/dashboardSubscriber/save/dashboard.save.jsx"
     ),
   ]),
 
@@ -122,6 +141,9 @@ export default [
   // login internal (admin, validator, contributor)
   route("login-internal", "routes/auth/internal/formInternal.jsx", [
     index("components/Auth/Internal/LoginInternalForm.jsx"),
-    route("register", "components/Auth/Internal/RegisFormWrapper.jsx"),
+    route(
+      "registrasi-internal",
+      "components/Auth/Internal/RegisFormWrapper.jsx"
+    ),
   ]),
 ] satisfies RouteConfig;

@@ -68,7 +68,7 @@ function LoginForm() {
           onError={handleGoogleLoginError}
         />
 
-        <a href={"/login-internal/register"}>belum punya akun?</a>
+        <a href={"/login-internal/registrasi-internal"}>belum punya akun?</a>
       </div>
     </div>
   );

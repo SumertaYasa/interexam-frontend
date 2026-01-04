@@ -62,7 +62,60 @@ const DUMMY_COURSES = [
       },
     },
   },
-  // ... more dummy items
+  {
+    id: 4,
+    title: "Tryout Bahasa Inggris",
+    image: "/person.jpg",
+    rating: 1.9,
+    totalSoal: 60,
+    participants: 2210,
+    category: "Bahasa Inggris",
+    createdAt: "2025-11-01T09:00:00Z",
+    path: `/dashboard-subscriber/latihan/${slugify("Tryout Bahasa Inggris")}`,
+    linkState: {
+      from: "course",
+      badge: {
+        label: "Latihan",
+        classes: "border-blue-300 bg-blue-50 text-blue-800",
+      },
+    },
+  },
+  {
+    id: 5,
+    title: "Tryout Bahasa Jepang",
+    image: "/person.jpg",
+    rating: 4.9,
+    totalSoal: 60,
+    participants: 2210,
+    category: "Bahasa Jepang",
+    createdAt: "2025-11-01T09:00:00Z",
+    path: `/dashboard-subscriber/latihan/${slugify("Tryout Bahasa Jepang")}`,
+    linkState: {
+      from: "course",
+      badge: {
+        label: "Latihan",
+        classes: "border-blue-300 bg-blue-50 text-blue-800",
+      },
+    },
+  },
+  {
+    id: 6,
+    title: "Tryout Bahasa Spanyol",
+    image: "/person.jpg",
+    rating: 4.9,
+    totalSoal: 60,
+    participants: 2210,
+    category: "Bahasa Spanyol",
+    createdAt: "2025-11-01T09:00:00Z",
+    path: `/dashboard-subscriber/latihan/${slugify("Tryout Bahasa Spanyol")}`,
+    linkState: {
+      from: "course",
+      badge: {
+        label: "Latihan",
+        classes: "border-blue-300 bg-blue-50 text-blue-800",
+      },
+    },
+  },
 ];
 
 function LoadingCards() {
@@ -121,6 +174,7 @@ export async function loader({ request }) {
 function CourseContainer() {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const [viewMode, setViewMode] = useState(() => {
     if (typeof window !== "undefined") {
@@ -154,8 +208,6 @@ function CourseContainer() {
       // ignore
     }
   }, [filters]);
-
-  const [filterOpen, setFilterOpen] = useState(false);
 
   // Close filter panel on outside click (clicks inside panel/button will stop propagation)
   useEffect(() => {
@@ -230,7 +282,7 @@ function CourseContainer() {
   const handleClearFilters = () => setFilters(defaultFilters);
 
   return (
-    <div className="w-full">
+    <div className="w-full ">
       <div className="flex items-center">
         <SearchBar
           placeholder="Cari paket soal"
@@ -269,7 +321,7 @@ function CourseContainer() {
             setFilterOpen((s) => !s);
           }}
           title="Filter"
-          className="px-4 py-2.5 border rounded-full cursor-pointer flex items-center gap-2"
+          className={`px-4 py-2.5 border rounded-full cursor-pointer flex items-center gap-2 ${filterOpen ? "bg-slate-900 text-white" : "bg-white text-black"}`}
         >
           <Sliders />
           <span className="text-body-s-medium">Filter</span>

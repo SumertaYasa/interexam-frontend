@@ -65,6 +65,7 @@ function RegisForm() {
 
       {!googleToken ? (
         <GoogleLogin
+          text="signup_with"
           onSuccess={handleGoogleLoginSuccess}
           onError={() => alert("Login Google gagal")}
         />

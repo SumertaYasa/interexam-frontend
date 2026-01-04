@@ -8,25 +8,25 @@ function CourseGrid() {
       id: 1,
       label: "Paket Soal 1",
       image: "/person.jpg",
-      progress: { answered: 2, totalSoal: 10 }, // 30%
+      progress: { answered: 2, totalSoal: 10 }, 
     },
     {
       id: 2,
       label: "Paket Soal 2",
       image: "/person.jpg",
-      progress: { answered: 2, totalSoal: 20 }, // 20%
+      progress: { answered: 2, totalSoal: 20 }, 
     },
     {
       id: 3,
       label: "Paket Soal 3",
       image: "/person.jpg",
-      progress: { answered: 1, totalSoal: 11 }, // ~9%
+      progress: { answered: 1, totalSoal: 11 }, 
     },
     {
       id: 4,
       label: "Paket Soal 3",
       image: "/person.jpg",
-      progress: { answered: 1, totalSoal: 11 }, // ~9%
+      progress: { answered: 1, totalSoal: 11 }, 
     },
   ];
 

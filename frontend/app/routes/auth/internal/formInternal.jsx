@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import AuthLayout from "../../../components/Auth/internal/authLayout";
+import AuthLayout from "../../../components/Auth/internal/AuthLayout.jsx";
 
 export function meta() {
   return [{ title: "login - InterExam" }];
