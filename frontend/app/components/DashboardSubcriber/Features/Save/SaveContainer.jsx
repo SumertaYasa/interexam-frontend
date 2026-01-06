@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useAuth } from "../../../../context/AuthContext";
+import { useFolder } from "../../../../context/FolderContext";
 import { Plus, MoreVertical, X } from "lucide-react";
-
+import { Link } from "react-router";
 function SaveContainer() {
-  const { folders, addFolder, showAlert } = useAuth();
-
-  // State untuk kontrol Modal
+  const { showAlert } = useAuth();
+  const { folders, addFolder } = useFolder();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
 
@@ -26,7 +26,7 @@ function SaveContainer() {
       return;
     }
 
-    addFolder(newFolderName); // Fungsi addFolder di Context sudah memicu showAlert sukses
+    addFolder(newFolderName);
     setNewFolderName("");
     setIsModalOpen(false);
   };
@@ -47,7 +47,8 @@ function SaveContainer() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {uniqueFolders.map((folder) => (
-          <div
+          <Link
+            to={`/dashboard-subscriber/tersimpan/${folder.id_folder}`}
             key={folder.id_folder}
             className="group cursor-pointer border border-gray-200 rounded-2xl overflow-hidden hover:shadow-md transition-all bg-white flex flex-col"
           >
@@ -61,18 +62,23 @@ function SaveContainer() {
 
             <div className="p-5 flex justify-between items-start gap-3">
               <div className="flex flex-col gap-1">
-                <h3 className="text-body-m font-bold text-gray-800 line-clamp-2 leading-snug">
+                <h3 className="text-base font-bold text-slate-800 line-clamp-2 leading-tight tracking-tight">
                   {folder.folder_name}
                 </h3>
-                <p className="text-body-s text-gray-500 font-medium">
+                <p className="text-xs font-medium text-slate-400 tracking-tight">
                   {folder.count} soal
                 </p>
               </div>
-              <button className="text-gray-400 hover:text-gray-600 p-1">
+              <button
+                className="text-gray-400 hover:text-gray-600 p-1"
+                onClick={(e) => {
+                  e.preventDefault();
+                }}
+              >
                 <MoreVertical size={20} />
               </button>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

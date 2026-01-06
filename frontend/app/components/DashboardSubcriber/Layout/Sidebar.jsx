@@ -24,15 +24,30 @@ const sideMenuLists = [
     name: "Latihan",
     icon: <Book />,
   },
-  { id: 3, link: "/perkembangan", name: "Perkembangan", icon: <ChartBar /> },
-  { id: 4, link: "/pencapaian", name: "Pencapaian", icon: <Award /> },
+  {
+    id: 3,
+    link: "/dashboard-subscriber/perkembangan",
+    name: "Perkembangan",
+    icon: <ChartBar />,
+  },
+  {
+    id: 4,
+    link: "/dashboard-subscriber/pencapaian",
+    name: "Pencapaian",
+    icon: <Award />,
+  },
   {
     id: 5,
-    link: "/dashboard-subscriber/simpan",
+    link: "/dashboard-subscriber/tersimpan",
     name: "Tersimpan",
     icon: <Bookmark />,
   },
-  { id: 6, link: "/pengaturan", name: "Pengaturan", icon: <Settings /> },
+  {
+    id: 6,
+    link: "/dashboard-subscriber/pengaturan",
+    name: "Pengaturan",
+    icon: <Settings />,
+  },
 ];
 
 function Sidebar({ profile = "/person.jpg" }) {

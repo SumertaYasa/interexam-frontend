@@ -15,28 +15,34 @@ export default function QuestionCard({
   }, [selectedAnswer]);
 
   return (
-    <div className="border rounded-md p-4 bg-white shadow-sm">
-      <div className="flex justify-between items-start">
-        <div className="font-semibold text-lg">
-          {index + 1}. {question.text}
+    <div className="border rounded-md p-6 bg-white shadow-sm font-sans antialiased">
+      <div className="flex justify-between items-start gap-4">
+        <div className="text-lg font-bold text-slate-800 tracking-tight leading-relaxed">
+          <span className="font-black tracking-tighter mr-1">{index + 1}.</span>{" "}
+          {question.text}
         </div>
-        <div className="flex items-center gap-2">
-          <button className="p-2 rounded-full hover:bg-slate-100">
-            <AlertCircle size={18} className="text-gray-400" />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button className="p-2 rounded-full hover:bg-slate-100 transition-colors">
+            <AlertCircle size={18} className="text-slate-400" />
           </button>
           <button
-            onClick={() => onBookmark(question.id)} // Kirim id_question
+            onClick={() => onBookmark(question.id)}
             className="p-2 rounded-full hover:bg-slate-100 transition-colors"
           >
-            <BookmarkIcon size={18} className="text-gray-400" />
+            <BookmarkIcon size={18} className="text-slate-400" />
           </button>
         </div>
       </div>
-      <div className="mt-4 flex flex-col gap-3">
+
+      <div className="mt-6 flex flex-col gap-3">
         {question.options.map((opt, i) => (
           <label
             key={i}
-            className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${selected === opt ? "bg-primary-50 border-primary-200" : "hover:bg-slate-50"}`}
+            className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all ${
+              selected === opt
+                ? "bg-primary-50 border-primary-200"
+                : "hover:bg-slate-50 border-slate-200"
+            }`}
           >
             <input
               type="radio"
@@ -46,9 +52,11 @@ export default function QuestionCard({
                 setSelected(opt);
                 onAnswer(index, opt);
               }}
-              className="accent-primary"
+              className="accent-primary w-4 h-4"
             />
-            <span className="text-gray-700">{opt}</span>
+            <span className="text-sm font-medium text-slate-700 tracking-tight leading-none">
+              {opt}
+            </span>
           </label>
         ))}
       </div>

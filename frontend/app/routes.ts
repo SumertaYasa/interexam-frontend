@@ -109,8 +109,16 @@ export default [
       "routes/dashboardSubscriber/course/dashboard.course.jsx"
     ),
     route(
-      "dashboard-subscriber/simpan",
+      "dashboard-subscriber/tersimpan",
       "routes/dashboardSubscriber/save/dashboard.save.jsx"
+    ),
+    route(
+      "dashboard-subscriber/pengaturan",
+      "routes/dashboardSubscriber/settings/dashboard.setting.jsx"
+    ),
+    route(
+      "dashboard-subscriber/perkembangan",
+      "routes/dashboardSubscriber/progress/dashboard.progress.jsx"
     ),
   ]),
 
@@ -136,6 +144,12 @@ export default [
   route(
     "dashboard-subscriber/latihan/:label/attempt",
     "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx"
+  ),
+
+  // Tersimpan
+  route(
+    "dashboard-subscriber/tersimpan/:id",
+    "components/DashboardSubcriber/Features/Save/DetailSave.jsx"
   ),
 
   // login internal (admin, validator, contributor)

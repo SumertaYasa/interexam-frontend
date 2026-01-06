@@ -11,7 +11,7 @@ export default function FilterPanel({
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className="w-full bg-white border border-slate-100 rounded-[2.5rem] shadow-xl p-8 my-4 animate-in fade-in slide-in-from-top-2 duration-300"
+      className="w-full bg-white border rounded-3xl shadow p-8 my-4 animate-in fade-in slide-in-from-top-2 duration-300"
     >
       {/* CSS Kustom untuk Slider Pointer (Thumb) agar muncul kembali */}
       <style
@@ -53,7 +53,7 @@ export default function FilterPanel({
               onChange={(e) =>
                 setFilters((f) => ({ ...f, category: e.target.value }))
               }
-              style={{ backgroundImage: "none" }} // FIX: Menghapus double arrow bawaan browser
+              style={{ backgroundImage: "none" }}
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>

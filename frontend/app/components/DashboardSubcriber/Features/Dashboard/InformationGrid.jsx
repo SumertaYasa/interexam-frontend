@@ -29,8 +29,14 @@ export function InformationGrid() {
       messageAlert: "Konsistensi adalah kunci kemajuanmu",
     },
   ];
+
+  const slideSpeeds = {
+    1: "slide-in-from-bottom-[2%]",
+    2: "slide-in-from-bottom-[4%]",
+    3: "slide-in-from-bottom-[6%]",
+  };
   return (
-    <div className="w-full flex  items-center gap-5">
+    <div className="w-full flex  items-center gap-5 ">
       {dataCardInformation.map((card) => (
         <CardInformation
           key={card.id}
@@ -39,7 +45,7 @@ export function InformationGrid() {
           value={card.value}
           messageInformation={card.messageInformation}
           messageAlert={card.messageAlert}
-          className=""
+          className={`animate-in fade-in duration-500 ${slideSpeeds[card.id] || ""}`}
         />
       ))}
     </div>

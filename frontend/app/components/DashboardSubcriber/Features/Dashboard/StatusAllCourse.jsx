@@ -207,8 +207,8 @@ function StatusAllCourse() {
           <div
             className={
               isHandleLayout
-                ? "flex flex-col gap-5 px-7-5 py-5 items-center"
-                : "flex flex-wrap gap-5 py-5 px-7-5 "
+                ? "flex flex-col gap-5 px-7-5 py-5 items-center animate-in fade-in duration-500"
+                : "flex flex-wrap gap-5 py-5 px-7-5 animate-in fade-in duration-500 slide-in-from-bottom-5"
             }
           >
             {filteredCourses.map((course) =>

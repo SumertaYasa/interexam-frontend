@@ -1,5 +1,6 @@
 import React from "react";
 import { useLoaderData, Link, useLocation } from "react-router";
+import { useFolder } from "../../../../context/FolderContext.tsx";
 import BreadCrumbs from "../../Common/BreadCrumbs";
 import RankingTable from "../../Common/RankingTable";
 import ProgressBar, { calculatePercentage } from "../../Common/ProgressBar";
@@ -82,14 +83,23 @@ export async function loader({ params, request }) {
 
 function DetailExam() {
   const examData = useLoaderData();
+  const { examProgress } = useFolder();
 
   if (!examData) {
     return (
       <div className="w-full px-7-5 py-10 text-center">
-        <p className="text-gray-500 font-semibold">Ujian tidak ditemukan.</p>
+        {/* Placeholder: font-bold tracking-tight */}
+        <p className="text-slate-500 font-bold tracking-tight text-sm">
+          Ujian tidak ditemukan.
+        </p>
       </div>
     );
   }
+
+  const answeredCount =
+    examProgress[examData.id] !== undefined
+      ? examProgress[examData.id]
+      : examData.progress?.answered || 0;
 
   const location = useLocation();
   const origin = location?.state?.from ?? null;
@@ -102,7 +112,7 @@ function DetailExam() {
 
   function Badge() {
     const base =
-      "text-xs font-semibold py-1 px-3 rounded-full border flex items-center gap-2";
+      "text-[11px] font-bold py-1 px-3 rounded-full border flex items-center gap-2 tracking-tight leading-none";
     const passedBadge = location?.state?.badge;
 
     if (passedBadge && passedBadge.label) {
@@ -117,7 +127,7 @@ function DetailExam() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full font-sans antialiased">
       <nav className="w-full px-7-5 py-3.5">
         <div className="w-12">
           <img src="/interexam-logo.svg" className="w-full" />
@@ -126,23 +136,23 @@ function DetailExam() {
 
       <div className="px-7-5 py-5 flex flex-col gap-5">
         <BreadCrumbs />
-        <div className="flex gap-5 w-full ">
+        <div className="flex gap-5 w-full">
           <div className="w-[600px] h-[400px] overflow-hidden rounded-[10px]">
-            <img src={examData.image} className="w-full" />
+            <img src={examData.image} className="w-full h-full object-cover" />
           </div>
           <div className="flex flex-col justify-between items-start w-[60%]">
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 w-full">
               <div className="flex items-center gap-3">
-                <h1 className="text-heading-3 font-semibold font-sora">
+                <h1 className="text-3xl font-bold text-slate-900 leading-tight">
                   {examData.label}
                 </h1>
               </div>
-              <div className="flex items-center gap-5">
-                <span className="text-body-xs-medium flex gap-1 border px-2.5 py-1 rounded">
+              <div className="flex items-center gap-5 w-[60%]">
+                <span className="text-xs font-bold text-slate-700 flex gap-1 border border-slate-200 px-3 py-1.5 rounded tracking-tight leading-none">
                   {examData.totalSoal} <span>soal</span>
                 </span>
                 <ProgressBar
-                  answered={examData.progress?.answered}
+                  answered={answeredCount}
                   total={examData.progress?.totalSoal}
                 />
               </div>
@@ -150,7 +160,7 @@ function DetailExam() {
 
             <Link
               to={attemptPath}
-              className="rounded px-4 py-2.5 bg-primary hover:bg-primary/80 text-white transition-colors duration-300"
+              className="rounded px-6 py-3 bg-primary hover:bg-primary/80 text-white font-bold text-sm tracking-tight transition-all duration-300 active:scale-95 shadow-lg shadow-primary/20"
             >
               Mulai kerjakan
             </Link>
@@ -158,13 +168,15 @@ function DetailExam() {
         </div>
 
         <div className="py-5">
-          <p className="text-justify text-body-s-regular w-full max-w-[1000px]">
+          <p className="text-justify text-sm font-medium text-slate-500 w-full max-w-[1000px] leading-relaxed tracking-tight">
             {examData.description}
           </p>
         </div>
 
-        <div className="mt-8 px-7-5 py-5">
-          <h2 className="text-heading-4 font-semibold mb-4">Peringkat</h2>
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-6 tracking-tight">
+            Peringkat
+          </h2>
           <RankingTable />
         </div>
       </div>

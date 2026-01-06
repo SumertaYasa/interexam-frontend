@@ -346,7 +346,7 @@ function CourseContainer() {
             Tidak ada paket soal ditemukan.
           </div>
         ) : viewMode === "grid" ? (
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4 animate-in fade-in duration-500 slide-in-from-bottom-[2%]">
             {filtered.map((course) => (
               <CardCourse
                 key={course.id}
@@ -362,7 +362,7 @@ function CourseContainer() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 animate-in fade-in duration-500 slide-in-from-bottom-[2%]">
             {filtered.map((course) => (
               <CardCourseList
                 key={course.id}
