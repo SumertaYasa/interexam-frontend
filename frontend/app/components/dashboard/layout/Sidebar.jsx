@@ -126,6 +126,24 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
               {userRole === "admin" && (
               <li>
                 <Link 
+                  to="jenjang" 
+                  className={`flex whitespace-nowrap transition-all duration-300 ease-in-out  h-12 items-center w-full p-2  pl-11 rounded-2xl group font-noto-sans text-base
+                    ${isActive("/dashboard/jenjang") 
+                      ? "text-gray-900 bg-primary/10 font-medium" 
+                      : "text-gray-500 hover:text-gray-900 hover:bg-primary/10"}`}>
+                  <svg 
+                    className={`w-5 h-5 mr-2 ml-4 transition-transform flex-shrink-0  ${isActive("jenjang") ? "text-gray-900" : "text-gray-400"}`}
+                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m9 5 7 7-7 7"/>
+                  </svg>
+                  Jenjang
+                </Link>
+              </li>
+              )}
+
+              {userRole === "admin" && (
+              <li>
+                <Link 
                   to="mata-pelajaran" 
                   className={`flex whitespace-nowrap transition-all duration-300 ease-in-out  h-12 items-center w-full p-2  pl-11 rounded-2xl group font-noto-sans text-base
                     ${isActive("/dashboard/mata-pelajaran") 

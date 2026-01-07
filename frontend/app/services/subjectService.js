@@ -1,46 +1,32 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+};
+
 export const subjectService = {
-    // Ambil semua mata pelajaran
     getAllSubjects: async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/admin/subjects`);
-            const result = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(result.message || "Gagal mengambil data mata pelajaran");
-            }
-            return result.data;
-        } catch (error) {
-            console.error("Error fetching subjects:", error);
-            throw error;
-        }
-    },
-
-    // Hapus mata pelajaran
-    deleteSubject: async (id) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/admin/subject/${id}`, {
-                method: 'DELETE'
+            const response = await fetch(`${API_BASE_URL}/admin/subjects`, {
+                headers: getAuthHeaders()
             });
             const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || "Gagal menghapus mata pelajaran");
-            }
-            return result;
+            if (!response.ok) throw new Error(result.message || "Gagal mengambil data");
+            return result.data;
         } catch (error) {
-            console.error("Error deleting subject:", error);
             throw error;
         }
     },
 
-    // Tambah Mata Pelajaran
     createSubject: async (data) => {
         try {
             const response = await fetch(`${API_BASE_URL}/admin/subject`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(data)
             });
             const result = await response.json();
@@ -51,12 +37,11 @@ export const subjectService = {
         }
     },
 
-    // Update Mata Pelajaran
     updateSubject: async (id, data) => {
         try {
             const response = await fetch(`${API_BASE_URL}/admin/subject/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(data)
             });
             const result = await response.json();
@@ -67,13 +52,17 @@ export const subjectService = {
         }
     },
 
-    // Get Subject By ID
-    getSubjectById: async (id) => {
+    deleteSubject: async (id) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/admin/subject/${id}`);
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message);
-            return result.data;
+            const response = await fetch(`${API_BASE_URL}/admin/subject/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            if (!response.ok) {
+                const result = await response.json();
+                throw new Error(result.message || "Gagal menghapus");
+            }
+            return await response.json();
         } catch (error) {
             throw error;
         }

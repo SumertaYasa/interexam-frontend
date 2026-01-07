@@ -31,17 +31,16 @@ export default function EditUser() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                // Ambil List Subjects
-                const subjectsRes = await fetch(`${API_BASE_URL}/admin/subjects`);
-                const subjectsData = await subjectsRes.json();
-                if (subjectsRes.ok) {
-                    setSubjectsList(subjectsData.data.map(s => ({ 
-                        label: s.nama_subject, 
-                        value: s.id_subject 
-                    })));
-                }
+                // 1. PERBAIKAN: Gunakan userService agar token terkirim otomatis
+                const subjectsData = await userService.getSubjectsForDropdown();
+                
+                // Map data dari id_subject ke value dan nama_subject ke label
+                setSubjectsList(subjectsData.map(s => ({ 
+                    label: s.nama_subject, 
+                    value: s.id_subject 
+                })));
 
-                // Ambil Data User yang mau diedit
+                // 2. Ambil Data User yang mau diedit
                 const user = await userService.getUserById(id);
 
                 setFormData({
@@ -50,23 +49,24 @@ export default function EditUser() {
                     phone_number: user.phone || "",
                     password: "",
                     role: user.role,
-                    keahlian: user.subject_ids || [],
+                    // Pastikan backend mengirim subject_ids dalam bentuk array [1, 2]
+                    keahlian: user.subject_ids || [], 
                     fotoProfile: null
                 });
 
-                // Set Preview Foto dari Server
+                // Set Preview Foto
                 setPreviewImage(getPhotoUrl(user.foto));
 
             } catch (error) {
-                alert("Gagal memuat data user.");
+                console.error("Error load data:", error);
+                alert("Gagal memuat data: " + error.message);
                 navigate("/dashboard/users");
             } finally {
                 setIsLoading(false);
             }
         };
-
         loadData();
-    }, [id, API_BASE_URL, navigate]);
+    }, [id,navigate]);
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
