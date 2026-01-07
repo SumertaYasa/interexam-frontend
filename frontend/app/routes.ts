@@ -24,6 +24,10 @@ export default [
     route("bank-soal/detail/:id", "routes/dashboard/bank-soal/detail.soal.jsx"),
 
     //  -------------------- KHUSUS KATEGORI ------------------------
+    // Kategori Jenjang
+    route("jenjang", "routes/dashboard/jenjang/data.jenjang.jsx"),
+    // route("jenjang/add", "routes/dashboard/jenjang/add.jenjang.jsx"),
+    // route("jenjang/edit/:id", "routes/dashboard/jenjang/edit.jenjang.jsx"),
     // Kategori Mata Pelajaran
     route(
       "mata-pelajaran",

@@ -1,10 +1,17 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+const getAuthHeaders = () => ({
+    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+    'Content-Type': 'application/json'
+});
+
 export const topicService = {
     // Ambil semua topik
     getAllTopics: async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/topics`);
+            const response = await fetch(`${API_BASE_URL}/topics`, {
+                headers: getAuthHeaders() // Tambahkan ini
+            });
             const result = await response.json();
             
             if (!response.ok) {
@@ -22,6 +29,7 @@ export const topicService = {
         try {
             const response = await fetch(`${API_BASE_URL}/topics/${id}`, {
                 method: 'DELETE',
+                headers: getAuthHeaders() // Tambahkan ini
             });
             const result = await response.json();
 
@@ -38,7 +46,9 @@ export const topicService = {
     // Get Topic By ID
     getTopicById: async (id) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/topics/${id}`);
+            const response = await fetch(`${API_BASE_URL}/topics/${id}`, {
+                headers: getAuthHeaders() // Tambahkan ini
+            });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || "Topik tidak ditemukan");
             return result.data;
@@ -52,7 +62,7 @@ export const topicService = {
         try {
             const response = await fetch(`${API_BASE_URL}/topics`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(), // Gunakan getAuthHeaders
                 body: JSON.stringify(data)
             });
             const result = await response.json();
@@ -70,7 +80,7 @@ export const topicService = {
         try {
             const response = await fetch(`${API_BASE_URL}/topics/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(), // Gunakan getAuthHeaders
                 body: JSON.stringify(data)
             });
             const result = await response.json();
