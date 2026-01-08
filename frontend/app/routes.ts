@@ -98,7 +98,7 @@ export default [
     route("artikel/add", "routes/dashboard/artikel/add.artikel.jsx"),
   ]),
 
-  // dashboard subscriber
+  // Route Halaman dashboard subscriber
   layout("routes/dashboardSubscriber.jsx", [
     route(
       "dashboard-subscriber",
@@ -120,36 +120,74 @@ export default [
       "dashboard-subscriber/perkembangan",
       "routes/dashboardSubscriber/progress/dashboard.progress.jsx"
     ),
+    route(
+      "dashboard-subscriber/pencapaian",
+      "routes/dashboardSubscriber/achievement/dashboard.achievement.jsx"
+    ),
   ]),
 
-  // status ujian terakhir
+  // Route Halaman Status
   route(
     "dashboard-subscriber/status-ujian-terakhir",
     "components/DashboardSubcriber/Features/Dashboard/StatusAllCourse.jsx"
   ),
   route(
     "dashboard-subscriber/status-ujian-terakhir/:label",
-    "components/DashboardSubcriber/Features/Exam/DetailExam.jsx"
+    "components/DashboardSubcriber/Features/Exam/DetailExam.jsx",
+    { id: "status-detail" }
   ),
   route(
     "dashboard-subscriber/status-ujian-terakhir/:label/attempt",
-    "components/DashboardSubcriber/Features/Exam/ExamAttemptStatus.jsx"
+    "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx",
+    { id: "status-attempt" }
+  ),
+  route(
+    "dashboard-subscriber/status-ujian-terakhir/:label/result",
+    "components/DashboardSubcriber/Features/Exam/ResultExam.jsx",
+    { id: "status-result" }
   ),
 
-  // Latihan
+  // Route Halaman Latihan
   route(
     "dashboard-subscriber/latihan/:label",
-    "components/DashboardSubcriber/Features/Exam/DetailExamLatihan.jsx"
+    "components/DashboardSubcriber/Features/Exam/DetailExam.jsx",
+    { id: "latihan-detail" }
   ),
   route(
     "dashboard-subscriber/latihan/:label/attempt",
-    "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx"
+    "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx",
+    { id: "latihan-attempt" }
+  ),
+  route(
+    "dashboard-subscriber/latihan/:label/result",
+    "components/DashboardSubcriber/Features/Exam/ResultExam.jsx",
+    { id: "latihan-result" }
   ),
 
-  // Tersimpan
+  // Route Halaman Simpan
   route(
     "dashboard-subscriber/tersimpan/:id",
     "components/DashboardSubcriber/Features/Save/DetailSave.jsx"
+  ),
+  route(
+    "dashboard-subscriber/tersimpan/:label/exam-detail",
+    "components/DashboardSubcriber/Features/Exam/DetailExam.jsx",
+    { id: "folder-detail" }
+  ),
+  route(
+    "dashboard-subscriber/tersimpan/:label/attempt",
+    "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx",
+    { id: "folder-attempt" }
+  ),
+  route(
+    "dashboard-subscriber/tersimpan/:label/result",
+    "components/DashboardSubcriber/Features/Exam/ResultExam.jsx",
+    { id: "folder-result" }
+  ),
+
+  route(
+    "dashboard-subscriber/pencapaian/lencana",
+    "components/DashboardSubcriber/Features/Achievement/BadgeContainer.jsx"
   ),
 
   // login internal (admin, validator, contributor)

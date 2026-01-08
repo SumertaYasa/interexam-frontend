@@ -128,16 +128,11 @@ function LoadingCards() {
   );
 }
 
-/**
- * Route loader: fetches courses data from API.
- * Returns: { courses: Array }
- * Endpoint: '/api/courses' (adjust server path as needed)
- */
 export async function loader({ request }) {
   try {
     const res = await fetch("/api/courses", { signal: request?.signal });
     if (!res.ok) {
-      return { courses: [] };
+      return { courses: DUMMY_COURSES };
     }
     const data = await res.json();
     const items = Array.isArray(data) ? data : (data?.courses ?? []);
@@ -146,15 +141,14 @@ export async function loader({ request }) {
       id: it.id ?? it._id ?? Math.random().toString(36).slice(2, 9),
       title: it.title ?? it.label ?? it.name ?? "Untitled",
       image: it.image ?? it.thumbnail ?? "/person.jpg",
-      rating: it.rating ?? 0,
+      rating: Number(it.rating ?? 0),
       totalSoal: it.totalSoal ?? it.totalQuestions ?? it.total ?? 0,
       participants: it.participants ?? it.totalTaken ?? it.timesTaken ?? 0,
       category: it.category ?? it.subject ?? "Umum",
       createdAt:
         it.createdAt ?? it.uploadedAt ?? it.created_at ?? it.created ?? null,
       path:
-        it.path ??
-        `/dashboard-subscriber/latihan/${slugify(it.title ?? it.label ?? it.name ?? "")}`,
+        it.path ?? `/dashboard-subscriber/latihan/${slugify(it.title ?? "")}`,
       linkState: {
         from: "course",
         badge: {
@@ -166,8 +160,7 @@ export async function loader({ request }) {
 
     return { courses: normalized };
   } catch (err) {
-    // network error or aborted
-    return { courses: [] };
+    return { courses: DUMMY_COURSES };
   }
 }
 
@@ -190,7 +183,6 @@ function CourseContainer() {
     }
   }, [viewMode]);
 
-  // Filters state (persisted)
   const defaultFilters = { category: "all", minRating: 0, sortBy: "relevance" };
   const [filters, setFilters] = useState(() => {
     try {
@@ -204,12 +196,9 @@ function CourseContainer() {
   useEffect(() => {
     try {
       localStorage.setItem("courseFilters", JSON.stringify(filters));
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
   }, [filters]);
 
-  // Close filter panel on outside click (clicks inside panel/button will stop propagation)
   useEffect(() => {
     function onWindowClick() {
       if (filterOpen) setFilterOpen(false);
@@ -222,7 +211,6 @@ function CourseContainer() {
     setViewMode((prev) => (prev === "grid" ? "list" : "grid"));
   };
 
-  // Debounce search input (500ms)
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query.trim()), 500);
     return () => clearTimeout(t);
@@ -230,20 +218,18 @@ function CourseContainer() {
 
   const isSearching = query.trim() !== debouncedQuery;
 
-  // Pull courses from route loader (falls back to dummy data)
   const loaderData = useLoaderData();
   const courses = loaderData?.courses ?? DUMMY_COURSES;
 
-  // Extract categories
   const categories = useMemo(() => {
     const set = new Set();
     courses.forEach((c) => set.add(c.category || "Umum"));
     return ["all", ...Array.from(set)];
   }, [courses]);
 
-  // Apply search + filters + sorting
+  // --- LOGIKA FILTER (DIPERBAIKI) ---
   const filtered = useMemo(() => {
-    let list = courses.slice();
+    let list = [...courses];
 
     // search
     if (debouncedQuery) {
@@ -256,9 +242,10 @@ function CourseContainer() {
       list = list.filter((c) => c.category === filters.category);
     }
 
-    // rating
-    if (filters.minRating && Number(filters.minRating) > 0) {
-      list = list.filter((c) => (c.rating || 0) >= Number(filters.minRating));
+    // rating (FIXED: Pastikan casting ke Number)
+    const minRating = Number(filters.minRating);
+    if (minRating > 0) {
+      list = list.filter((c) => Number(c.rating || 0) >= minRating);
     }
 
     // sorting
@@ -266,12 +253,8 @@ function CourseContainer() {
       list.sort(
         (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
       );
-    } else if (filters.sortBy === "oldest") {
-      list.sort(
-        (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
-      );
     } else if (filters.sortBy === "rating") {
-      list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      list.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
     } else if (filters.sortBy === "questions") {
       list.sort((a, b) => (b.totalSoal || 0) - (a.totalSoal || 0));
     }
@@ -334,6 +317,21 @@ function CourseContainer() {
             categories={categories}
             onClose={() => setFilterOpen(false)}
             onClear={handleClearFilters}
+            // SINKRONISASI PROPS BARU
+            labels={{
+              categoryLabel: "Mata Pelajaran",
+              ratingLabel: "Rating Minimal",
+              sortLabel: "Urutkan",
+              allCategoryText: "Semua Mapel",
+              applyButtonText: "Terapkan",
+              resetButtonText: "Bersihkan",
+            }}
+            sortOptions={[
+              { value: "relevance", label: "Relevansi" },
+              { value: "newest", label: "Terbaru" },
+              { value: "rating", label: "Rating Tertinggi" },
+              { value: "questions", label: "Soal Terbanyak" },
+            ]}
           />
         )}
       </div>

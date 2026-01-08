@@ -6,6 +6,7 @@ interface Question {
   text: string;
   options: string[];
   subject?: string;
+  correctAnswer: number;
 }
 
 interface FolderItem {
@@ -49,18 +50,70 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
       id: "q1",
       text: "She _______ to the market when it started to rain.",
       options: ["go", "goes", "went", "was going"],
+      correctAnswer: 3,
       subject: "Bahasa Inggris",
     },
     {
       id: "q2",
       text: "Choose the correct sentence:",
       options: ["He don't like coffee.", "He doesn't like coffee."],
+      correctAnswer: 1,
       subject: "Bahasa Inggris",
     },
     {
       id: "q3",
       text: "If I _______ enough money, I would buy a new phone.",
       options: ["have", "had", "would have"],
+      correctAnswer: 1,
+      subject: "Bahasa Inggris",
+    },
+    {
+      id: "q4",
+      text: "I ______ my breakfast at 7 AM this morning.",
+      options: ["ate", "eaten", "eat", "was eating"],
+      correctAnswer: 0,
+      subject: "Bahasa Inggris",
+    },
+    {
+      id: "q5",
+      text: "The movie was so ______ that I fell asleep.",
+      options: ["excited", "exciting", "bored", "boring"],
+      correctAnswer: 3,
+      subject: "Bahasa Inggris",
+    },
+    {
+      id: "q6",
+      text: "She is the ______ girl in our class.",
+      options: ["smart", "smarter", "smartest", "most smart"],
+      correctAnswer: 2,
+      subject: "Bahasa Inggris",
+    },
+    {
+      id: "q7",
+      text: "Look! The cat ______ on the sofa right now.",
+      options: ["sleep", "sleeps", "is sleeping", "was sleeping"],
+      correctAnswer: 2,
+      subject: "Bahasa Inggris",
+    },
+    {
+      id: "q8",
+      text: "We ______ to Japan for our holiday last year.",
+      options: ["go", "gone", "went", "going"],
+      correctAnswer: 2,
+      subject: "Bahasa Inggris",
+    },
+    {
+      id: "q9",
+      text: "Would you mind ______ the window? It's hot in here.",
+      options: ["open", "to open", "opening", "opened"],
+      correctAnswer: 2,
+      subject: "Bahasa Inggris",
+    },
+    {
+      id: "q10",
+      text: "If I ______ a bird, I would fly around the world.",
+      options: ["am", "was", "be", "were"],
+      correctAnswer: 3,
       subject: "Bahasa Inggris",
     },
   ]);

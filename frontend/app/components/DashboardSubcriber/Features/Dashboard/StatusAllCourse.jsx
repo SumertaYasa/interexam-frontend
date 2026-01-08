@@ -57,20 +57,6 @@ const Courses = [
     progress: { answered: 0, totalSoal: 20 },
     category: "Umum",
   },
-  {
-    id: 16,
-    label: "Paket Soal 16 - Tryout Akbar",
-    image: "/person.jpg",
-    progress: { answered: 0, totalSoal: 20 },
-    category: "Umum",
-  },
-  {
-    id: 16,
-    label: "Paket Soal 16 - Tryout Akbar",
-    image: "/person.jpg",
-    progress: { answered: 0, totalSoal: 20 },
-    category: "Umum",
-  },
 ];
 
 function LoadingCards() {
@@ -88,7 +74,7 @@ function StatusAllCourse() {
   const [debouncedValue, setDebouncedValue] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
 
-  // State Filter (Kategori & Progres)
+  // State Filter
   const defaultFilters = { category: "all", minRating: 0, sortBy: "relevance" };
   const [filters, setFilters] = useState(defaultFilters);
 
@@ -101,37 +87,44 @@ function StatusAllCourse() {
   });
 
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(searchValue), 500);
+    const handler = setTimeout(
+      () => setDebouncedValue(searchValue.trim()),
+      500
+    );
     return () => clearTimeout(handler);
   }, [searchValue]);
 
-  // Ambil kategori unik dari data
   const categories = useMemo(() => {
     const set = new Set();
     Courses.forEach((c) => set.add(c.category || "Umum"));
     return ["all", ...Array.from(set)];
   }, []);
 
-  // Logika Filtering & Sorting
+  // filtering
   const filteredCourses = useMemo(() => {
     let list = Courses.filter((course) => {
+      //  Pencarian
       const matchesSearch = course.label
         .toLowerCase()
         .includes(debouncedValue.toLowerCase());
+
+      // Kategori
       const matchesCategory =
         filters.category === "all" || course.category === filters.category;
 
-      // Hitung persentase progres untuk filter (minRating di sini dianggap progres 0-5)
+      // progress
       const progressPercent =
         (course.progress.answered / course.progress.totalSoal) * 5;
-      const matchesProgress = progressPercent >= filters.minRating;
+      const matchesProgress = progressPercent >= Number(filters.minRating);
 
       return matchesSearch && matchesCategory && matchesProgress;
     });
 
-    if (filters.sortBy === "newest") list.reverse();
-    if (filters.sortBy === "rating") {
-      list.sort(
+    // 4. Logika Sorting
+    if (filters.sortBy === "newest") {
+      list = [...list].reverse();
+    } else if (filters.sortBy === "rating") {
+      list = [...list].sort(
         (a, b) =>
           b.progress.answered / b.progress.totalSoal -
           a.progress.answered / a.progress.totalSoal
@@ -146,8 +139,8 @@ function StatusAllCourse() {
   }, [isHandleLayout]);
 
   return (
-    <div className="w-full ">
-      <nav className="w-full px-7-5 py-3.5  bg-white">
+    <div className="w-full">
+      <nav className="w-full px-7-5 py-3.5 bg-white">
         <div className="w-12">
           <img src="/interexam-logo.svg" className="w-full" alt="Logo" />
         </div>
@@ -175,9 +168,12 @@ function StatusAllCourse() {
             </button>
           </div>
         </div>
+
         <div>
           <button
-            className={`flex justify-center items-center gap-2.5 border px-5 py-2.5 rounded-full cursor-pointer transition-all ${filterOpen ? "bg-slate-900 text-white" : "bg-white text-black"}`}
+            className={`flex justify-center items-center gap-2.5 border px-5 py-2.5 rounded-full cursor-pointer transition-all ${
+              filterOpen ? "bg-slate-900 text-white" : "bg-white text-black"
+            }`}
             onClick={() => setFilterOpen(!filterOpen)}
           >
             <Sliders size={20} />
@@ -192,11 +188,25 @@ function StatusAllCourse() {
             categories={categories}
             onClose={() => setFilterOpen(false)}
             onClear={() => setFilters(defaultFilters)}
+            // --- UPDATE PROPS FILTERPANEL (SINKRONISASI LABEL) ---
+            labels={{
+              categoryLabel: "Kategori Mapel",
+              ratingLabel: "Minimal Progres Pengerjaan",
+              sortLabel: "Urutkan Berdasarkan",
+              allCategoryText: "Semua Kategori",
+              applyButtonText: "Terapkan Filter",
+              resetButtonText: "Reset",
+            }}
+            sortOptions={[
+              { value: "relevance", label: "Paling Relevan" },
+              { value: "newest", label: "Terakhir Dipelajari" },
+              { value: "rating", label: "Progres Tertinggi" },
+            ]}
           />
         )}
       </div>
 
-      <div className="w-full ">
+      <div className="w-full">
         {searchValue !== debouncedValue ? (
           <LoadingCards />
         ) : filteredCourses.length === 0 ? (

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import InfoCards from "./InfoCards";
-import BarChart from "./BarChart";
-import ActivitySummary from "./ActivitySummary";
+import InfoCards from "./Components/InfoCards";
+import BarChart from "./Components/BarChart";
+import ActivitySummary from "./Components/ActivitySummary";
 
 const DUMMY_DATA = {
   Mingguan: {
