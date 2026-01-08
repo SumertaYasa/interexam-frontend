@@ -94,19 +94,25 @@ function Row({ index, user }) {
 
   return (
     <div className={`${baseClasses} ${rowBg}`}>
-      <div className="w-8 text-center font-semibold">{index + 1}</div>
+      <div className="w-8 text-center font-bold tracking-tighter leading-none">
+        {index + 1}
+      </div>
       <div className="flex items-center gap-3">
         <img
           src={user.avatar}
           alt={user.name}
           className="w-8 h-8 rounded-full object-cover"
         />
-        <div className="font-medium">{user.name}</div>
+        <div className="font-bold tracking-tight text-slate-800 leading-none">
+          {user.name}
+        </div>
       </div>
-      <div className="ml-auto w-[120px] text-right text-body-xs-medium">
+      <div className="ml-auto w-[120px] text-right text-[11px] font-medium tracking-tight text-slate-500 leading-none">
         {user.correct}/{user.total}
       </div>
-      <div className="w-[100px] text-right font-semibold">{user.score}</div>
+      <div className="w-[100px] text-right font-black tracking-tighter text-slate-900 leading-none">
+        {user.score}
+      </div>
     </div>
   );
 }
@@ -117,7 +123,6 @@ export default function RankingTable({ data = TOP_TEN }) {
     .sort((a, b) => b.score - a.score)
     .slice(0, 10);
 
-  // prevent hydration mismatch: start as false on both server and initial client render
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -129,14 +134,13 @@ export default function RankingTable({ data = TOP_TEN }) {
           sessionStorage.getItem("token")
       );
       setIsLoggedIn(logged);
-    } catch (e) {
-    }
+    } catch (e) {}
   }, []);
 
   return (
-    <div className="w-full rounded-md border border-neutral-200 overflow-hidden">
+    <div className="w-full rounded-md border border-neutral-200 overflow-hidden font-sans">
       <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-200">
-        <div className="flex items-center gap-4 text-sm font-medium">
+        <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
           <div style={{ width: 32 }}>No</div>
           <div>Nama</div>
           <div className="ml-auto w-[120px] text-right">Jawaban benar</div>
@@ -149,21 +153,24 @@ export default function RankingTable({ data = TOP_TEN }) {
           <Row key={user.id} index={idx} user={user} />
         ))}
 
-        {/* Show placeholder row when user is not logged in */}
         {!isLoggedIn && (
           <div className="flex items-center gap-4 px-4 py-4 rounded-md bg-white">
-            <div className="w-8 text-center text-gray-500">-</div>
-            <div className="text-gray-600">
+            <div className="w-8 text-center text-gray-500 font-bold tracking-tighter">
+              -
+            </div>
+            <div className="text-gray-600 text-sm font-medium tracking-tight">
               Belum ada peringkat — silakan{" "}
-              <a href="/login" className="text-primary underline">
+              <a href="/login" className="text-primary underline font-bold">
                 masuk
               </a>{" "}
               untuk melihat peringkatmu
             </div>
-            <div className="ml-auto w-[120px] text-right text-body-xs-medium text-gray-400">
+            <div className="ml-auto w-[120px] text-right text-[11px] font-bold tracking-tight text-gray-400">
               -
             </div>
-            <div className="w-[100px] text-right text-gray-400">-</div>
+            <div className="w-[100px] text-right text-gray-400 font-black tracking-tighter">
+              -
+            </div>
           </div>
         )}
       </div>

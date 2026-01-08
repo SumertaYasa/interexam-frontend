@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useLoaderData, Link, useLocation } from "react-router";
+import { useFolder } from "../../../../context/FolderContext.tsx";
 import BreadCrumbs from "../../Common/BreadCrumbs";
 import RankingTable from "../../Common/RankingTable";
-import ProgressBar, { calculatePercentage } from "../../Common/ProgressBar";
+import ProgressBar from "../../Common/ProgressBar";
 import { slugify } from "../../../../utils/slugify.ts";
 
-// latihan (unanswered / course) exams
 const DATA_UJIAN_LATIHAN = [
   {
     id: "lat-1",
@@ -13,8 +13,8 @@ const DATA_UJIAN_LATIHAN = [
     description:
       "Latihan struktur dan penggunaan bahasa Inggris untuk meningkatkan grammar dan fluency.",
     image: "/person.jpg",
-    progress: { answered: 0, totalSoal: 50 },
-    totalSoal: 50,
+    progress: { answered: 0, totalSoal: 10 },
+    totalSoal: 10,
   },
   {
     id: "lat-2",
@@ -27,7 +27,6 @@ const DATA_UJIAN_LATIHAN = [
   },
 ];
 
-// status (already answered / progress) exams
 const DATA_UJIAN_STATUS = [
   {
     id: "st-1",
@@ -58,99 +57,102 @@ const DATA_UJIAN_STATUS = [
   },
 ];
 
+// --- LOADER: Hanya fokus pada Latihan & Status ---
 export async function loader({ params, request }) {
   const labelParam = params.label;
   const url = request?.url ?? "";
 
-  // Determine which dataset to search based on the route path
-  let dataset = null;
   if (url.includes("/dashboard-subscriber/status-ujian-terakhir/")) {
-    dataset = DATA_UJIAN_STATUS;
-  } else if (url.includes("/dashboard-subscriber/latihan/")) {
-    dataset = DATA_UJIAN_LATIHAN;
-  } else {
-    // fallback: search both
-    const found =
-      DATA_UJIAN_LATIHAN.find((e) => slugify(e.label) === labelParam) ||
-      DATA_UJIAN_STATUS.find((e) => slugify(e.label) === labelParam);
-    return found || null;
+    const found = DATA_UJIAN_STATUS.find(
+      (e) => slugify(e.label) === labelParam
+    );
+    return { mode: "status", data: found };
   }
 
-  const exam = dataset.find((exam) => slugify(exam.label) === labelParam);
-  return exam || null;
+  if (url.includes("/dashboard-subscriber/latihan/")) {
+    const found = DATA_UJIAN_LATIHAN.find(
+      (e) => slugify(e.label) === labelParam
+    );
+    return { mode: "latihan", data: found };
+  }
+
+  // Fallback ke latihan jika tidak terdeteksi
+  const fallback =
+    DATA_UJIAN_LATIHAN.find((e) => slugify(e.label) === labelParam) ||
+    DATA_UJIAN_STATUS.find((e) => slugify(e.label) === labelParam);
+  return { mode: "latihan", data: fallback };
 }
 
 function DetailExam() {
-  const examData = useLoaderData();
+  const loaderResult = useLoaderData();
+  const { examProgress } = useFolder(); // Folders dihapus karena tidak lagi digunakan di sini
+  const location = useLocation();
+
+  // Logika Pemilihan Data (Hanya untuk Paket Statis)
+  const examData = useMemo(() => {
+    if (!loaderResult || !loaderResult.data) return null;
+
+    return {
+      ...loaderResult.data,
+      origin:
+        loaderResult.mode === "status" ? "status-ujian-terakhir" : "latihan",
+    };
+  }, [loaderResult]);
 
   if (!examData) {
     return (
-      <div className="w-full px-7-5 py-10 text-center">
-        <p className="text-gray-500 font-semibold">Ujian tidak ditemukan.</p>
+      <div className="w-full px-7-5 py-10 text-center font-bold text-slate-500">
+        Ujian tidak ditemukan.
       </div>
     );
   }
 
-  const location = useLocation();
-  const origin = location?.state?.from ?? null;
+  const answeredCount =
+    examProgress[examData.id] !== undefined
+      ? examProgress[examData.id]
+      : examData.progress?.answered || 0;
 
   const slug = slugify(examData.label);
-  const attemptPath =
-    origin === "status"
-      ? `/dashboard-subscriber/status-ujian-terakhir/${slug}/attempt`
-      : `/dashboard-subscriber/latihan/${slug}/attempt`;
-
-  function Badge() {
-    const base =
-      "text-xs font-semibold py-1 px-3 rounded-full border flex items-center gap-2";
-    const passedBadge = location?.state?.badge;
-
-    if (passedBadge && passedBadge.label) {
-      return (
-        <span className={`${base} ${passedBadge.classes}`}>
-          {passedBadge.label}
-        </span>
-      );
-    }
-
-    return null;
-  }
+  const attemptPath = `/dashboard-subscriber/${examData.origin}/${slug}/attempt`;
 
   return (
-    <div className="w-full">
+    <div className="w-full font-sans antialiased">
       <nav className="w-full px-7-5 py-3.5">
         <div className="w-12">
-          <img src="/interexam-logo.svg" className="w-full" />
+          <img src="/interexam-logo.svg" className="w-full" alt="Logo" />
         </div>
       </nav>
 
       <div className="px-7-5 py-5 flex flex-col gap-5">
         <BreadCrumbs />
-        <div className="flex gap-5 w-full ">
+        <div className="flex gap-5 w-full">
           <div className="w-[600px] h-[400px] overflow-hidden rounded-[10px]">
-            <img src={examData.image} className="w-full" />
+            <img
+              src={examData.image}
+              className="w-full h-full object-cover"
+              alt="Ujian"
+            />
           </div>
           <div className="flex flex-col justify-between items-start w-[60%]">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <h1 className="text-heading-3 font-semibold font-sora">
-                  {examData.label}
-                </h1>
-              </div>
-              <div className="flex items-center gap-5">
-                <span className="text-body-xs-medium flex gap-1 border px-2.5 py-1 rounded">
-                  {examData.totalSoal} <span>soal</span>
+            <div className="flex flex-col gap-6 w-full">
+              <h1 className="text-3xl font-bold text-slate-900 leading-tight">
+                {examData.label}
+              </h1>
+              <div className="flex items-center gap-5 w-[60%]">
+                <span className="text-xs font-bold text-slate-700 border border-slate-200 px-3 py-1.5 rounded tracking-tight leading-none">
+                  {examData.totalSoal} soal
                 </span>
                 <ProgressBar
-                  answered={examData.progress?.answered}
-                  total={examData.progress?.totalSoal}
+                  answered={answeredCount}
+                  total={examData.totalSoal}
                 />
               </div>
             </div>
 
             <Link
               to={attemptPath}
-              className="rounded px-4 py-2.5 bg-primary hover:bg-primary/80 text-white transition-colors duration-300"
+              state={{ from: loaderResult.mode }}
+              className="rounded px-6 py-3 bg-primary hover:bg-primary/80 text-white font-bold text-sm tracking-tight transition-all duration-300 active:scale-95 shadow-lg shadow-primary/20"
             >
               Mulai kerjakan
             </Link>
@@ -158,13 +160,15 @@ function DetailExam() {
         </div>
 
         <div className="py-5">
-          <p className="text-justify text-body-s-regular w-full max-w-[1000px]">
+          <p className="text-justify text-sm font-medium text-slate-500 w-full max-w-[1000px] leading-relaxed tracking-tight">
             {examData.description}
           </p>
         </div>
 
-        <div className="mt-8 px-7-5 py-5">
-          <h2 className="text-heading-4 font-semibold mb-4">Peringkat</h2>
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-6 tracking-tight">
+            Peringkat
+          </h2>
           <RankingTable />
         </div>
       </div>

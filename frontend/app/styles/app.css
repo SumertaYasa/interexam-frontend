@@ -11,7 +11,7 @@
 
   /* Colors */
   --color-primary: oklch(0.5339 0.1249 247.74);
-  --color-secondary: oklch(0.6551 0.2150 327.69);
+  --color-secondary: oklch(0.6551 0.215 327.69);
   --color-background: oklch(1 0 89.88);
   --color-dashboard: oklch(0.9851 0 89.88);
   --color-foreground: oklch(0 0 0);

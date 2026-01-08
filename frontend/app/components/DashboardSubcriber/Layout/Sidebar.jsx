@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router";
+import { useAuth } from "../../../context/AuthContext";
 import {
   LayoutDashboard,
   Book,
@@ -23,14 +24,35 @@ const sideMenuLists = [
     name: "Latihan",
     icon: <Book />,
   },
-  { id: 3, link: "/perkembangan", name: "Perkembangan", icon: <ChartBar /> },
-  { id: 4, link: "/pencapaian", name: "Pencapaian", icon: <Award /> },
-  { id: 5, link: "/tersimpan", name: "Tersimpan", icon: <Bookmark /> },
-  { id: 6, link: "/pengaturan", name: "Pengaturan", icon: <Settings /> },
+  {
+    id: 3,
+    link: "/dashboard-subscriber/perkembangan",
+    name: "Perkembangan",
+    icon: <ChartBar />,
+  },
+  {
+    id: 4,
+    link: "/dashboard-subscriber/pencapaian",
+    name: "Pencapaian",
+    icon: <Award />,
+  },
+  {
+    id: 5,
+    link: "/dashboard-subscriber/tersimpan",
+    name: "Tersimpan",
+    icon: <Bookmark />,
+  },
+  {
+    id: 6,
+    link: "/dashboard-subscriber/pengaturan",
+    name: "Pengaturan",
+    icon: <Settings />,
+  },
 ];
 
 function Sidebar({ profile = "/person.jpg" }) {
   const { pathname } = useLocation();
+  const { logout } = useAuth();
 
   return (
     <aside className="h-screen">
@@ -76,12 +98,12 @@ function Sidebar({ profile = "/person.jpg" }) {
         {/* BOTTOM AREA */}
         <div className="flex flex-col items-center gap-5">
           <div className="relative pt-5">
-            <Link
-              to="/logout"
-              className="p-2 rounded-xl border border-red-500 w-10 h-10 flex justify-center bg-red-100 text-red-500"
+            <button
+              onClick={logout}
+              className="p-2 rounded-xl border border-red-500 w-10 h-10 flex justify-center bg-red-100 text-red-500 cursor-pointer"
             >
               <LogOut />
-            </Link>
+            </button>
           </div>
 
           {/* PROFILE */}

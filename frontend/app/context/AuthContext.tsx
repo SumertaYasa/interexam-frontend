@@ -1,48 +1,72 @@
 import React, { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
+import { useNavigate, useLocation } from "react-router";
+import Alert from "../components/Common/Alert";
 
-// 1. Definisikan tipe data untuk User
 interface User {
   id: string | number;
   nama: string;
-  email_user?: string;
-  email_subscriber?: string;
   role: "admin" | "validator" | "contributor" | "subscriber";
-  foto?: string;
-  status?: string;
+  // ... field lainnya
 }
 
-// 2. Definisikan tipe data untuk Context kita
 interface AuthContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   logout: () => void;
+  alert: { message: string; type: "success" | "error" } | null;
+  showAlert: (message: string, type?: "success" | "error") => void;
+  setAlert: React.Dispatch<
+    React.SetStateAction<{ message: string; type: "success" | "error" } | null>
+  >;
 }
 
-// 3. Inisialisasi Context dengan tipe data tersebut
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null); // Nanti diisi data riil dari login
+  const [alert, setAlert] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const showAlert = (
+    message: string,
+    type: "success" | "error" = "success"
+  ) => {
+    setAlert({ message, type });
+  };
 
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    window.location.href = "/login-internal";
+    const target = location.pathname.includes("/dashboard-subscriber")
+      ? "/login"
+      : "/login-internal";
+    navigate(target);
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, logout }}>
+    <AuthContext.Provider
+      value={{ user, setUser, logout, alert, showAlert, setAlert }}
+    >
       {children}
+      {alert && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert(null)}
+        />
+      )}
     </AuthContext.Provider>
   );
 };
 
-// 4. Hook custom dengan pengecekan keamanan TypeScript
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };

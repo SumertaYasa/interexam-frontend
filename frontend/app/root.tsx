@@ -12,6 +12,7 @@ import type { Route } from "./+types/root";
 import "./styles/app.css";
 import "flowbite";
 import { AuthProvider } from "./context/AuthContext";
+import { FolderProvider } from "./context/FolderContext";
 
 // Ambil Client ID dari env frontend
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -59,7 +60,9 @@ export default function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthProvider>
-        <Outlet /> {/* Semua route children sekarang punya router context */}
+        <FolderProvider>
+          <Outlet />
+        </FolderProvider>
       </AuthProvider>
     </GoogleOAuthProvider>
   );

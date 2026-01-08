@@ -8,9 +8,9 @@ function SearchBar({ placeholder, onChange, value }) {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="w-full bg-transparent outline-none focus:ring-0 border-none text-gray-700 placeholder:text-gray-400 mr-2"
+        className="w-full bg-transparent outline-none focus:ring-0 border-none text-sm font-medium text-slate-700 tracking-tight leading-none placeholder:text-slate-400 placeholder:font-medium placeholder:tracking-tight mr-2"
       />
-      <Search className="text-[#8A8A8A]" />
+      <Search className="text-[#8A8A8A]" size={20} />
     </div>
   );
 }

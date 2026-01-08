@@ -4,7 +4,8 @@ import { Star } from "lucide-react";
 
 function SmallBadge({ children }) {
   return (
-    <span className="text-xs py-1 px-2 rounded-full border flex items-center gap-1 border-gray-200 bg-white text-gray-700">
+    // Tipografi Badge: font-bold dengan tracking-tight agar tetap tegas pada ukuran kecil
+    <span className="text-[13px] font-bold py-1 px-2 rounded-full border flex items-center gap-1 border-gray-200 bg-white text-gray-700 tracking-tight leading-none">
       {children}
     </span>
   );
@@ -45,14 +46,15 @@ function CardCourseList({
         </div>
 
         <div className="flex-1">
-          <h3 className="font-semibold text-body-s-medium line-clamp-1">
+          <h3 className="font-bold text-lg text-slate-900 tracking-tight leading-none line-clamp-1">
             {title}
           </h3>
         </div>
 
         <div className="flex items-center gap-2">
           <SmallBadge>
-            <Star size={18} color="#F19E04" /> <span>{rating} </span>
+            <Star size={14} color="#F19E04" fill="#F19E04" />
+            <span className="ml-0.5">{rating}</span>
           </SmallBadge>
           <SmallBadge>{totalSoal} Soal</SmallBadge>
           <SmallBadge>

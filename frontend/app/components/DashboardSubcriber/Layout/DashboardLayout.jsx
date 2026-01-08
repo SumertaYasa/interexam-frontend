@@ -1,19 +1,74 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Outlet, useNavigate } from "react-router";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
-import { Outlet } from "react-router";
+import { useAuth } from "../../../context/AuthContext"; // Sesuaikan path file context kamu
 
 function DashboardLayout() {
+  const { user, setUser } = useAuth(); // Ambil data user dan fungsi pengubahnya dari context
+  const [isChecking, setIsChecking] = useState(true); // State loading lokal untuk pengecekan session
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const token = localStorage.getItem("token");
+
+      // 1. Jika tidak ada token, langsung tendang ke login
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        // 2. Verifikasi token ke backend via endpoint /me
+        const response = await fetch("http://localhost:5000/api/auth/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`, // Kirim token di header [cite: 36, 37]
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // 3. Simpan data user hasil verifikasi ke context global
+          setUser(data.user);
+        } else {
+          // Jika token kadaluwarsa atau tidak valid, hapus dan redirect [cite: 32]
+          localStorage.removeItem("token");
+          navigate("/login");
+        }
+      } catch (err) {
+        console.error("Session check failed:", err);
+        navigate("/login");
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkSession();
+  }, [navigate, setUser]);
+
+  // Tampilkan loading sebentar agar komponen tidak "berkedip" saat data belum siap
+  if (isChecking) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <p className="animate-pulse text-gray-500">Memuat Sesi...</p>
+      </div>
+    );
+  }
+
   return (
-    <section className="w-full h-screen flex flex-col overflow-hidden ">
-      <div className="z-10  flex-none">
-        <Navbar Name={"joe"} />
+    <section className="w-full h-screen flex flex-col overflow-hidden">
+      <div className="z-10 flex-none">
+        {/* Nama "joe" diganti menjadi dinamis sesuai user yang login  */}
+        <Navbar Name={user?.nama || "User"} />
       </div>
 
       <div className="flex flex-1 overflow-hidden w-full">
-        <Sidebar />
+        <Sidebar userRole={user?.role} />
 
-        <main className="flex-1 overflow-y-auto scroll-smooth">
+        <main className="flex-1 overflow-y-scroll scroll-smooth">
           <div className="mx-auto max-w-7xl h-full">
             <Outlet />
           </div>

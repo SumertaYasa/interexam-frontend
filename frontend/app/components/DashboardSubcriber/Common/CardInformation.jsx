@@ -1,5 +1,6 @@
 import React from "react";
 import Card from "./Card";
+import { ArrowUpRight } from "lucide-react";
 
 function CardInformation({
   icon: Icon,
@@ -7,27 +8,28 @@ function CardInformation({
   value,
   messageInformation,
   messageAlert,
+  className,
 }) {
   return (
-    <Card className="w-full">
-      <div className="p-5 flex flex-col  items-start gap-4">
-        <div className="flex justify-center items-center gap-2.5">
-          <div className=" rounded p-1 bg-primary/80">
-            <Icon className="text-white" />
+    <Card className={`w-full ${className}`}>
+      <div className=" p-6 ">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+            {Icon && <Icon size={20} />}
           </div>
-          <span>{label}</span>
+          <h3 className="text-sm font-bold text-slate-800">{label}</h3>
         </div>
-        <div className="flex justify-between items-center w-full ">
-          <span className="text-heading-2 font-semibold ">{value}</span>
-          <div className="flex flex-col gap-2.5">
-            <p className="text-body-s-regular bg-green-400 w-fit px-1 py-0.5 text-white rounded-[2px]">
-              {messageInformation}
-            </p>
-            <p className="text-body-xxs-demilight text-gray-500">
-              {messageAlert}
-            </p>
+
+        <div className="flex items-end gap-3 mb-2">
+          <span className="text-4xl font-black text-slate-900 leading-none">
+            {value}
+          </span>
+          <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold mb-1">
+            <ArrowUpRight size={12} />
+            <span>{messageInformation} dari minggu lalu</span>
           </div>
         </div>
+        <p className="text-xs text-slate-400 font-medium">{messageAlert}</p>
       </div>
     </Card>
   );

@@ -14,7 +14,7 @@ export default function DashboardHome() {
     <div className="w-full pb-7-5">
       <div className="">
         <h1 className="text-heading-4 font-bold mb-2.5">Dashboard</h1>
-        <div className="w-full h-full flex flex-col gap-5">
+        <div className="w-full h-full flex flex-col gap-5 ">
           <InformationGrid />
           <CourseGrid />
           <RecentActivityList />

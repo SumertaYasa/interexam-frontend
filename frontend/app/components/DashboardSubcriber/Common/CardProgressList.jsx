@@ -20,12 +20,14 @@ function CardProgressList({
 
   return (
     <Card className="w-full">
-      <Link to={toProp} className=" p-5 flex justify-between items-center">
+      <Link to={toProp} className="p-5 flex justify-between items-center">
         <div className="flex items-center gap-4 w-full">
           <div className="w-[50px] h-[50px] overflow-hidden rounded-[4px]">
             <img src={image} alt={formatAlt} className="w-full" />
           </div>
-          <h2 className="font-semibold line-clamp-1">{label}</h2>
+          <h2 className="text-base font-bold text-slate-900 tracking-tight leading-none line-clamp-1">
+            {label}
+          </h2>
         </div>
 
         {(() => {

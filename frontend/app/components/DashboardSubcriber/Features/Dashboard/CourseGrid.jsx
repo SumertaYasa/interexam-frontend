@@ -8,30 +8,36 @@ function CourseGrid() {
       id: 1,
       label: "Paket Soal 1",
       image: "/person.jpg",
-      progress: { answered: 2, totalSoal: 10 }, // 30%
+      progress: { answered: 2, totalSoal: 10 },
     },
     {
       id: 2,
       label: "Paket Soal 2",
       image: "/person.jpg",
-      progress: { answered: 2, totalSoal: 20 }, // 20%
+      progress: { answered: 2, totalSoal: 20 },
     },
     {
       id: 3,
       label: "Paket Soal 3",
       image: "/person.jpg",
-      progress: { answered: 1, totalSoal: 11 }, // ~9%
+      progress: { answered: 1, totalSoal: 11 },
     },
     {
       id: 4,
       label: "Paket Soal 3",
       image: "/person.jpg",
-      progress: { answered: 1, totalSoal: 11 }, // ~9%
+      progress: { answered: 1, totalSoal: 11 },
     },
   ];
 
+  const slideSpeeds = {
+    1: "slide-in-from-bottom-[2%]",
+    2: "slide-in-from-bottom-[4%]",
+    3: "slide-in-from-bottom-[6%]",
+    4: "slide-in-from-bottom-[8%]",
+  };
   return (
-    <div className="w-full flex flex-col gap-2.5">
+    <div className="w-full flex flex-col gap-2.5 font-noto-sans">
       <div className="flex justify-between items-center">
         <h1 className="text-heading-5 font-semibold">Status Ujian Terakhir</h1>
         <Link
@@ -56,6 +62,7 @@ function CourseGrid() {
             }}
             image={card.image}
             progress={card.progress}
+            className={`animate-in fade-in duration-500 ${slideSpeeds[card.id] || ""}`}
           />
         ))}
       </div>

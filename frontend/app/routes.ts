@@ -12,7 +12,10 @@ export default [
   route("/paket", "landing/paket/paket.tsx"),
   route("/tentang-kami", "landing/tentangKami/tentangKami.tsx"),
   route("/coba-gratis", "landing/cobaGratis/cobaGratis.tsx"),
-  route("/login", "landing/loginSubscriber/loginSubcriber.tsx"),
+  route("login", "routes/auth/formSubscriber.jsx", [
+    index("components/Auth/LoginFormSubscriber.jsx"),
+    route("registrasi", "components/Auth/RegisFormSubscriber.jsx"),
+  ]),
 
   // Khusus Dashboard
   route("dashboard", "routes/dashboard.jsx", [
@@ -20,7 +23,10 @@ export default [
 
     // bank soal
     route("bank-soal", "routes/dashboard/bank-soal/data.bank.jsx"),
-    route("bank-soal/edit/:id", "routes/dashboard/bank-soal/edit.bank.soal.jsx"),
+    route(
+      "bank-soal/edit/:id",
+      "routes/dashboard/bank-soal/edit.bank.soal.jsx"
+    ),
     route("bank-soal/detail/:id", "routes/dashboard/bank-soal/detail.soal.jsx"),
 
     //  -------------------- KHUSUS KATEGORI ------------------------
@@ -50,7 +56,10 @@ export default [
     // Kategori Sub Topik
     route("sub-topik", "routes/dashboard/sub-topik/data.sub.topik.jsx"),
     route("sub-topik/add", "routes/dashboard/sub-topik/add.sub.topik.jsx"),
-    route("sub-topik/edit/:id", "routes/dashboard/sub-topik/edit.sub.topik.jsx"),
+    route(
+      "sub-topik/edit/:id",
+      "routes/dashboard/sub-topik/edit.sub.topik.jsx"
+    ),
 
     //  -------------------- BATAS KATEGORI ------------------------
 
@@ -79,15 +88,21 @@ export default [
     ),
 
     //daftar subscriber
-    route("daftar-subscriber", "routes/dashboard/subscriber/daftar.subscriber.jsx"),
-    route("detail-pembayaran", "routes/dashboard/subscriber/detail.pembayaran.jsx"),
+    route(
+      "daftar-subscriber",
+      "routes/dashboard/subscriber/daftar.subscriber.jsx"
+    ),
+    route(
+      "detail-pembayaran",
+      "routes/dashboard/subscriber/detail.pembayaran.jsx"
+    ),
 
     // konten
     route("artikel", "routes/dashboard/artikel/data.artikel.jsx"),
     route("artikel/add", "routes/dashboard/artikel/add.artikel.jsx"),
   ]),
 
-  // dashboard subscriber
+  // Route Halaman dashboard subscriber
   layout("routes/dashboardSubscriber.jsx", [
     route(
       "dashboard-subscriber",
@@ -97,35 +112,94 @@ export default [
       "dashboard-subscriber/latihan",
       "routes/dashboardSubscriber/course/dashboard.course.jsx"
     ),
+    route(
+      "dashboard-subscriber/tersimpan",
+      "routes/dashboardSubscriber/save/dashboard.save.jsx"
+    ),
+    route(
+      "dashboard-subscriber/pengaturan",
+      "routes/dashboardSubscriber/settings/dashboard.setting.jsx"
+    ),
+    route(
+      "dashboard-subscriber/perkembangan",
+      "routes/dashboardSubscriber/progress/dashboard.progress.jsx"
+    ),
+    route(
+      "dashboard-subscriber/pencapaian",
+      "routes/dashboardSubscriber/achievement/dashboard.achievement.jsx"
+    ),
   ]),
 
-  // status ujian terakhir
+  // Route Halaman Status
   route(
     "dashboard-subscriber/status-ujian-terakhir",
     "components/DashboardSubcriber/Features/Dashboard/StatusAllCourse.jsx"
   ),
   route(
     "dashboard-subscriber/status-ujian-terakhir/:label",
-    "components/DashboardSubcriber/Features/Exam/DetailExam.jsx"
+    "components/DashboardSubcriber/Features/Exam/DetailExam.jsx",
+    { id: "status-detail" }
   ),
   route(
     "dashboard-subscriber/status-ujian-terakhir/:label/attempt",
-    "components/DashboardSubcriber/Features/Exam/ExamAttemptStatus.jsx"
+    "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx",
+    { id: "status-attempt" }
+  ),
+  route(
+    "dashboard-subscriber/status-ujian-terakhir/:label/result",
+    "components/DashboardSubcriber/Features/Exam/ResultExam.jsx",
+    { id: "status-result" }
   ),
 
-  // Latihan
+  // Route Halaman Latihan
   route(
     "dashboard-subscriber/latihan/:label",
-    "components/DashboardSubcriber/Features/Exam/DetailExamLatihan.jsx"
+    "components/DashboardSubcriber/Features/Exam/DetailExam.jsx",
+    { id: "latihan-detail" }
   ),
   route(
     "dashboard-subscriber/latihan/:label/attempt",
-    "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx"
+    "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx",
+    { id: "latihan-attempt" }
+  ),
+  route(
+    "dashboard-subscriber/latihan/:label/result",
+    "components/DashboardSubcriber/Features/Exam/ResultExam.jsx",
+    { id: "latihan-result" }
+  ),
+
+  // Route Halaman Simpan
+  route(
+    "dashboard-subscriber/tersimpan/:id",
+    "components/DashboardSubcriber/Features/Save/DetailSave.jsx"
+  ),
+  route(
+    "dashboard-subscriber/tersimpan/:label/exam-detail",
+    "components/DashboardSubcriber/Features/Exam/DetailExam.jsx",
+    { id: "folder-detail" }
+  ),
+  route(
+    "dashboard-subscriber/tersimpan/:label/attempt",
+    "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx",
+    { id: "folder-attempt" }
+  ),
+  route(
+    "dashboard-subscriber/tersimpan/:label/result",
+    "components/DashboardSubcriber/Features/Exam/ResultExam.jsx",
+    { id: "folder-result" }
+  ),
+
+  route(
+    "dashboard-subscriber/pencapaian/lencana",
+    "components/DashboardSubcriber/Features/Achievement/BadgeContainer.jsx"
   ),
 
   // login internal (admin, validator, contributor)
   route("login-internal", "routes/auth/internal/formInternal.jsx", [
     index("components/Auth/Internal/LoginInternalForm.jsx"),
-    route("register", "components/Auth/Internal/RegisFormWrapper.jsx"),
+    route(
+      "registrasi-internal",
+      "components/Auth/Internal/RegisFormWrapper.jsx"
+    ),
   ]),
 ] satisfies RouteConfig;

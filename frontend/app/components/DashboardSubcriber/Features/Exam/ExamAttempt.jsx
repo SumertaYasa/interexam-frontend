@@ -1,252 +1,247 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useLoaderData, Link } from "react-router";
-import QuestionCard from "./QuestionCard";
-import { humanizeSlug } from "../../../../utils/slugify";
+import React, { useState, useMemo, useEffect } from "react";
+import { useLoaderData, useNavigate } from "react-router";
+import { slugify, humanizeSlug } from "../../../../utils/slugify";
+import QuestionCard from "./Components/QuestionCard";
+import GuideModal from "../../Common/GuideModal";
+import ActionModal from "../../Common/ActionModal";
+import SaveToFolderModal from "./Components/SaveToFolderModal";
+import { useAuth } from "../../../../context/AuthContext";
+import { useFolder } from "../../../../context/FolderContext";
+import { HelpCircle, Timer, CheckCircle2 } from "lucide-react";
 
-// Simple mock questions per exam (in real app this should come from loader/backend)
-const MOCK_QUESTIONS = [
-  {
-    id: "q1",
-    text: "She _______ to the market when it started to rain.",
-    options: ["go", "goes", "went", "was going"],
-  },
-  {
-    id: "q2",
-    text: "Choose the correct sentence:",
-    options: [
-      "He don't like coffee.",
-      "He doesn't likes coffee.",
-      "He doesn't like coffee.",
-      "He not like coffee.",
-    ],
-  },
-  {
-    id: "q3",
-    text: "If I _______ enough money, I would buy a new phone.",
-    options: ["have", "had", "will have", "would have"],
-  },
+// Dataset Statis tetap diperlukan
+const DATA_UJIAN_LATIHAN = [
+  { id: "lat-1", label: "Tes Bahasa Inggris: Structure & Usage" },
+  { id: "lat-2", label: "Tryout Matematika Saintek" },
 ];
 
-export async function loader({ params }) {
-  // in production: fetch exam and questions by label param
-  const label = params.label;
-  // return minimal exam info for now
-  return { exam: { label }, questions: MOCK_QUESTIONS };
+const DATA_UJIAN_STATUS = [
+  { id: "st-1", label: "Paket Soal 1 - Logika Dasar" },
+  { id: "st-2", label: "Paket Soal 2 - TPA Kuantitatif" },
+  { id: "st-3", label: "Ujian Logika Dasar Sekolah Menengah Atas" },
+];
+
+export async function loader({ params, request }) {
+  const labelParam = params.label;
+  const url = request?.url ?? "";
+  if (url.includes("/dashboard-subscriber/tersimpan/")) {
+    return { mode: "folder", folderId: labelParam };
+  }
+  const allExams = [...DATA_UJIAN_LATIHAN, ...DATA_UJIAN_STATUS];
+  const examFound = allExams.find((e) => slugify(e.label) === labelParam);
+  return { mode: "package", exam: examFound || { label: params.label } };
 }
 
 export default function ExamAttempt() {
-  const { exam, questions } = useLoaderData();
+  const navigate = useNavigate();
+  const loaderResult = useLoaderData();
+  const { showAlert } = useAuth();
+  const {
+    availableQuestions,
+    folders,
+    saveQuestionToFolder,
+    addFolder,
+    setProgress,
+  } = useFolder();
+
+  // State
   const [answers, setAnswers] = useState({});
+  const [targetQuestionId, setTargetQuestionId] = useState(null);
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  const [activeModal, setActiveModal] = useState(null); // 'save', 'exit', 'submit', 'guide'
+  const [countdown, setCountdown] = useState(3);
+  const [isCounting, setIsCounting] = useState(true);
 
-  // Countdown / pre-start UI
-  const START_SECONDS = 5;
-  const countdownKey = `exam-countdown-${exam.label}`;
-  const startedKey = `exam-started-${exam.label}`;
-  const answersKey = `exam-answers-${exam.label}`;
+  const displayedQuestions = useMemo(() => {
+    if (loaderResult.mode === "folder") {
+      const folderSoalIds = folders
+        .filter(
+          (f) =>
+            String(f.id_folder) === String(loaderResult.folderId) &&
+            f.id_soal !== null
+        )
+        .map((f) => String(f.id_soal));
+      return availableQuestions.filter((q) =>
+        folderSoalIds.includes(String(q.id))
+      );
+    }
+    return availableQuestions;
+  }, [loaderResult, availableQuestions, folders]);
 
-  const [countdown, setCountdown] = useState(START_SECONDS);
-  const [started, setStarted] = useState(false);
-  const timerRef = useRef(null);
-
-  // On mount: restore answers and countdown state from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(answersKey);
-      if (raw) {
-        setAnswers(JSON.parse(raw));
+  const uniqueFolders = useMemo(() => {
+    return folders.reduce((acc, current) => {
+      if (!acc.find((item) => item.id_folder === current.id_folder)) {
+        const count = folders.filter(
+          (f) => f.id_folder === current.id_folder && f.id_soal !== null
+        ).length;
+        acc.push({ ...current, count });
       }
-    } catch (e) {
-      // ignore
+      return acc;
+    }, []);
+  }, [folders]);
+
+  const totalQuestions = displayedQuestions.length;
+  const totalAnswered = Object.keys(answers).length;
+  const displayTitle =
+    loaderResult.mode === "folder"
+      ? folders.find(
+          (f) => String(f.id_folder) === String(loaderResult.folderId)
+        )?.folder_name || "Latihan Folder"
+      : loaderResult.exam?.id
+        ? loaderResult.exam.label
+        : humanizeSlug(loaderResult.exam?.label, { capitalize: true });
+
+  // --- HANDLERS ---
+  const handleFinishSave = () => {
+    if (selectedFolder && targetQuestionId) {
+      saveQuestionToFolder(
+        targetQuestionId,
+        selectedFolder.id_folder,
+        selectedFolder.folder_name
+      );
+      setActiveModal(null);
+      setSelectedFolder(null);
+      showAlert("Soal berhasil disimpan!", "success");
     }
+  };
 
-    // If exam was already started, skip countdown
-    const wasStarted = localStorage.getItem(startedKey);
-    if (wasStarted === "1") {
-      setStarted(true);
-      return;
-    }
+  const handleConfirmExit = () => {
+    const id =
+      loaderResult.mode === "folder"
+        ? loaderResult.folderId
+        : loaderResult.exam?.id;
+    if (id) setProgress(id, totalAnswered);
+    navigate(-1);
+  };
 
-    // Restore existing countdown if exists
-    const existing = localStorage.getItem(countdownKey);
-    if (existing) {
-      const endTs = Number(existing);
-      const remaining = Math.ceil((endTs - Date.now()) / 1000);
-      if (remaining > 0) {
-        // resume remaining seconds
-        setCountdown(remaining);
-        setStarted(false);
-        return;
-      }
-      // expired: instead of marking as started, start a fresh countdown so UX is consistent
-      try {
-        localStorage.removeItem(countdownKey);
-      } catch (e) {}
-      const newEndTs = Date.now() + START_SECONDS * 1000;
-      localStorage.setItem(countdownKey, String(newEndTs));
-      setCountdown(START_SECONDS);
-      setStarted(false);
-      return;
-    }
-
-    // No existing countdown, create one so refreshes continue it
-    const endTs = Date.now() + START_SECONDS * 1000;
-    localStorage.setItem(countdownKey, String(endTs));
-    setCountdown(START_SECONDS);
-    setStarted(false);
-  }, [exam.label]);
-
-  useEffect(() => {
-    // start countdown when component mounts or when restarted
-    if (!started) {
-      timerRef.current = setInterval(() => {
-        setCountdown((c) => {
-          if (c <= 1) {
-            clearInterval(timerRef.current);
-            try {
-              localStorage.removeItem(countdownKey);
-              localStorage.setItem(startedKey, "1");
-            } catch (e) {}
-            setStarted(true);
-            return 0;
-          }
-          return c - 1;
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+  const handleSubmitExam = () => {
+    let correctCount = 0;
+    displayedQuestions.forEach((q, index) => {
+      if (answers[index] === q.options[q.correctAnswer]) correctCount++;
+    });
+    const results = {
+      score: Math.round((correctCount / totalQuestions) * 100),
+      correct: correctCount,
+      wrong: totalAnswered - correctCount,
+      unanswered: totalQuestions - totalAnswered,
+      totalSoal: totalQuestions,
+      examLabel: displayTitle,
     };
-  }, [started, countdownKey, startedKey]);
+    const id =
+      loaderResult.mode === "folder"
+        ? loaderResult.folderId
+        : loaderResult.exam?.id;
+    if (id) setProgress(id, totalAnswered);
+    navigate("../result", { state: { results }, relative: "path" });
+  };
 
-  // lock page scroll while overlay is active to prevent background scrolling
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    if (!started) {
-      document.body.style.overflow = "hidden";
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
     } else {
-      document.body.style.overflow = prev || "";
+      setTimeout(() => setIsCounting(false), 500);
     }
-    return () => {
-      document.body.style.overflow = prev || "";
-    };
-  }, [started]);
-
-  const handleSkipCountdown = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    try {
-      localStorage.removeItem(countdownKey);
-      localStorage.setItem(startedKey, "1");
-    } catch (e) {}
-    setStarted(true);
-  };
-
-  const handleCancelStart = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    try {
-      localStorage.removeItem(countdownKey);
-      localStorage.removeItem(answersKey);
-      localStorage.removeItem(startedKey);
-    } catch (e) {}
-    // go back to previous page
-    window.history.back();
-  };
-
-  const handleAnswer = (idx, value) => {
-    setAnswers((s) => ({ ...s, [idx]: value }));
-  };
-
-  // persist draft answers to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(answersKey, JSON.stringify(answers));
-    } catch (e) {}
-  }, [answers, answersKey]);
-
-  const handleSubmit = () => {
-    // TODO: submit answers to backend
-    try {
-      localStorage.removeItem(answersKey);
-      localStorage.removeItem(startedKey);
-    } catch (e) {}
-    alert("Jawaban disubmit (mock). Hasil akan muncul di halaman hasil.");
-  };
-
-  const label = humanizeSlug(exam.label, { capitalize: true });
+  }, [countdown]);
 
   return (
-    <div className="w-full">
-      <div className="mx-7-5 my-5">
-        <Link to={-1} className="p-2 rounded-full border w-full ">
-          Kembali
-        </Link>
-      </div>
-      <div className="px-7-5 py-5 flex flex-col gap-5">
-        <div className="w-full border py-4 px-5 rounded-md">
-          <h1 className="text-heading-3 font-semibold w-full text-wrap">
-            {label}
+    <div className="w-full relative min-h-screen bg-slate-50/30 font-sans antialiased pb-20">
+      {isCounting && (
+        <div className="fixed inset-0 z-[500] bg-white flex flex-col items-center justify-center transition-all">
+          <div
+            key={countdown}
+            className="text-[12rem] font-black text-primary animate-in zoom-in duration-500"
+          >
+            {countdown > 0 ? countdown : "GO!"}
+          </div>
+        </div>
+      )}
+
+      <button
+        className="block m-7.5 text-gray-500 hover:text-primary font-bold text-sm p-4"
+        onClick={() => setActiveModal("exit")}
+      >
+        Kembali
+      </button>
+
+      <div className="px-7.5 py-5 flex flex-col gap-5">
+        <div className="w-full border py-6 px-8 rounded-[10px] bg-white flex justify-between items-center shadow-sm">
+          <h1 className="text-2xl font-bold uppercase text-slate-800">
+            {displayTitle}
           </h1>
+          <button
+            onClick={() => setActiveModal("guide")}
+            className="p-1 text-slate-400 hover:text-primary transition-all"
+          >
+            <HelpCircle size={22} />
+          </button>
         </div>
 
-        <div className="relative">
-          <div className="flex flex-col gap-4">
-            {questions.map((q, i) => (
-              <QuestionCard
-                key={q.id}
-                index={i}
-                question={q}
-                onAnswer={handleAnswer}
-                selectedAnswer={answers[i]}
-              />
-            ))}
-          </div>
+        <div className="flex flex-col gap-4">
+          {displayedQuestions.map((q, i) => (
+            <QuestionCard
+              key={q.id}
+              index={i}
+              question={q}
+              onAnswer={(idx, val) => setAnswers((s) => ({ ...s, [idx]: val }))}
+              selectedAnswer={answers[i]}
+              onBookmark={(id) => {
+                setTargetQuestionId(id);
+                setActiveModal("save");
+              }}
+            />
+          ))}
+        </div>
 
-          <div className="flex justify-end gap-3 mt-4">
-            <button
-              className="rounded px-4 py-2 border"
-              onClick={() => alert("Simpan sebagai draft (mock)")}
-            >
-              Simpan
-            </button>
-            <button
-              className="rounded px-4 py-2 bg-primary text-white"
-              onClick={handleSubmit}
-            >
-              Submit
-            </button>
-          </div>
-
-          {/* Overlay countdown while not started */}
-          {!started && (
-            <div
-              role="dialog"
-              aria-modal="true"
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-            >
-              <div className="p-6  rounded-md bg-white max-w-[600px] mx-4 text-center">
-                <p className="text-sm text-gray-700 mb-3">
-                  Ujian akan dimulai dalam
-                </p>
-                <div className="text-5xl font-bold">{countdown}</div>
-                <div className="mt-4 flex justify-center gap-3">
-                  <button
-                    className="rounded px-4 py-2  bg-primary text-white"
-                    onClick={handleSkipCountdown}
-                  >
-                    Mulai sekarang
-                  </button>
-                  <button
-                    className="rounded px-4 py-2  bg-gray-600 text-gray-300"
-                    onClick={handleCancelStart}
-                  >
-                    Batal
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+        <div className="w-full flex justify-end py-5">
+          <button
+            onClick={() => setActiveModal("submit")}
+            disabled={totalQuestions === 0}
+            className="px-12 py-4 bg-primary text-white font-bold rounded-xl active:scale-95 disabled:bg-slate-300"
+          >
+            Selesai
+          </button>
         </div>
       </div>
+
+      {/* --- MODALS SECTION --- */}
+      <SaveToFolderModal
+        isOpen={activeModal === "save"}
+        onClose={() => setActiveModal(null)}
+        folders={uniqueFolders}
+        onAddFolder={(name) => addFolder(name)}
+        onSelectFolder={setSelectedFolder}
+        selectedFolder={selectedFolder}
+        onSave={handleFinishSave}
+      />
+
+      <ActionModal
+        isOpen={activeModal === "submit"}
+        onClose={() => setActiveModal(null)}
+        onConfirm={handleSubmitExam}
+        title="Kumpulkan Jawaban?"
+        description={`Kamu telah menjawab ${totalAnswered} dari ${totalQuestions} soal.`}
+        icon={CheckCircle2}
+        iconClass="bg-emerald-50 text-emerald-500"
+        confirmText="Ya, Kumpulkan"
+        confirmClass="bg-emerald-500 shadow-emerald-200"
+      />
+
+      <ActionModal
+        isOpen={activeModal === "exit"}
+        onClose={() => setActiveModal(null)}
+        onConfirm={handleConfirmExit}
+        title="Keluar dari Ujian?"
+        description={`Progres Anda ${totalAnswered} soal akan disimpan secara otomatis.`}
+        icon={HelpCircle}
+        iconClass="bg-amber-50 text-amber-500"
+        confirmText="Simpan & Keluar"
+        confirmClass="bg-slate-900 shadow-slate-200"
+      />
+
+      {activeModal === "guide" && (
+        <GuideModal onClose={() => setActiveModal(null)} />
+      )}
     </div>
   );
 }
