@@ -71,6 +71,7 @@ export default [
     // Paket Soal
     route("paket-soal", "routes/dashboard/paket-soal/data.paket.soal.jsx"),
     route("paket-soal/add", "routes/dashboard/paket-soal/add.paket.soal.jsx"),
+    route("paket-soal/edit/:id","routes/dashboard/paket-soal/edit.paket.soal.jsx"),
 
     // user
     route("users", "routes/dashboard/users/data.user.jsx"),

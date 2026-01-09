@@ -10,7 +10,7 @@ export const topicService = {
     getAllTopics: async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/topics`, {
-                headers: getAuthHeaders() // Tambahkan ini
+                headers: getAuthHeaders()
             });
             const result = await response.json();
             
@@ -29,7 +29,7 @@ export const topicService = {
         try {
             const response = await fetch(`${API_BASE_URL}/topics/${id}`, {
                 method: 'DELETE',
-                headers: getAuthHeaders() // Tambahkan ini
+                headers: getAuthHeaders() 
             });
             const result = await response.json();
 
@@ -47,7 +47,7 @@ export const topicService = {
     getTopicById: async (id) => {
         try {
             const response = await fetch(`${API_BASE_URL}/topics/${id}`, {
-                headers: getAuthHeaders() // Tambahkan ini
+                headers: getAuthHeaders()
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || "Topik tidak ditemukan");
@@ -62,7 +62,7 @@ export const topicService = {
         try {
             const response = await fetch(`${API_BASE_URL}/topics`, {
                 method: 'POST',
-                headers: getAuthHeaders(), // Gunakan getAuthHeaders
+                headers: getAuthHeaders(),
                 body: JSON.stringify(data)
             });
             const result = await response.json();
@@ -80,7 +80,7 @@ export const topicService = {
         try {
             const response = await fetch(`${API_BASE_URL}/topics/${id}`, {
                 method: 'PUT',
-                headers: getAuthHeaders(), // Gunakan getAuthHeaders
+                headers: getAuthHeaders(),
                 body: JSON.stringify(data)
             });
             const result = await response.json();
