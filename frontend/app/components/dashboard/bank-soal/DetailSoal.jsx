@@ -38,6 +38,13 @@ export default function DetailSoal() {
                     // Cari Teks Pembahasan 
                     const textBahas = raw.pembahasan_umum || (raw.jawaban && raw.jawaban[0]?.pembahasan) || "";
 
+                     let topikDisplay = "-";
+                    if (raw.topic) {
+                        const namaTopik = raw.topic.nama_topics;
+                        const namaJenjang = raw.topic.jenjang?.nama_jenjang;
+                        topikDisplay = namaJenjang ? `${namaTopik} (${namaJenjang})` : namaTopik;
+                    }
+
                     const formattedData = {
                         tipe_soal: (raw.jenis_soal === 'multiple_choice' || raw.jenis_soal === 'pilihan_ganda') 
                                    ? "Pilihan Ganda" : "Multi Jawaban",
@@ -52,7 +59,8 @@ export default function DetailSoal() {
                         gambar_pembahasan: soalService.getAssetUrl(raw.gambar_pembahasan || attachBahas?.path_attachment),
                         
                         subject_label: raw.topic?.subject?.nama_subject || "-",
-                        topik_label: raw.topic?.nama_topics || "-",
+                        // topik_label: raw.topic?.nama_topics || "-",
+                        topik_label: topikDisplay,
                         level: raw.level_kesulitan || "mudah",
                         contributor_name: raw.contributor?.nama_user || "-",
                         
