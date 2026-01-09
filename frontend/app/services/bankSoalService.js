@@ -5,10 +5,16 @@ const BANK_SOAL_API = `${API_BASE_URL}/bank-soal`;
 
 export const bankSoalService = {
   
-  // GET DASHBOARD 
-  getBankSoal: async (role = 'validator') => {
+  // 1. GET DASHBOARD BANK SOAL
+  // Mengambil token setiap kali request untuk menghindari Error 401
+  getBankSoal: async () => {
     try {
-      const response = await axios.get(`${BANK_SOAL_API}?as_role=${role}`);
+      const token = localStorage.getItem("token"); // Pastikan key di localStorage adalah 'token'
+      const response = await axios.get(`${BANK_SOAL_API}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error("Error fetching bank soal:", error);
@@ -16,10 +22,15 @@ export const bankSoalService = {
     }
   },
 
-  // GET DETAIL SOAL
+  // 2. GET DETAIL SOAL
   getSoalDetail: async (id) => {
     try {
-      const response = await axios.get(`${BANK_SOAL_API}/${id}`);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${BANK_SOAL_API}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error("Error fetching detail:", error);
@@ -27,10 +38,15 @@ export const bankSoalService = {
     }
   },
 
-  // UPDATE / VALIDASI SOAL
+  // 3. UPDATE / VALIDASI SOAL
   updateSoal: async (id, payload) => {
     try {
-      const response = await axios.put(`${BANK_SOAL_API}/${id}`, payload);
+      const token = localStorage.getItem("token");
+      const response = await axios.put(`${BANK_SOAL_API}/${id}`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error("Error update/validate soal:", error);
@@ -41,21 +57,32 @@ export const bankSoalService = {
   // 4. DELETE SOAL
   deleteSoal: async (id) => {
     try {
-        const response = await axios.delete(`${BANK_SOAL_API}/${id}`);
-        return response.data;
+      const token = localStorage.getItem("token");
+      const response = await axios.delete(`${BANK_SOAL_API}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data;
     } catch (error) {
-        console.error("Error delete soal:", error);
-        throw error.response?.data || error.message;
+      console.error("Error delete soal:", error);
+      throw error.response?.data || error.message;
     }
   },
 
-  // 5. Lookup Paket
+  // 5. LOOKUP PAKET
   getLookupPackets: async () => {
     try {
-        const response = await axios.get(`${BANK_SOAL_API}/lookup/packets`);
-        return response.data.data;
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${BANK_SOAL_API}/lookup/packets`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data.data;
     } catch (error) {
-        return [];
+      console.error("Error lookup packets:", error);
+      return [];
     }
   }
 };
