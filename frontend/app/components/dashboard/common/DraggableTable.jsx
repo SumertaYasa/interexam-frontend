@@ -33,7 +33,7 @@ const DraggableTable = forwardRef(({ data, onDragStart, onDragEnter, onDragEnd, 
                 </thead>
                 <tbody ref={ref} className="divide-y divide-gray-100 bg-white">
                     {data.length === 0 ? (
-                        <tr><td colSpan="7" className="px-6 py-8 text-center">Belum ada soal ditambahkan. Silahkan klik "+ Soal Dari Bank Soal".</td></tr>
+                        <tr><td colSpan="7" className="px-6 py-8 text-center">Belum ada soal ditambahkan. Silahkan klik "Add Soal".</td></tr>
                     ) : (
                         data.map((item, index) => (
                             <tr 

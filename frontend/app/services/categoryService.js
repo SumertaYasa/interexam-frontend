@@ -10,8 +10,7 @@ const getAuthHeader = () => {
 export const categoryService = {
     getAllCategories: async () => {
         try {
-            // URL: http://localhost:5000/api/v1/admin/categories
-            // Sesuai dengan app.use('/api/v1/admin/categories', ...) di backend
+            
             const response = await axios.get(`${API_BASE_URL}/admin/categories`, getAuthHeader());
             return response.data.data;
         } catch (error) {

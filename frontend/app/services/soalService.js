@@ -2,11 +2,6 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-/**
- * AXIOS INTERCEPTOR
- * Otomatis menambahkan header Authorization: Bearer <token>
- * ke setiap request jika token tersedia di localStorage.
- */
 axios.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
@@ -21,7 +16,7 @@ axios.interceptors.request.use(
 );
 
 export const soalService = {
-    // 1. Ambil Semua Soal Milik Kontributor yang Login
+
     getMyQuestions: async () => {
         try {
             const response = await axios.get(`${API_BASE_URL}/contributor/my-questions`);
@@ -32,7 +27,7 @@ export const soalService = {
         }
     },
 
-    // 2. Ambil Detail Satu Soal
+    // Ambil Detail Satu Soal
     getQuestionById: async (id) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/contributor/question/${id}`);
@@ -43,10 +38,10 @@ export const soalService = {
         }
     },
 
-    // 3. Tambah Soal Baru
+    // Tambah Soal Baru
     createQuestion: async (formData) => {
         try {
-            // FormData otomatis mengatur Content-Type menjadi multipart/form-data
+
             const response = await axios.post(`${API_BASE_URL}/contributor/question`, formData);
             return response.data;
         } catch (error) {
@@ -55,7 +50,7 @@ export const soalService = {
         }
     },
 
-    // 4. Update Soal
+    // Update Soal
     updateQuestion: async (id, formData) => {
         try {
             const response = await axios.put(`${API_BASE_URL}/contributor/question/${id}`, formData);
@@ -66,7 +61,7 @@ export const soalService = {
         }
     },
 
-    // 5. Hapus Soal
+    // Hapus Soal
     deleteQuestion: async (id) => {
         try {
             await axios.delete(`${API_BASE_URL}/contributor/question/${id}`);
@@ -77,7 +72,7 @@ export const soalService = {
         }
     },
 
-    // 6. Duplikat Soal (Sesuai logic awal Anda)
+    //  Duplikat Soal
     duplicateQuestions: async (ids, dataSoal) => {
         try {
             const promises = ids.map(async (id) => {
@@ -120,10 +115,10 @@ export const soalService = {
         }
     },
 
-    // 7. Helper URL Gambar
+    // Helper URL Gambar
     getAssetUrl: (path) => {
         if (!path) return null;
-        // Menghilangkan '/api/v1' untuk mendapatkan root URL server
+        
         const rootUrl = API_BASE_URL.replace('/api/v1', '');
         const cleanPath = path.replace(/\\/g, "/");
         return `${rootUrl}/${cleanPath}`;

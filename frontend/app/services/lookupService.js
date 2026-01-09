@@ -12,13 +12,12 @@ const getAuthHeader = () => {
 };
 
 export const lookupService = {
-    // 1. Ambil Mapel berdasarkan keahlian kontributor (kompetensiUser)
+    // Ambil Mapel berdasarkan keahlian kontributor (kompetensiUser)
     getSubjects: async () => {
         try {
             const res = await axios.get(`${API_BASE_URL}/contributor/lookup/my-subjects`, {
                 headers: getAuthHeader()
             });
-            // Pastikan backend mengembalikan { status: "success", data: [...] }
             return res.data.data || []; 
         } catch (error) {
             console.error("Gagal load keahlian contributor:", error);
@@ -26,7 +25,6 @@ export const lookupService = {
         }
     },
 
-    // 2. FUNGSI TAMBAHAN: Ambil daftar Jenjang (Dibutuhkan di AddTopik.jsx)
     getJenjang: async () => {
         try {
             const res = await axios.get(`${API_BASE_URL}/contributor/lookup/jenjang`, {
@@ -39,7 +37,7 @@ export const lookupService = {
         }
     },
 
-    // 3. Ambil Topik berdasarkan ID Subject
+    // Ambil Topik berdasarkan ID Subject
     getTopicsBySubject: async (subjectId) => {
         try {
             const res = await axios.get(`${API_BASE_URL}/contributor/lookup/topics/${subjectId}`, {
@@ -52,7 +50,7 @@ export const lookupService = {
         }
     },
 
-    // 4. Ambil enum Level Kesulitan
+    // Ambil enum Level Kesulitan
     getLevelKesulitan: async () => {
         try {
             const res = await axios.get(`${API_BASE_URL}/contributor/lookup/levels`, {
@@ -63,5 +61,20 @@ export const lookupService = {
             console.error("Gagal load levels:", error);
             return [];
         }
-    }
+    },
+
+    getCategories: async () => {
+        try {
+
+            const res = await axios.get(`${API_BASE_URL}/categories`, {
+                headers: getAuthHeader()
+            });
+            
+            return res.data.data || [];
+        } catch (error) {
+            console.error("Gagal load categories:", error);
+            return [];
+        }
+    },
+    
 };

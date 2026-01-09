@@ -1,7 +1,7 @@
 import React from "react";
 
 const ActionButton = ({ onClick, text, variant = "primary", disabled = false }) => {
-    const baseClass = "rounded-xl px-5 py-2.5 text-sm font-medium transition font-noto-sans shadow-sm border whitespace-nowrap w-full sm:w-auto text-center disabled:opacity-50 disabled:cursor-not-allowed";
+    const baseClass = "rounded-2xl px-5 py-3 text-sm font-medium transition font-noto-sans shadow-sm border whitespace-nowrap w-full sm:w-auto text-center disabled:opacity-50 disabled:cursor-not-allowed";
     
     const variants = {
         primary: "text-white bg-primary hover:bg-primary/90 border-transparent",

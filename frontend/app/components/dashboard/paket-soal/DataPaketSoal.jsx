@@ -1,6 +1,9 @@
 import { Link, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 
+import { paketSoalService } from "../../../services/paketSoalService";
+import { soalService } from "../../../services/soalService";
+
 import PageHeader from "../common/PageHeader";
 import SearchInput from "../common/SearchInput";
 import DynamicTable from "../common/DynamicTable";
@@ -20,89 +23,34 @@ export default function DataPaketSoal() {
         sort: "newest"
     });
 
-    const paketFilterConfig = [
-        {
-            key: "sort",
-            label: "Urutkan Data",
-            type: "radio",
-            defaultValue: "newest",
-            options: [
-                { label: "Terbaru (Default)", value: "newest" },
-                { label: "Terlama", value: "oldest" },
-                { label: "Abjad (A-Z)", value: "a-z" },
-                { label: "Abjad (Z-A)", value: "z-a" }
-            ]
-        },
-        {
-            key: "status",
-            label: "Filter Status",
-            type: "radio",
-            defaultValue: "all",
-            options: [
-                { label: "Semua Status", value: "all" },
-                { label: "Active", value: "active" },
-                { label: "Inactive", value: "inactive" },
-                { label: "Draft", value: "draft" }
-            ]
-        },
-        {
-            key: "jenis",
-            label: "Filter Jenis",
-            type: "radio",
-            defaultValue: "all",
-            options: [
-                { label: "Semua Jenis", value: "all" },
-                { label: "Berbayar", value: "berbayar" },
-                { label: "Gratis", value: "gratis" }
-            ]
-        }
-    ];
-
-    const handleFilterChange = (key, value) => {
-        setFilterState(prev => ({ ...prev, [key]: value }));
-    };
-
+    // --- FETCH DATA ---
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const dummyData = [
-                { 
-                    id: 1, 
-                    nama: "Latihan Matematika Dasar", 
-                    mapel: "Matematika", 
-                    jumlah: 50, 
-                    jenis: "Gratis", 
-                    status: "active", 
-                    image: "/profile.jpg" 
-                },
-                { 
-                    id: 2, 
-                    nama: "Tryout Fisika UN 2024", 
-                    mapel: "Fisika", 
-                    jumlah: 40, 
-                    jenis: "Berbayar", 
-                    status: "draft",
-                    image: "/profile.jpg" 
-                },
-                { 
-                    id: 3, 
-                    nama: "Latihan Biologi Sel", 
-                    mapel: "Biologi", 
-                    jumlah: 30, 
-                    jenis: "Gratis", 
-                    status: "inactive", 
-                    image: "/profile.jpg" 
-                },
-                
-            ];
+            const result = await paketSoalService.getAllPaket();
             
-            setTimeout(() => {
-                setDataPaket(dummyData); 
-                setIsLoading(false);
-            }, 500);
+            const mappedData = result.map(item => ({
+                id: item.id_paket_soal,
+                nama: item.nama_paket,
+                mapel: item.category?.nama_category || "-", 
+                
+                // [PENTING] Kita simpan object _count mentah-mentah ke dalam row
+                // agar bisa diakses langsung oleh kolom Render
+                raw_count: item._count, 
+                
+                // Backup jika backend pakai kolom manual
+                manual_count: item.jumlah_soal,
 
+                jenis: item.jenis === 'try_out' ? 'Berbayar' : 'Gratis', 
+                jenis_raw: item.jenis,
+                status: item.status, 
+                image: soalService.getAssetUrl(item.image) 
+            }));
+
+            setDataPaket(mappedData); 
         } catch (error) {
             console.error("Gagal load data:", error);
+        } finally {
             setIsLoading(false);
         }
     };
@@ -111,11 +59,12 @@ export default function DataPaketSoal() {
         fetchData();
     }, []);
 
-    // LOGIKA FILTERING ---
+    // --- FILTER & SORT ---
     const processedData = dataPaket.filter(item => {
         const term = searchTerm.toLowerCase();
         const nama = String(item.nama || "").toLowerCase();
         const mapel = String(item.mapel || "").toLowerCase();
+        
         const matchesSearch = nama.includes(term) || mapel.includes(term);
 
         let matchesStatus = true;
@@ -125,7 +74,7 @@ export default function DataPaketSoal() {
 
         let matchesJenis = true;
         if (filterState.jenis !== "all") {
-            matchesJenis = item.jenis?.toLowerCase() === filterState.jenis;
+            matchesJenis = item.jenis_raw === filterState.jenis;
         }
 
         return matchesSearch && matchesStatus && matchesJenis;
@@ -142,47 +91,72 @@ export default function DataPaketSoal() {
         }
     });
 
-    const handleDelete = (id) => {
-        if(confirm("Apakah Anda yakin ingin menghapus paket soal ini?")) {
-            setDataPaket(prev => prev.filter(p => p.id !== id));
-            alert("Data berhasil dihapus (Simulasi).");
+    // --- ACTIONS ---
+    const handleDelete = async (id) => {
+        if(confirm("Apakah Anda yakin ingin menghapus paket soal ini? Data yang dihapus tidak dapat dikembalikan.")) {
+            try {
+                await paketSoalService.deletePaket(id);
+                setDataPaket(prev => prev.filter(p => p.id !== id));
+                alert("Paket soal berhasil dihapus.");
+            } catch (error) {
+                alert("Gagal menghapus: " + (error.message || "Terjadi kesalahan"));
+            }
         }
+    };
+
+    const handleFilterChange = (key, value) => {
+        setFilterState(prev => ({ ...prev, [key]: value }));
     };
 
     const getStatusBadge = (status) => {
         const s = status?.toLowerCase() || "";
         switch(s) {
-            case "active":
-                return "bg-green-100 text-green-700";
-            case "inactive":
-                return "bg-yellow-100 text-yellow-700";
-            case "draft":
-                return "bg-gray-200 text-gray-900";
-            default:
-                return "bg-gray-100 text-gray-600";
+            case "active": return "bg-green-100 text-green-700";
+            case "inactive": return "bg-yellow-100 text-yellow-700";
+            case "draft": return "bg-gray-200 text-gray-900";
+            default: return "bg-gray-100 text-gray-600";
         }
     };
 
-    // KOLOM TABEL ---
+    // --- CONFIG TABLE ---
     const columns = [
         {
             header: "GAMBAR",
             render: (row) => (
                 <img 
-                    src={row.image || "/placeholder.jpg"} 
+                    src={row.image} 
                     alt="Cover" 
-                    className="rounded-lg h-12 w-16 object-cover border border-gray-200"
+                    className="rounded-lg h-12 w-16 object-cover border border-gray-200 bg-gray-50"
+                    onError={(e) => { e.target.src = "https://placehold.co/100x100?text=No+Img"; }}
                 />
             )
         },
         { header: "NAMA", accessor: "nama" },
-        { header: "MATA PELAJARAN", accessor: "mapel" },
-        { header: "JUMLAH SOAL", accessor: "jumlah", render: (row) => `${row.jumlah} Soal` },
+        { header: "KATEGORI", accessor: "mapel" },
+        
+        // [FIX UTAMA] Render Langsung dari Object raw_count
+        { 
+            header: "JUMLAH SOAL", 
+            render: (row) => {
+                // 1. Ambil dari _count.soalPaket (sesuai hasil diagnosa kamu)
+                // 2. Kalau tidak ada, ambil dari _count.soal_paket_soal (jaga-jaga)
+                // 3. Kalau tidak ada, ambil dari manual_count
+                // 4. Default ke 0
+                const count = row.raw_count?.soalPaket || row.raw_count?.soal_paket_soal || row.manual_count || 0;
+                
+                return (
+                    <span className="font-semibold text-gray-700">
+                        {count} Soal
+                    </span>
+                );
+            } 
+        },
+        
         { 
             header: "JENIS", 
             render: (row) => (
                 <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
-                    row.jenis?.toLowerCase() === 'berbayar' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
+                    row.jenis === 'Berbayar' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-700'
                 }`}>
                     {row.jenis}
                 </span>
@@ -218,9 +192,10 @@ export default function DataPaketSoal() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
                         </svg>
                     </button>
+
                     <button 
-                        onClick={() => alert(`Preview ID: ${row.id}`)} 
-                        className="flex items-center justify-center bg-primary hover:bg-blue-700 text-white rounded-base h-8 w-8 transition-colors"
+                        onClick={() => alert(`Fitur Preview untuk ID: ${row.id} akan segera hadir.`)} 
+                        className="flex items-center justify-center bg-primary text-white rounded-base h-8 w-8 transition-colors"
                         title="Lihat Detail"
                     >
                         <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
@@ -230,6 +205,44 @@ export default function DataPaketSoal() {
                     </button>
                 </div>
             )
+        }
+    ];
+
+    const paketFilterConfig = [
+        {
+            key: "sort",
+            label: "Urutkan Data",
+            type: "radio",
+            defaultValue: "newest",
+            options: [
+                { label: "Terbaru (Default)", value: "newest" },
+                { label: "Terlama", value: "oldest" },
+                { label: "Abjad (A-Z)", value: "a-z" },
+                { label: "Abjad (Z-A)", value: "z-a" }
+            ]
+        },
+        {
+            key: "status",
+            label: "Filter Status",
+            type: "radio",
+            defaultValue: "all",
+            options: [
+                { label: "Semua Status", value: "all" },
+                { label: "Active", value: "active" },
+                { label: "Inactive", value: "inactive" },
+                { label: "Draft", value: "draft" }
+            ]
+        },
+        {
+            key: "jenis",
+            label: "Filter Jenis",
+            type: "radio",
+            defaultValue: "all",
+            options: [
+                { label: "Semua Jenis", value: "all" },
+                { label: "Berbayar", value: "try_out" },
+                { label: "Gratis", value: "latihan" }
+            ]
         }
     ];
 
@@ -265,6 +278,7 @@ export default function DataPaketSoal() {
                     data={processedData} 
                     isLoading={isLoading} 
                     itemsPerPage={5} 
+                    emptyMessage="Belum ada paket soal yang dibuat."
                 />
             </div>
         </div>

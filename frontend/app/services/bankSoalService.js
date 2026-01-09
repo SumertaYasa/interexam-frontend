@@ -5,11 +5,9 @@ const BANK_SOAL_API = `${API_BASE_URL}/bank-soal`;
 
 export const bankSoalService = {
   
-  // 1. GET DASHBOARD BANK SOAL
-  // Mengambil token setiap kali request untuk menghindari Error 401
   getBankSoal: async () => {
     try {
-      const token = localStorage.getItem("token"); // Pastikan key di localStorage adalah 'token'
+      const token = localStorage.getItem("token");
       const response = await axios.get(`${BANK_SOAL_API}`, {
         headers: {
           Authorization: `Bearer ${token}`

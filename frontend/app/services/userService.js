@@ -1,12 +1,11 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Helper untuk mengambil token dan membuat header
 const getAuthHeaders = (isFormData = false) => {
     const token = localStorage.getItem("token");
     const headers = {
         'Authorization': `Bearer ${token}`
     };
-    // Jika bukan FormData (seperti GET), tambahkan Content-Type JSON
+
     if (!isFormData) {
         headers['Content-Type'] = 'application/json';
     }
@@ -14,10 +13,10 @@ const getAuthHeaders = (isFormData = false) => {
 };
 
 export const userService = {
-    // 1. FUNGSI BARU: Ambil semua subject untuk dropdown Keahlian
+    // Ambil semua subject untuk dropdown Keahlian
     getSubjectsForDropdown: async () => {
         try {
-            // Gunakan endpoint subjects-list yang sudah kita buat di routes
+
             const response = await fetch(`${API_BASE_URL}/admin/subjects-list`, {
                 headers: getAuthHeaders()
             });
@@ -30,7 +29,7 @@ export const userService = {
         }
     },
 
-    // 2. Ambil semua data user
+    // Ambil semua data user
     getAllUsers: async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/admin/users`, {
@@ -45,12 +44,12 @@ export const userService = {
         }
     },
 
-    // 3. CREATE USER (Menggunakan FormData untuk upload foto)
+    // CREATE USER
     createUser: async (formData) => {
         try {
             const response = await fetch(`${API_BASE_URL}/admin/user`, {
                 method: 'POST',
-                headers: getAuthHeaders(true), // true karena mengirim FormData
+                headers: getAuthHeaders(true), 
                 body: formData
             });
             const result = await response.json();
@@ -62,7 +61,7 @@ export const userService = {
         }
     },
 
-    // 4. Mengambil user berdasarkan ID
+    // Mengambil user berdasarkan ID
     getUserById: async (id) => {
         try {
             const response = await fetch(`${API_BASE_URL}/admin/user/${id}`, {
@@ -77,7 +76,7 @@ export const userService = {
         }
     },
 
-    // 5. UPDATE USER
+    // UPDATE USER
     updateUser: async (id, formData) => {
         try {
             const response = await fetch(`${API_BASE_URL}/admin/user/${id}`, {
@@ -94,7 +93,7 @@ export const userService = {
         }
     },
 
-    // 6. Hapus user
+    // Hapus user
     deleteUser: async (id) => {
         try {
             const response = await fetch(`${API_BASE_URL}/admin/user/${id}`, {
