@@ -32,8 +32,8 @@ export default [
     //  -------------------- KHUSUS KATEGORI ------------------------
     // Kategori Jenjang
     route("jenjang", "routes/dashboard/jenjang/data.jenjang.jsx"),
-    // route("jenjang/add", "routes/dashboard/jenjang/add.jenjang.jsx"),
-    // route("jenjang/edit/:id", "routes/dashboard/jenjang/edit.jenjang.jsx"),
+    route("jenjang/add", "routes/dashboard/jenjang/add.jenjang.jsx"),
+    route("jenjang/edit/:id", "routes/dashboard/jenjang/edit.jenjang.jsx"),
     // Kategori Mata Pelajaran
     route(
       "mata-pelajaran",
