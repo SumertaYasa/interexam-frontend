@@ -20,6 +20,8 @@ export default function EditSoalApproved() {
     const [dataSoal, setDataSoal] = useState(null);
     const [paketOptions, setPaketOptions] = useState([]);
     const [selectedPaket, setSelectedPaket] = useState("");
+
+    const [existingPackages, setExistingPackages] = useState([]);
   
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,6 +34,8 @@ export default function EditSoalApproved() {
                 if (resSoal.status === 'success' || resSoal.data) {
                     const raw = resSoal.data;
                     
+                    setExistingPackages(raw.list_paket || []);
+
                     // Logic Gambar
                     const attachSoal = raw.attachments?.find(a => a.keterangan === "Gambar Soal");
                     const attachBahas = raw.attachments?.find(a => a.keterangan === "Gambar Pembahasan");
@@ -109,10 +113,14 @@ export default function EditSoalApproved() {
         if(confirm(`Simpan soal ini ke dalam paket "${namaPaket}"?`)) {
             setIsSubmitting(true);
             try {
-                await paketSoalService.addQuestionToPacket(selectedPaket, id);
+                // await paketSoalService.addQuestionToPacket(selectedPaket, id);
+                await bankSoalService.updateSoal(id, { 
+                    id_paket_soal: selectedPaket 
+                });
                 
                 alert(`Berhasil menambahkan soal ke paket: ${namaPaket}`);
-                navigate("/dashboard/bank-soal");
+                // navigate("/dashboard/bank-soal");
+                window.location.reload();
             } catch (error) {
                 alert("Gagal menambahkan: " + (error.message || error));
             } finally {
@@ -261,18 +269,19 @@ export default function EditSoalApproved() {
                         />
 
                         {/* LIST PAKET YANG SUDAH ADA */}
-                        <div className="pt-1">
-                            <label className="block text-sm font-medium text-gray-700 font-noto-sans mb-2">
-                                Tersedia di paket soal
-                            </label>
-                            {dataSoal.existing_packages && dataSoal.existing_packages.length > 0 ? (
-                                <ul className="list-disc list-inside text-sm text-gray-800 font-noto-sans space-y-1 pl-1">
-                                    {dataSoal.existing_packages.map((pkg, idx) => (
-                                        <li key={idx}>{pkg}</li>
+                        <div className="pt-2 border-t border-gray-100">
+                            <label className="block text-sm font-medium text-gray-700 font-noto-sans mb-2">Tersedia di Paket Soal:</label>
+                            {existingPackages.length > 0 ? (
+                                <ul className="space-y-1">
+                                    {existingPackages.map((pkg, idx) => (
+                                        <li key={idx} className="text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 flex items-center">
+                                            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                            {pkg}
+                                        </li>
                                     ))}
                                 </ul>
                             ) : (
-                                <p className="text-sm text-gray-500 italic font-noto-sans">Belum dimasukkan ke paket manapun</p>
+                                <p className="text-sm text-gray-400 italic">Belum masuk ke paket manapun.</p>
                             )}
                         </div>
                     </div>
