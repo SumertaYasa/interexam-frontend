@@ -16,6 +16,8 @@ import ActionButton from "../common/ActionButton";
 import DraggableTable, { formatSoalDisplay, getLevelBadge } from "../common/DraggableTable";
 import ImageUploadCard from "../common/ImageUploadCard";
 
+import ModalDetailSoal from "../bank-soal/ModalDetailSoal";
+
 const statusOptions = [
     { label: "Active", value: "active" }, 
     { label: "Inactive", value: "inactive" },
@@ -54,6 +56,8 @@ export default function AddPaketSoal() {
     const [isModalLoading, setIsModalLoading] = useState(false);
     const [modalSearch, setModalSearch] = useState("");
     const [selectedInModal, setSelectedInModal] = useState({}); 
+
+    const [detailSoalId, setDetailSoalId] = useState(null);
     
     const [modalFilters, setModalFilters] = useState({
         jenjang: "all",
@@ -150,7 +154,7 @@ export default function AddPaketSoal() {
                 .map(item => ({
                     id: item.id || item.id_soal,
                     
-                    // [JURUS SAPU JAGAT DATA] Ambil dari berbagai key
+                    //  Ambil dari berbagai key
                     nama_soal: item.nama_soal || item.text_soal || item.soal_text || "-", 
                     matapelajaran: item.matapelajaran || (item.topic?.subject?.nama_subject) || "-",
                     jenjang: item.jenjang || (item.topic?.jenjang?.nama_jenjang) || "-",
@@ -312,6 +316,11 @@ export default function AddPaketSoal() {
         }
     };
 
+    const handleRowClick = (item) => {
+        // Set ID soal yang diklik agar modal detail muncul
+        setDetailSoalId(item.id);
+    };
+
     const modalColumns = [
         { 
             header: "SOAL", 
@@ -332,7 +341,9 @@ export default function AddPaketSoal() {
         {
             header: "AKSI",
             render: (row) => (
-                <div className="flex justify-center items-center">
+                <div className="flex justify-center items-center"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <label className="cursor-pointer relative">
                         <input 
                             type="checkbox" 
@@ -392,6 +403,13 @@ export default function AddPaketSoal() {
                 ]}
             />
 
+            {detailSoalId && (
+                <ModalDetailSoal 
+                    soalId={detailSoalId} 
+                    onClose={() => setDetailSoalId(null)} 
+                />
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 
                 {/* KIRI TABEL UTAMA */}
@@ -425,6 +443,7 @@ export default function AddPaketSoal() {
                         onDragEnd={handleDragEnd}
                         onDrop={handleDrop}
                         onDelete={handleDeleteSoal}
+                        onRowClick={handleRowClick}
                     />
                 </div>
 
@@ -552,6 +571,7 @@ export default function AddPaketSoal() {
                                     data={bankSoalData}
                                     isLoading={isModalLoading}
                                     itemsPerPage={10}
+                                    onRowClick={handleRowClick}
                                     emptyMessage="Tidak ada soal ditemukan untuk mapel ini."
                                 />
                             </div>

@@ -17,6 +17,8 @@ import ActionButton from "../common/ActionButton";
 import DraggableTable, { formatSoalDisplay, getLevelBadge } from "../common/DraggableTable";
 import ImageUploadCard from "../common/ImageUploadCard";
 
+import ModalDetailSoal from "../bank-soal/ModalDetailSoal";
+
 const statusOptions = [
     { label: "Active", value: "active" },
     { label: "Inactive", value: "inactive" },
@@ -55,6 +57,8 @@ export default function EditPaketSoal() {
     const [isModalLoading, setIsModalLoading] = useState(false);
     const [modalSearch, setModalSearch] = useState("");
     const [selectedInModal, setSelectedInModal] = useState({}); 
+
+    const [detailSoalId, setDetailSoalId] = useState(null);
     
     const [modalFilters, setModalFilters] = useState({
         jenjang: "all",
@@ -328,7 +332,11 @@ export default function EditPaketSoal() {
         { key: "level", label: "Level Kesulitan", type: "radio", defaultValue: "all", options: [{ label: "Semua Level", value: "all" }, { label: "Mudah", value: "Mudah" }, { label: "Sedang", value: "Sedang" }, { label: "Sulit", value: "Sulit" }] }
     ];
 
-    // [MODAL COLUMNS] dengan Formatter yang benar
+    const handleRowClick = (item) => {
+        // Set ID soal yang diklik agar modal detail muncul
+        setDetailSoalId(item.id);
+    };
+
     const modalColumns = [
         { 
             header: "SOAL", 
@@ -347,7 +355,9 @@ export default function EditPaketSoal() {
         {
             header: "AKSI",
             render: (row) => (
-                <div className="flex justify-center items-center">
+                <div className="flex justify-center items-center"
+                    onClick={(e) => e.stopPropagation()}
+                    >
                     <label className="cursor-pointer relative">
                         <input 
                             type="checkbox" 
@@ -378,6 +388,13 @@ export default function EditPaketSoal() {
                     { label: "Edit", link: null }
                 ]}
             />
+
+             {detailSoalId && (
+                <ModalDetailSoal 
+                    soalId={detailSoalId} 
+                    onClose={() => setDetailSoalId(null)} 
+                />
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 
@@ -410,6 +427,7 @@ export default function EditPaketSoal() {
                         onDragEnd={handleDragEnd}
                         onDrop={handleDrop}
                         onDelete={handleDeleteSoal}
+                        onRowClick={handleRowClick}
                     />
                 </div>
 
@@ -543,6 +561,7 @@ export default function EditPaketSoal() {
                                     data={bankSoalData}
                                     isLoading={isModalLoading}
                                     itemsPerPage={10}
+                                    onRowClick={handleRowClick}
                                     emptyMessage="Tidak ada soal ditemukan untuk mapel ini."
                                 />
                             </div>

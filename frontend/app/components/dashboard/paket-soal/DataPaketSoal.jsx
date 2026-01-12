@@ -34,11 +34,8 @@ export default function DataPaketSoal() {
                 nama: item.nama_paket,
                 mapel: item.category?.nama_category || "-", 
                 
-                // [PENTING] Kita simpan object _count mentah-mentah ke dalam row
-                // agar bisa diakses langsung oleh kolom Render
                 raw_count: item._count, 
                 
-                // Backup jika backend pakai kolom manual
                 manual_count: item.jumlah_soal,
 
                 jenis: item.jenis === 'try_out' ? 'Berbayar' : 'Gratis', 
@@ -134,14 +131,10 @@ export default function DataPaketSoal() {
         { header: "NAMA", accessor: "nama" },
         { header: "KATEGORI", accessor: "mapel" },
         
-        // [FIX UTAMA] Render Langsung dari Object raw_count
         { 
             header: "JUMLAH SOAL", 
             render: (row) => {
-                // 1. Ambil dari _count.soalPaket (sesuai hasil diagnosa kamu)
-                // 2. Kalau tidak ada, ambil dari _count.soal_paket_soal (jaga-jaga)
-                // 3. Kalau tidak ada, ambil dari manual_count
-                // 4. Default ke 0
+
                 const count = row.raw_count?.soalPaket || row.raw_count?.soal_paket_soal || row.manual_count || 0;
                 
                 return (
@@ -193,8 +186,8 @@ export default function DataPaketSoal() {
                         </svg>
                     </button>
 
-                    <button 
-                        onClick={() => alert(`Fitur Preview untuk ID: ${row.id} akan segera hadir.`)} 
+                    <Link 
+                        to={`detail/${row.id}`} 
                         className="flex items-center justify-center bg-primary text-white rounded-base h-8 w-8 transition-colors"
                         title="Lihat Detail"
                     >
@@ -202,7 +195,7 @@ export default function DataPaketSoal() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                         </svg>
-                    </button>
+                    </Link>
                 </div>
             )
         }

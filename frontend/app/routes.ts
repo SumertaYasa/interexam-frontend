@@ -28,6 +28,7 @@ export default [
       "routes/dashboard/bank-soal/edit.bank.soal.jsx"
     ),
     route("bank-soal/detail/:id", "routes/dashboard/bank-soal/detail.soal.jsx"),
+    route("bank-soal/modal-soal/:id", "routes/dashboard/bank-soal/modal.soal.jsx"),
 
     //  -------------------- KHUSUS KATEGORI ------------------------
     // Kategori Jenjang
@@ -72,6 +73,7 @@ export default [
     route("paket-soal", "routes/dashboard/paket-soal/data.paket.soal.jsx"),
     route("paket-soal/add", "routes/dashboard/paket-soal/add.paket.soal.jsx"),
     route("paket-soal/edit/:id","routes/dashboard/paket-soal/edit.paket.soal.jsx"),
+    route("paket-soal/detail/:id","routes/dashboard/paket-soal/detail.paket.soal.jsx"),
 
     // user
     route("users", "routes/dashboard/users/data.user.jsx"),
