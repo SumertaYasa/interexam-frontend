@@ -2,36 +2,33 @@ import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
-import { useAuth } from "../../../context/AuthContext"; // Sesuaikan path file context kamu
+import { useAuth } from "../../../context/AuthContext";
 
 function DashboardLayout() {
-  const { user, setUser } = useAuth(); // Ambil data user dan fungsi pengubahnya dari context
-  const [isChecking, setIsChecking] = useState(true); // State loading lokal untuk pengecekan session
+  const { user, setUser } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkSession = async () => {
       const token = localStorage.getItem("token");
 
-      // 1. Jika tidak ada token, langsung tendang ke login
       if (!token) {
         navigate("/login");
         return;
       }
 
       try {
-        // 2. Verifikasi token ke backend via endpoint /me
         const response = await fetch("http://localhost:5000/api/auth/me", {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`, // Kirim token di header [cite: 36, 37]
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
 
         if (response.ok) {
           const data = await response.json();
-          // 3. Simpan data user hasil verifikasi ke context global
           setUser(data.user);
         } else {
           // Jika token kadaluwarsa atau tidak valid, hapus dan redirect [cite: 32]
@@ -61,7 +58,6 @@ function DashboardLayout() {
   return (
     <section className="w-full h-screen flex flex-col overflow-hidden">
       <div className="z-10 flex-none">
-        {/* Nama "joe" diganti menjadi dinamis sesuai user yang login  */}
         <Navbar Name={user?.nama || "User"} />
       </div>
 

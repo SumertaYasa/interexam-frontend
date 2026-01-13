@@ -1,27 +1,22 @@
 import { Outlet } from "react-router";
 import DashboardLayout from "../components/DashboardSubcriber/Layout/DashboardLayout.jsx";
+import ProtectedRoute from "../components/Common/ProtectedRoute.tsx";
 
-export function loader() {
-  const userData = {
-    name: "Fahmi",
-    role: "Subscriber",
-  };
-
-  return { user: userData };
-}
-
-export function meta({ data }) {
-  const name = data?.user?.name;
-
+export function meta() {
   return [
-    { title: `Dashboard - ${name}`, description: "Dashboard Subscriber" },
+    {
+      title: "Dashboard Subscriber - InterExam",
+      description: "Halaman dashboard utama peserta.",
+    },
   ];
 }
 
 export default function Dashboard() {
   return (
-    <DashboardLayout>
-      <Outlet />
-    </DashboardLayout>
+    <ProtectedRoute allowedRoles={["subscriber"]}>
+      <DashboardLayout>
+        <Outlet />
+      </DashboardLayout>
+    </ProtectedRoute>
   );
 }

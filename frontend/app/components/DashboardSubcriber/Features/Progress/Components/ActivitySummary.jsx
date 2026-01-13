@@ -25,7 +25,7 @@ export default function ActivitySummary({ mode, summaries }) {
   const handleSaveNote = () => {
     if (noteText.trim() !== "" && noteDate !== "") {
       const newNote = { type: "user", text: noteText, date: noteDate };
-      setAllActivities([...allActivities, newNote]);
+      setAllActivities([newNote, ...allActivities]);
       setNoteText("");
       setIsModalOpen(false);
     }
