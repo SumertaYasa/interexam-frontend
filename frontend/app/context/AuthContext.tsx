@@ -1,17 +1,25 @@
-import React, { createContext, useContext, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+} from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router";
+import axios from "axios";
 import Alert from "../components/Common/Alert";
 
 interface User {
-  id: string | number;
-  nama: string;
+  id_subscriber: string | number;
+  nama_subscriber: string;
   role: "admin" | "validator" | "contributor" | "subscriber";
-  // ... field lainnya
 }
 
 interface AuthContextType {
   user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   logout: () => void;
   alert: { message: string; type: "success" | "error" } | null;
@@ -24,7 +32,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null); // Nanti diisi data riil dari login
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [alert, setAlert] = useState<{
     message: string;
     type: "success" | "error";
@@ -32,6 +41,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const isAuthenticated = useMemo(() => !!user, [user]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://localhost:5000/api/auth/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // PERBAIKAN: Ambil properti 'user' dari dalam response.data
+        if (response.data && response.data.user) {
+          console.log("DEBUG AUTH - User Set:", response.data.user);
+          setUser(response.data.user);
+        }
+      } catch (error: any) {
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          setUser(null);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [token]);
 
   const showAlert = (
     message: string,
@@ -46,12 +89,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const target = location.pathname.includes("/dashboard-subscriber")
       ? "/login"
       : "/login-internal";
-    navigate(target);
+    navigate(target, { replace: true });
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, setUser, logout, alert, showAlert, setAlert }}
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        setUser,
+        logout,
+        alert,
+        showAlert,
+        setAlert,
+      }}
     >
       {children}
       {alert && (
