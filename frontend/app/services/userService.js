@@ -106,5 +106,22 @@ export const userService = {
             console.error("Error deleting user:", error);
             throw error;
         }
+    },
+
+    // Ubah status user (aktif/non-aktif)
+    changeStatus: async (id, status, reason = "") => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/user/${id}/status`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ status, reason })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || "Gagal mengubah status user");
+            return result;
+        } catch (error) {
+            console.error("Error changing status:", error);
+            throw error;
+        }
     }
 };

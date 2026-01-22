@@ -12,7 +12,7 @@ import ButtonCancel from "../common/ButtonCancel";
 
 export default function AddUser() {
     const navigate = useNavigate();
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     // State Data
     const [formData, setFormData] = useState({
@@ -27,12 +27,19 @@ export default function AddUser() {
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/admin/subjects`);
-                const result = await response.json();
-                if (response.ok) {
-                    const formatted = result.data.map(s => ({ label: s.nama_subject, value: s.id_subject }));
-                    setSubjectsList(formatted);
-                }
+                // const response = await fetch(`${API_BASE_URL}/admin/subjects`);
+                // const result = await response.json();
+                // if (response.ok) {
+                //     const formatted = result.data.map(s => ({ label: s.nama_subject, value: s.id_subject }));
+                //     setSubjectsList(formatted);
+                // }
+                const data = await userService.getSubjectsForDropdown();
+                const formatted = data.map(s => ({ 
+                    label: s.nama_subject, 
+                    value: s.id_subject 
+                }));
+                
+                setSubjectsList(formatted);
             } catch (error) {
                 console.error("Gagal ambil subject:", error);
             }

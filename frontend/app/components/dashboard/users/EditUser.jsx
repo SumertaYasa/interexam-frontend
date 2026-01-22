@@ -14,7 +14,7 @@ import ButtonCancel from "../common/ButtonCancel";
 export default function EditUser() {
     const navigate = useNavigate();
     const { id } = useParams();
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     const [formData, setFormData] = useState({
         username: "", email: "", phone_number: "", password: "", role: "",

@@ -87,6 +87,9 @@ export default [
     route("users/add", "routes/dashboard/users/add.user.jsx"),
     route("users/edit/:id", "routes/dashboard/users/edit.user.jsx"),
 
+
+    route("edit-profile/", "routes/dashboard/users/edit.profile.user.jsx"),
+
     route(
       "paket-langganan",
       "routes/dashboard/paket-langganan/data.paket.langganan.jsx"
