@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 
-// import { topicService } from "../../../../services/topicService"; 
-// import { lookupService } from "../../../../services/lookupService"; 
+import { jenjangService } from "../../../../services/jenjangService";
 
 import PageHeader from "../../common/PageHeader";
 import InputField from "../../common/InputField";
@@ -16,7 +15,7 @@ export default function AddSubTopik() {
     const [isLoading, setIsLoading] = useState(false);
 
     const [formData, setFormData] = useState({
-        jenjang: "",
+        nama_jenjang: "",
         keterangan: ""
     });
 
@@ -26,19 +25,32 @@ export default function AddSubTopik() {
 
    
 
-    const handleSubmit = async () => {
-        if (!formData.jenjang || !formData.keterangan) {
-            alert("Mohon lengkapi semua data wajib!");
+    const handleSubmit = async (e) => {
+
+        if (e && e.preventDefault) {
+        e.preventDefault();
+    }
+    
+        if (!formData.nama_jenjang) {
+            alert("Nama Jenjang wajib diisi!");
             return;
         }
 
         setIsLoading(true);
-        setTimeout(() => {
-            console.log("Data Submitted:", formData);
+        try {
+            // Panggil Service
+            await jenjangService.createJenjang(formData);
+            
             alert("Jenjang berhasil ditambahkan!");
+            navigate("../jenjang"); // Redirect kembali ke tabel jenjang
+            
+        } catch (error) {
+            console.error("Error creating jenjang:", error);
+            // Tampilkan pesan error dari backend (misal: duplikat nama)
+            alert(error.message || "Terjadi kesalahan saat menyimpan data.");
+        } finally {
             setIsLoading(false);
-            navigate("../jenjang"); 
-        }, 1000);
+        }
     };
 
     
@@ -57,22 +69,22 @@ export default function AddSubTopik() {
             <div className="bg-white shadow-lg rounded-2xl w-full max-w-[600px] p-6">
                 {/* Input Nama Jenjang */}
                 <InputField 
-                    label="Jenjang"
-                    name="jenjang"
-                    value={formData.jenjang}
+                    label="Nama Jenjang"
+                    name="nama_jenjang"
+                    value={formData.nama_jenjang}
                     onChange={handleChange}
-                    placeholder="Masukan nama jenjang"
+                    placeholder="Contoh: SD, SMP, SMA"
                     required
                 />
 
                 {/* Input Keterangan */}
                 <InputField 
-                    label="Deskripsi"
-                    name="deskripsi"
-                    value={formData.deskripsi}
+                    label="Keterangan / Deskripsi"
+                    name="keterangan"
+                    value={formData.keterangan}
                     onChange={handleChange}
                     placeholder="Masukan deskripsi jenjang"
-                    required
+                    required={false}
                     type="textarea" 
                     rows={4}
                 />
