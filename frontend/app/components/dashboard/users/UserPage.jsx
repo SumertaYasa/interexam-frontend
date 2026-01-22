@@ -30,24 +30,52 @@ export default function UserPage() {
         fetchUsers();
     }, []);
 
-    const handleDelete = async (id) => {
-        if (confirm("Yakin ingin menghapus user ini?")) {
+    const handleDelete = async (id, isReject = false) => {
+        const message = isReject 
+            ? "Yakin ingin MENOLAK pendaftaran user ini? Data akan dihapus permanen." 
+            : "Yakin ingin menghapus user ini?";
+
+        if (confirm(message)) {
             try {
                 await userService.deleteUser(id);
                 setUsers(users.filter(user => user.id_user !== id));
-                alert("User berhasil dihapus");
+                alert(isReject ? "Pendaftaran ditolak." : "User berhasil dihapus");
             } catch (error) {
                 alert("Gagal menghapus user");
             }
         }
     };
 
-    const handleSuspend = async (id) => {
-        if (confirm("Yakin ingin men-suspend user ini?")) {
+    const handleStatusChange = async (id, newStatus) => {
+        let confirmMsg = "";
+        let reason = "";
+
+        if (newStatus === 'Verified') confirmMsg = "Verifikasi user ini?";
+        if (newStatus === 'Suspend') {
+            confirmMsg = "Yakin ingin MEN-SUSPEND user ini?";
+            reason = prompt("Masukkan alasan suspend (opsional):") || "Pelanggaran aturan";
+        }
+        if (newStatus === 'Unverified') confirmMsg = "Kembalikan ke status Unverified?"; 
+        
+        // Logika Aktifkan Kembali (Dari Suspend ke Verified)
+        if (newStatus === 'Reactivate') {
+            confirmMsg = "Aktifkan kembali user ini?";
+            newStatus = 'Verified'; 
+            reason = "Pengaktifan kembali akun";
+        }
+
+        if (confirm(confirmMsg)) {
             try {
-                alert("Fitur Suspend berhasil (Simulasi)");
+                await userService.changeStatus(id, newStatus, reason);
+                
+                setUsers(users.map(user => 
+                    user.id_user === id ? { ...user, status: newStatus } : user
+                ));
+                
+                alert(`Status user berhasil diubah menjadi ${newStatus}`);
             } catch (error) {
-                alert("Gagal suspend user");
+                console.error(error);
+                alert(error.message || "Gagal mengubah status user");
             }
         }
     };
@@ -82,9 +110,80 @@ export default function UserPage() {
             )
         },
         {
+            header: "STATUS",
+            render: (row) => {
+                let badgeClass = "bg-gray-100 text-gray-800";
+                if (row.status === 'Verified') badgeClass = "bg-green-100 text-green-800 border-green-200";
+                if (row.status === 'Unverified') badgeClass = "bg-yellow-100 text-yellow-800 border-yellow-200";
+                if (row.status === 'Suspend') badgeClass = "bg-red-100 text-red-800 border-red-200";
+
+                return (
+                    <span className={`px-2 py-1 text-xs font-bold rounded-full border ${badgeClass}`}>
+                        {row.status || 'Unverified'}
+                    </span>
+                );
+            }
+        },
+        {
             header: "AKSI",
-            render: (row) => (
+            render: (row) => {
+                const currentStatus = row.status || 'Unverified';
+                return (
                 <div className="flex gap-2 items-center">
+
+                    {/* KONDISI : User Baru / Unverified */}
+                        {currentStatus === 'Unverified' && (
+                            <>
+                                {/* Tombol Verifikasi (Checklist) */}
+                                <button 
+                                    onClick={() => handleStatusChange(row.id_user, 'Verified')}
+                                    className="flex items-center justify-center text-white bg-green-600 hover:bg-green-700 rounded-lg h-8 w-8 transition-colors shadow-sm"
+                                    title="Verifikasi User">
+                                    <svg xmlns="http://www.w3.org/2000/svg" 
+                                        className="lucide lucide-check-icon lucide-check w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                                        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M20 6 9 17l-5-5"/>
+                                    </svg>
+                                </button>
+
+                                {/* Tombol Tolak (Silang Merah) - Hapus User */}
+                                <button 
+                                    onClick={() => handleDelete(row.id_user, true)}
+                                    className="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 rounded-lg h-8 w-8 transition-colors shadow-sm"
+                                    title="Tolak User">
+                                    <svg xmlns="http://www.w3.org/2000/svg" 
+                                        className="w-5 h-5 lucide lucide-x-icon lucide-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                                        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                </button>
+                            </>
+                        )}
+
+                        {/* KONDISI : User Verified (Bisa di-Suspend) */}
+                        {currentStatus === 'Verified' && (
+                            <button 
+                                onClick={() => handleStatusChange(row.id_user, 'Suspend')}
+                                className="flex items-center justify-center text-white bg-rose-600 hover:bg-rose-700 rounded-lg h-8 w-8 transition-colors shadow-sm"
+                                title="Suspend User">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                            </button>
+                        )}
+
+                        {/* KONDISI : User Suspend (Bisa Diaktifkan Kembali) */}
+                        {currentStatus === 'Suspend' && (
+                            <button 
+                                onClick={() => handleStatusChange(row.id_user, 'Reactivate')}
+                                className="flex items-center justify-center text-white bg-primary hover:bg-primary/90 rounded-lg h-8 w-8 transition-colors shadow-sm"
+                                title="Aktifkan Kembali">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
+                        )}
+
+                        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                        
                     {/* Tombol Edit */}
                     <Link 
                         to={`edit/${row.id_user}`} 
@@ -106,20 +205,11 @@ export default function UserPage() {
                             <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
                         </svg>
                     </button>
-
-                    {/* Tombol Suspend */}
-                    <button 
-                        onClick={() => handleSuspend(row.id_user)}
-                        className="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 h-8 w-8 rounded-base transition-colors"
-                        title="Suspend User">
-                        <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4.93 4.93L19.07 19.07M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" 
-                            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                    </button>
                     
                 </div>
-            )
+                );
+            }
+            
         }
     ];
 
