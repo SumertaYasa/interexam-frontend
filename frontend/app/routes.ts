@@ -24,6 +24,7 @@ export default [
   // --- RUTE DASHBOARD INTERNAL/ADMIN ---
   route("dashboard", "routes/dashboard.jsx", [
     index("routes/dashboard/dashboard.home.jsx"),
+
     route("bank-soal", "routes/dashboard/bank-soal/data.bank.jsx"),
     route(
       "bank-soal/edit/:id",
@@ -34,9 +35,15 @@ export default [
       "bank-soal/modal-soal/:id",
       "routes/dashboard/bank-soal/modal.soal.jsx"
     ),
+
+    route("kategori", "routes/dashboard/kategori/data.kategori.jsx"),
+    route("kategori/add", "routes/dashboard/kategori/add.kategori.jsx"),
+    route("kategori/edit/:id", "routes/dashboard/kategori/edit.kategori.jsx"),
+
     route("jenjang", "routes/dashboard/jenjang/data.jenjang.jsx"),
     route("jenjang/add", "routes/dashboard/jenjang/add.jenjang.jsx"),
     route("jenjang/edit/:id", "routes/dashboard/jenjang/edit.jenjang.jsx"),
+
     route(
       "mata-pelajaran",
       "routes/dashboard/mata-pelajaran/data.mata-pelajaran.jsx"
@@ -49,18 +56,22 @@ export default [
       "mata-pelajaran/edit/:id",
       "routes/dashboard/mata-pelajaran/edit.mata-pelajaran.jsx"
     ),
+
     route("topik", "routes/dashboard/topik/data.topik.jsx"),
     route("topik/add", "routes/dashboard/topik/add.topik.jsx"),
     route("topik/edit/:id", "routes/dashboard/topik/edit.topik.jsx"),
+
     route("sub-topik", "routes/dashboard/sub-topik/data.sub.topik.jsx"),
     route("sub-topik/add", "routes/dashboard/sub-topik/add.sub.topik.jsx"),
     route(
       "sub-topik/edit/:id",
       "routes/dashboard/sub-topik/edit.sub.topik.jsx"
     ),
+
     route("soal", "routes/dashboard/soal/data.soal.jsx"),
     route("soal/add", "routes/dashboard/soal/add.soal.jsx"),
     route("soal/edit/:id", "routes/dashboard/soal/edit.soal.jsx"),
+
     route("paket-soal", "routes/dashboard/paket-soal/data.paket.soal.jsx"),
     route("paket-soal/add", "routes/dashboard/paket-soal/add.paket.soal.jsx"),
     route(
@@ -71,9 +82,11 @@ export default [
       "paket-soal/detail/:id",
       "routes/dashboard/paket-soal/detail.paket.soal.jsx"
     ),
+
     route("users", "routes/dashboard/users/data.user.jsx"),
     route("users/add", "routes/dashboard/users/add.user.jsx"),
     route("users/edit/:id", "routes/dashboard/users/edit.user.jsx"),
+
     route(
       "paket-langganan",
       "routes/dashboard/paket-langganan/data.paket.langganan.jsx"
@@ -82,6 +95,7 @@ export default [
       "paket-langganan/add",
       "routes/dashboard/paket-langganan/add.paket.langganan.jsx"
     ),
+
     route(
       "daftar-subscriber",
       "routes/dashboard/subscriber/daftar.subscriber.jsx"
@@ -90,6 +104,7 @@ export default [
       "detail-pembayaran",
       "routes/dashboard/subscriber/detail.pembayaran.jsx"
     ),
+
     route("artikel", "routes/dashboard/artikel/data.artikel.jsx"),
     route("artikel/add", "routes/dashboard/artikel/add.artikel.jsx"),
   ]),

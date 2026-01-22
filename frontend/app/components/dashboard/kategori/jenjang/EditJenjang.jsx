@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
-// import { topicService } from "../../../../services/topicService"; 
-// import { lookupService } from "../../../../services/lookupService"; 
+import { jenjangService } from "../../../../services/jenjangService"; 
 
 import PageHeader from "../../common/PageHeader";
 import InputField from "../../common/InputField";
@@ -13,12 +12,46 @@ import ButtonCancel from "../../common/ButtonCancel";
 
 export default function EditJenjang() {
     const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(false);
+    const { id } = useParams();
 
-    const [formData, setFormData] = useState({
-        jenjang: "",
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
+
+   const [formData, setFormData] = useState({
+        nama_jenjang: "",
         keterangan: ""
     });
+
+    useEffect(() => {
+        const fetchDetail = async () => {
+            try {
+                const allData = await jenjangService.getAllJenjang();
+                const dataArray = Array.isArray(allData) ? allData : [];
+                const currentData = allData.find(item => item.id_jenjang === parseInt(id));
+
+                if (currentData) {
+                    setFormData({
+                        nama_jenjang: currentData.nama_jenjang,
+                        keterangan: currentData.keterangan || ""
+                    });
+                } else {
+                    alert("Data jenjang tidak ditemukan!");
+                    navigate("../jenjang");
+                }
+
+            } catch (error) {
+                console.error("Gagal ambil detail:", error);
+                alert("Gagal memuat data.");
+                navigate("../jenjang");
+            } finally {
+                setIsFetching(false);
+            }
+        };
+
+        if (id) {
+            fetchDetail();
+        }
+    }, [id, navigate]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,20 +59,30 @@ export default function EditJenjang() {
 
    
 
-    const handleSubmit = async () => {
-        if (!formData.jenjang || !formData.keterangan) {
-            alert("Mohon lengkapi semua data wajib!");
+    const handleSubmit = async (e) => {
+      if (e && e.preventDefault) e.preventDefault();
+        if (!formData.nama_jenjang) {
+            alert("Mohon lengkapi Nama Jenjang!");
             return;
         }
-
         setIsLoading(true);
-        setTimeout(() => {
-            console.log("Data Submitted:", formData);
-            alert("Jenjang berhasil ditambahkan!");
-            setIsLoading(false);
+        try {
+            await jenjangService.updateJenjang(id, formData);
+            
+            alert("Jenjang berhasil diperbarui!");
             navigate("../jenjang"); 
-        }, 1000);
+            
+        } catch (error) {
+            console.error("Error updating:", error);
+            alert(error.message || "Gagal memperbarui data.");
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+    if (isFetching) {
+        return <div className="p-8 text-center text-gray-500">Memuat data...</div>;
+    }
 
     
     return (
@@ -56,23 +99,24 @@ export default function EditJenjang() {
 
             <div className="bg-white shadow-lg rounded-2xl w-full max-w-[600px] p-6">
                 {/* Input Nama Jenjang */}
+                <form onSubmit={handleSubmit}>
                 <InputField 
-                    label="Jenjang"
-                    name="jenjang"
-                    value={formData.jenjang}
+                    label="Nama Jenjang"
+                    name="nama_jenjang"
+                    value={formData.nama_jenjang}
                     onChange={handleChange}
-                    placeholder="Masukan nama jenjang"
+                    placeholder="Contoh: SD, SMP, SMA"
                     required
                 />
 
                 {/* Input Keterangan */}
                 <InputField 
-                    label="Deskripsi"
-                    name="deskripsi"
-                    value={formData.deskripsi}
+                    label="Keterangan / Deskripsi"
+                    name="keterangan"
+                    value={formData.keterangan}
                     onChange={handleChange}
                     placeholder="Masukan deskripsi jenjang"
-                    required
+                    required={false}
                     type="textarea" 
                     rows={4}
                 />
@@ -89,6 +133,7 @@ export default function EditJenjang() {
                         text="Batal" 
                     />
                 </div>
+                </form>
             </div>
         </div>
     );
