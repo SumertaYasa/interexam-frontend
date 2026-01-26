@@ -5,6 +5,7 @@ import QuestionCard from "./Components/QuestionCard";
 import GuideModal from "../../Common/GuideModal";
 import ActionModal from "../../Common/ActionModal";
 import SaveToFolderModal from "./Components/SaveToFolderModal";
+import ReportModal from "./Components/ReportModal";
 import { useAuth } from "../../../../context/AuthContext";
 import { useFolder } from "../../../../context/FolderContext";
 import { HelpCircle, Timer, CheckCircle2 } from "lucide-react";
@@ -49,6 +50,7 @@ export default function ExamAttempt() {
   const [targetQuestionId, setTargetQuestionId] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [activeModal, setActiveModal] = useState(null); // 'save', 'exit', 'submit', 'guide'
+  const [reportQuestionIdx, setReportQuestionIdx] = useState(null);
   const [countdown, setCountdown] = useState(3);
   const [isCounting, setIsCounting] = useState(true);
 
@@ -58,11 +60,11 @@ export default function ExamAttempt() {
         .filter(
           (f) =>
             String(f.id_folder) === String(loaderResult.folderId) &&
-            f.id_soal !== null
+            f.id_soal !== null,
         )
         .map((f) => String(f.id_soal));
       return availableQuestions.filter((q) =>
-        folderSoalIds.includes(String(q.id))
+        folderSoalIds.includes(String(q.id)),
       );
     }
     return availableQuestions;
@@ -72,7 +74,7 @@ export default function ExamAttempt() {
     return folders.reduce((acc, current) => {
       if (!acc.find((item) => item.id_folder === current.id_folder)) {
         const count = folders.filter(
-          (f) => f.id_folder === current.id_folder && f.id_soal !== null
+          (f) => f.id_folder === current.id_folder && f.id_soal !== null,
         ).length;
         acc.push({ ...current, count });
       }
@@ -85,7 +87,7 @@ export default function ExamAttempt() {
   const displayTitle =
     loaderResult.mode === "folder"
       ? folders.find(
-          (f) => String(f.id_folder) === String(loaderResult.folderId)
+          (f) => String(f.id_folder) === String(loaderResult.folderId),
         )?.folder_name || "Latihan Folder"
       : loaderResult.exam?.id
         ? loaderResult.exam.label
@@ -97,7 +99,7 @@ export default function ExamAttempt() {
       saveQuestionToFolder(
         targetQuestionId,
         selectedFolder.id_folder,
-        selectedFolder.folder_name
+        selectedFolder.folder_name,
       );
       setActiveModal(null);
       setSelectedFolder(null);
@@ -133,6 +135,12 @@ export default function ExamAttempt() {
         : loaderResult.exam?.id;
     if (id) setProgress(id, totalAnswered);
     navigate("../result", { state: { results }, relative: "path" });
+  };
+
+  const handleSendReport = (data) => {
+    console.log("Laporan dikirim:", data);
+    showAlert("Laporan berhasil dikirim, terima kasih!", "success");
+    setActiveModal(null);
   };
 
   useEffect(() => {
@@ -189,6 +197,10 @@ export default function ExamAttempt() {
                 setTargetQuestionId(id);
                 setActiveModal("save");
               }}
+              onReport={(idx) => {
+                setReportQuestionIdx(idx);
+                setActiveModal("report");
+              }}
             />
           ))}
         </div>
@@ -242,6 +254,14 @@ export default function ExamAttempt() {
       {activeModal === "guide" && (
         <GuideModal onClose={() => setActiveModal(null)} />
       )}
+
+      <ReportModal
+        isOpen={activeModal === "report"}
+        onClose={() => setActiveModal(null)}
+        questionIndex={reportQuestionIdx}
+        examTitle={displayTitle}
+        onSubmit={handleSendReport}
+      />
     </div>
   );
 }

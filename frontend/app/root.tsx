@@ -17,6 +17,12 @@ import { FolderProvider } from "./context/FolderContext";
 // Ambil Client ID dari env frontend
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+if (!GOOGLE_CLIENT_ID) {
+  console.warn(
+    "⚠️ VITE_GOOGLE_CLIENT_ID tidak diset di .env.local. Google OAuth tidak akan berfungsi.",
+  );
+}
+
 // Link Google Fonts & preconnect
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -57,6 +63,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 // App root tanpa BrowserRouter
 export default function App() {
+  // Jika CLIENT_ID tidak ada, render tanpa Google OAuth (fallback)
+  if (!GOOGLE_CLIENT_ID) {
+    return (
+      <AuthProvider>
+        <FolderProvider>
+          <Outlet />
+        </FolderProvider>
+      </AuthProvider>
+    );
+  }
+
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthProvider>

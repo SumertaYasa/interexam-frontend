@@ -7,6 +7,7 @@ export default function QuestionCard({
   onAnswer,
   selectedAnswer = null,
   onBookmark,
+  onReport,
 }) {
   const [selected, setSelected] = useState(selectedAnswer ?? null);
 
@@ -22,7 +23,10 @@ export default function QuestionCard({
           {question.text}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button className="p-2 rounded-full hover:bg-slate-100 transition-colors">
+          <button
+            onClick={() => onReport(index)}
+            className="p-2 rounded-full hover:bg-slate-100 transition-colors"
+          >
             <AlertCircle size={18} className="text-slate-400" />
           </button>
           <button

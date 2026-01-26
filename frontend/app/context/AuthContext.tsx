@@ -42,12 +42,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const isAuthenticated = useMemo(() => !!user, [user]);
 
   useEffect(() => {
     const checkAuth = async () => {
+      if (typeof window === "undefined") return;
+      const token = localStorage.getItem("token");
+
       if (!token) {
         setIsLoading(false);
         return;
@@ -58,9 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // PERBAIKAN: Ambil properti 'user' dari dalam response.data
         if (response.data && response.data.user) {
-          console.log("DEBUG AUTH - User Set:", response.data.user);
           setUser(response.data.user);
         }
       } catch (error: any) {
@@ -74,11 +73,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     checkAuth();
-  }, [token]);
+  }, []);
 
   const showAlert = (
     message: string,
-    type: "success" | "error" = "success"
+    type: "success" | "error" = "success",
   ) => {
     setAlert({ message, type });
   };

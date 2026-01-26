@@ -6,6 +6,7 @@ import CardCourseList from "../../Common/CardCourseList";
 import CardCourse from "../../Common/CardCourse";
 import FilterPanel from "../../Common/FilterPanel";
 import { slugify } from "../../../../utils/slugify.ts";
+import { courseService } from "../../../../services/subscriber";
 
 const DUMMY_COURSES = [
   {
@@ -130,25 +131,25 @@ function LoadingCards() {
 
 export async function loader({ request }) {
   try {
-    const res = await fetch("/api/courses", { signal: request?.signal });
-    if (!res.ok) {
+    // Fetch dari service layer
+    const data = await courseService.getAllPakets();
+    const items = Array.isArray(data) ? data : (data?.data ?? []);
+
+    // Jika kosong, gunakan default
+    if (items.length === 0) {
       return { courses: DUMMY_COURSES };
     }
-    const data = await res.json();
-    const items = Array.isArray(data) ? data : (data?.courses ?? []);
 
     const normalized = items.map((it) => ({
-      id: it.id ?? it._id ?? Math.random().toString(36).slice(2, 9),
-      title: it.title ?? it.label ?? it.name ?? "Untitled",
-      image: it.image ?? it.thumbnail ?? "/person.jpg",
-      rating: Number(it.rating ?? 0),
-      totalSoal: it.totalSoal ?? it.totalQuestions ?? it.total ?? 0,
-      participants: it.participants ?? it.totalTaken ?? it.timesTaken ?? 0,
-      category: it.category ?? it.subject ?? "Umum",
-      createdAt:
-        it.createdAt ?? it.uploadedAt ?? it.created_at ?? it.created ?? null,
-      path:
-        it.path ?? `/dashboard-subscriber/latihan/${slugify(it.title ?? "")}`,
+      id: it.id_paket_soal ?? it.id,
+      title: it.nama_paket ?? it.title,
+      image: it.image ?? "/person.jpg",
+      rating: Number(it.rating ?? 4.5),
+      totalSoal: it.jumlah_soal ?? 50,
+      participants: it.participants ?? 0,
+      category: it.category?.nama_category ?? "Umum",
+      createdAt: it.tanggal_dibuat ?? null,
+      path: `/dashboard-subscriber/latihan/${slugify(it.nama_paket || "paket")}`,
       linkState: {
         from: "course",
         badge: {
@@ -159,7 +160,8 @@ export async function loader({ request }) {
     }));
 
     return { courses: normalized };
-  } catch (err) {
+  } catch (error) {
+    console.error("Loader error:", error);
     return { courses: DUMMY_COURSES };
   }
 }
@@ -251,7 +253,7 @@ function CourseContainer() {
     // sorting
     if (filters.sortBy === "newest") {
       list.sort(
-        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
       );
     } else if (filters.sortBy === "rating") {
       list.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));

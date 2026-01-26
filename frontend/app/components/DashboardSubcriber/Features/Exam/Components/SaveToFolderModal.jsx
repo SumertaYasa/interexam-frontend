@@ -5,7 +5,7 @@ export default function SaveToFolderModal({
   isOpen,
   onClose,
   folders,
-  onAddFolder, // Sekarang menerima parameter name
+  onAddFolder,
   onSelectFolder,
   selectedFolder,
   onSave,
