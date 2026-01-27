@@ -1,108 +1,121 @@
-import React, { useMemo } from "react";
-import { useLoaderData, Link, useLocation } from "react-router";
+import React, { useState, useEffect } from "react";
+import { Link, useParams, useLocation } from "react-router";
 import { useFolder } from "../../../../context/FolderContext.tsx";
 import BreadCrumbs from "../../Common/BreadCrumbs";
 import RankingTable from "../../Common/RankingTable";
 import ProgressBar from "../../Common/ProgressBar";
 import { slugify } from "../../../../utils/slugify.ts";
+import { courseService } from "../../../../services/subscriber";
+import { getAssetUrl } from "../../../../utils/assetHelpper.ts";
 
-const DATA_UJIAN_LATIHAN = [
-  {
-    id: "lat-1",
-    label: "Tes Bahasa Inggris: Structure & Usage",
-    description:
-      "Latihan struktur dan penggunaan bahasa Inggris untuk meningkatkan grammar dan fluency.",
-    image: "/person.jpg",
-    progress: { answered: 0, totalSoal: 10 },
-    totalSoal: 10,
-  },
-  {
-    id: "lat-2",
-    label: "Tryout Matematika Saintek",
-    description:
-      "Tryout soal matematika saintek untuk melatih kecepatan dan ketepatan dalam menyelesaikan soal.",
-    image: "/person.jpg",
-    progress: { answered: 0, totalSoal: 60 },
-    totalSoal: 60,
-  },
-];
-
-const DATA_UJIAN_STATUS = [
-  {
-    id: "st-1",
-    label: "Paket Soal 1 - Logika Dasar",
-    description:
-      "Latihan logika dasar untuk melatih kemampuan berpikir kritis dan pemecahan masalah sederhana.",
-    image: "/person.jpg",
-    progress: { answered: 15, totalSoal: 50 },
-    totalSoal: 50,
-  },
-  {
-    id: "st-2",
-    label: "Paket Soal 2 - TPA Kuantitatif",
-    description:
-      "Tes Potensi Akademik fokus pada hitungan matematika, deret angka, dan logika aritmatika.",
-    image: "/person.jpg",
-    progress: { answered: 30, totalSoal: 40 },
-    totalSoal: 40,
-  },
-  {
-    id: "st-3",
-    label: "Ujian Logika Dasar Sekolah Menengah Atas",
-    description:
-      "Ujian logika dasar yang biasa digunakan untuk persiapan seleksi akademik.",
-    image: "/person.jpg",
-    progress: { answered: 5, totalSoal: 40 },
-    totalSoal: 40,
-  },
-];
-
-// --- LOADER: Hanya fokus pada Latihan & Status ---
-export async function loader({ params, request }) {
-  const labelParam = params.label;
-  const url = request?.url ?? "";
-
-  if (url.includes("/dashboard-subscriber/status-ujian-terakhir/")) {
-    const found = DATA_UJIAN_STATUS.find(
-      (e) => slugify(e.label) === labelParam
-    );
-    return { mode: "status", data: found };
-  }
-
-  if (url.includes("/dashboard-subscriber/latihan/")) {
-    const found = DATA_UJIAN_LATIHAN.find(
-      (e) => slugify(e.label) === labelParam
-    );
-    return { mode: "latihan", data: found };
-  }
-
-  // Fallback ke latihan jika tidak terdeteksi
-  const fallback =
-    DATA_UJIAN_LATIHAN.find((e) => slugify(e.label) === labelParam) ||
-    DATA_UJIAN_STATUS.find((e) => slugify(e.label) === labelParam);
-  return { mode: "latihan", data: fallback };
+function LoadingDetail() {
+  return (
+    <div className="w-full py-20 flex justify-center items-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-gray-500 font-semibold text-lg animate-pulse">
+          Memuat detail paket soal...
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function DetailExam() {
-  const loaderResult = useLoaderData();
-  const { examProgress } = useFolder(); // Folders dihapus karena tidak lagi digunakan di sini
+  const { label } = useParams();
   const location = useLocation();
+  const { examProgress } = useFolder();
+  const [examData, setExamData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Logika Pemilihan Data (Hanya untuk Paket Statis)
-  const examData = useMemo(() => {
-    if (!loaderResult || !loaderResult.data) return null;
+  const getMode = () => {
+    if (
+      location.pathname.includes("/dashboard-subscriber/status-ujian-terakhir/")
+    ) {
+      return "status";
+    } else if (location.pathname.includes("/dashboard-subscriber/tersimpan/")) {
+      return "folder";
+    }
+    return "latihan";
+  };
 
-    return {
-      ...loaderResult.data,
-      origin:
-        loaderResult.mode === "status" ? "status-ujian-terakhir" : "latihan",
+  const mode = getMode();
+
+  // --- FETCH DATA ---
+  useEffect(() => {
+    const fetchExamData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Ambil semua paket dari API
+        const response = await courseService.getAllPaketsWithProgress();
+        const items =
+          response && Array.isArray(response.data) ? response.data : [];
+
+        // Cari paket yang sesuai dengan label dari URL
+        const found = items.find(
+          (item) => slugify(item.label || item.nama_paket) === label,
+        );
+
+        if (!found) {
+          setError("Paket soal tidak ditemukan");
+          setExamData(null);
+          return;
+        }
+
+        const processed = {
+          id: found.id || found.id_paket_soal,
+          label: found.label || found.nama_paket || "Paket Soal",
+          description: found.deskripsi || "Deskripsi tidak tersedia",
+          image: getAssetUrl(found.image),
+          totalSoal: found.soal_count || found.totalSoal || 0,
+          progress: {
+            answered: found.progress?.answered || 0,
+            totalSoal: found.soal_count || found.totalSoal || 0,
+          },
+          category: found.category || "Umum",
+        };
+
+        setExamData(processed);
+      } catch (err) {
+        console.error("Error fetching exam data:", err);
+        setError(err.message || "Gagal memuat data paket soal");
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [loaderResult]);
 
-  if (!examData) {
+    if (label) {
+      fetchExamData();
+    }
+  }, [label]);
+
+  if (loading) {
     return (
-      <div className="w-full px-7-5 py-10 text-center font-bold text-slate-500">
-        Ujian tidak ditemukan.
+      <div className="w-full font-sans antialiased">
+        <nav className="w-full px-7-5 py-3.5">
+          <div className="w-12">
+            <img src="/interexam-logo.svg" className="w-full" alt="Logo" />
+          </div>
+        </nav>
+        <LoadingDetail />
+      </div>
+    );
+  }
+
+  if (error || !examData) {
+    return (
+      <div className="w-full font-sans antialiased">
+        <nav className="w-full px-7-5 py-3.5">
+          <div className="w-12">
+            <img src="/interexam-logo.svg" className="w-full" alt="Logo" />
+          </div>
+        </nav>
+        <div className="w-full px-7-5 py-10 text-center font-bold text-slate-500">
+          {error || "Paket soal tidak ditemukan."}
+        </div>
       </div>
     );
   }
@@ -113,7 +126,13 @@ function DetailExam() {
       : examData.progress?.answered || 0;
 
   const slug = slugify(examData.label);
-  const attemptPath = `/dashboard-subscriber/${examData.origin}/${slug}/attempt`;
+  const originPath =
+    mode === "status"
+      ? "status-ujian-terakhir"
+      : mode === "folder"
+        ? "tersimpan"
+        : "latihan";
+  const attemptPath = `/dashboard-subscriber/${originPath}/${slug}/attempt`;
 
   return (
     <div className="w-full font-sans antialiased">
@@ -151,7 +170,7 @@ function DetailExam() {
 
             <Link
               to={attemptPath}
-              state={{ from: loaderResult.mode }}
+              state={{ from: mode }}
               className="rounded px-6 py-3 bg-primary hover:bg-primary/80 text-white font-bold text-sm tracking-tight transition-all duration-300 active:scale-95 shadow-lg shadow-primary/20"
             >
               Mulai kerjakan

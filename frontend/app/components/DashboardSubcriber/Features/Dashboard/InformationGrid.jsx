@@ -15,7 +15,6 @@ export function InformationGrid() {
         setStats(data);
       } catch (error) {
         console.error("Error fetching statistics:", error);
-        setStats(null);
       } finally {
         setLoading(false);
       }
@@ -30,14 +29,17 @@ export function InformationGrid() {
       icon: CircleCheckBig,
       label: "total ujian diselesaikan",
       value: stats?.totalExamsCompleted || 0,
-      messageInformation: `+${stats?.comparedToPreviousWeek?.exams || 0} dari minggu lalu`,
+      // Akses ke object nested comparedToPreviousWeek
+      messageInformation: `+${stats?.comparedToPreviousWeek?.exams || 0} minggu ini`,
       messageAlert: "Pertahankan ritmemu minggu ini.",
     },
     {
       id: 2,
       icon: TrendingUp,
       label: "rata-rata skor",
-      value: stats?.averageScore ? `${Math.round(stats.averageScore)}%` : "0%",
+      // Backend mengirim number (misal 75), kita tambah % di sini
+      value:
+        stats?.averageScore !== undefined ? `${stats.averageScore}%` : "0%",
       messageInformation: `+${stats?.comparedToPreviousWeek?.scoreIncrease || 0}% dari minggu lalu`,
       messageAlert: "Fokus dan presisi terus meningkat.",
     },
@@ -68,7 +70,7 @@ export function InformationGrid() {
   }
 
   return (
-    <div className="w-full flex  items-center gap-5 ">
+    <div className="w-full flex items-center gap-5">
       {dataCardInformation.map((card) => (
         <CardInformation
           key={card.id}

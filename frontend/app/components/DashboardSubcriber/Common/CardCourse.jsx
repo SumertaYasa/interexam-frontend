@@ -12,7 +12,6 @@ function SmallBadge({ children }) {
 }
 
 function CardCourse({
-  id,
   title = "Judul Paket Soal",
   image = "/person.jpg",
   rating = 4.8,

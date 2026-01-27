@@ -32,13 +32,16 @@ export const dashboardService = {
       return response.data.data || {};
     } catch (error) {
       console.error("Gagal ambil statistik:", error);
+      // Fallback structure harus match dengan Frontend expectation
       return {
-        totalExams: 0,
-        examsTrend: "+0",
-        avgScore: 0,
-        scoreTrend: "0%",
-        studyTime: "0j 0m",
-        timeTrend: "+0m",
+        totalExamsCompleted: 0,
+        averageScore: 0,
+        totalStudyTime: "0j 0m",
+        comparedToPreviousWeek: {
+          exams: 0,
+          scoreIncrease: 0,
+          studyTimeIncrease: 0,
+        },
       };
     }
   },
@@ -50,12 +53,27 @@ export const dashboardService = {
         `${API_BASE_URL}/subscriber/statistics/streak`,
         getAuthHeader(),
       );
+      // Backend sekarang mengembalikan data flat langsung
       return (
         response.data.data || { streak: 0, weeklyProgress: 0, weeklyTarget: 10 }
       );
     } catch (error) {
       console.error("Gagal ambil streak:", error);
       return { streak: 0, weeklyProgress: 0, weeklyTarget: 10 };
+    }
+  },
+
+  // Ambil semua paket soal dengan progress
+  getAllPaketsWithProgress: async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/subscriber/pakets`,
+        getAuthHeader(),
+      );
+      return response.data.data || [];
+    } catch (error) {
+      console.error("Gagal ambil semua paket:", error);
+      return [];
     }
   },
 };

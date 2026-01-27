@@ -8,55 +8,85 @@ const getAuthHeader = () => {
 };
 
 export const courseService = {
-  // Ambil semua paket dengan filter dan sort
-  getAllPakets: async (params = {}) => {
+  // Mengambil paket pengerjaan khusus subscriber
+  getAllPaketsWithProgress: async (params = {}) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/subscriber/pakets`, {
         params: {
           search: params.search || "",
           category: params.category || "all",
           page: params.page || 1,
-          limit: params.limit || 10,
+          limit: params.limit || 100,
           sortBy: params.sortBy || "newest",
         },
         ...getAuthHeader(),
       });
-      return response.data;
+      return response.data; // Mengembalikan { status, data, meta }
     } catch (error) {
-      console.error("Gagal ambil paket:", error);
-      return {
-        status: "error",
-        data: [],
-        meta: { total: 0, page: 1, limit: 10 },
-      };
+      console.error(
+        "Gagal ambil paket:",
+        error.response?.data || error.message,
+      );
+      return { status: "error", data: [] };
     }
   },
 
-  // Ambil detail paket soal
   getPaketDetail: async (id) => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/subscriber/pakets/${id}`,
         getAuthHeader(),
       );
-      return response.data.data || null;
+      return response.data.data;
     } catch (error) {
-      console.error("Gagal ambil detail paket:", error);
+      console.error("Gagal ambil detail:", error);
       return null;
     }
   },
 
-  // Ambil kategori paket (optional - untuk filter)
-  getCategories: async () => {
+  // Simpan soal ke folder
+  saveQuestionToFolder: async (soalId, folderId) => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/categories`,
+      const response = await axios.post(
+        `${API_BASE_URL}/folders/save-question`,
+        { id_soal: soalId, id_folder: folderId },
         getAuthHeader(),
       );
-      return response.data.data || [];
+      return response.data;
     } catch (error) {
-      console.error("Gagal ambil kategori:", error);
-      return [];
+      console.error("Gagal simpan soal:", error);
+      throw error;
+    }
+  },
+
+  // Submit ujian
+  submitExam: async (paketId, answers) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/subscriber/pakets/submit`,
+        { id_paket_soal: paketId, answers }, // Kirim paketId dan answers terbaru
+        getAuthHeader(),
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Gagal submit ujian:",
+        error.response?.data || error.message,
+      );
+      throw error;
+    }
+  },
+  saveProgress: async (paketId, answers) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/subscriber/pakets/save-progress`,
+        { id_paket_soal: paketId, answers },
+        getAuthHeader(),
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Gagal simpan progres:", error);
+      throw error;
     }
   },
 };

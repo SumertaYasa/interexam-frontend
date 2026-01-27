@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import CardProgress from "../../Common/CardProgress";
 import { slugify } from "../../../../utils/slugify.ts";
 import { dashboardService } from "../../../../services/subscriber";
+import { getAssetUrl } from "../../../../utils/assetHelpper.ts";
 
 function CourseGrid() {
   const [pakets, setPakets] = useState([]);
@@ -25,15 +26,21 @@ function CourseGrid() {
     fetchRecentPakets();
   }, []);
 
-  const dataCardProgress = pakets.map((paket) => ({
-    id: paket.id_paket_soal,
-    label: paket.nama_paket,
-    image: paket.image || "/person.jpg",
-    progress: {
-      answered: paket.progress?.answered || 0,
-      totalSoal: paket.progress?.totalSoal || paket.jumlah_soal || 0,
-    },
-  }));
+  // Filter pakets yang sudah memiliki progress (sudah diambil exam) dan mapping data
+  const dataCardProgress = pakets
+    .filter((paket) => {
+      // Hanya tampilkan paket yang sudah pernah diambil exam (answered > 0)
+      return paket.progress?.answered > 0;
+    })
+    .map((paket) => ({
+      id: paket.id,
+      label: paket.label,
+      image: getAssetUrl(paket.image),
+      progress: {
+        answered: paket.progress?.answered || 0,
+        totalSoal: paket.progress?.totalSoal || 0,
+      },
+    }));
 
   const slideSpeeds = {
     1: "slide-in-from-bottom-[2%]",
@@ -69,7 +76,7 @@ function CourseGrid() {
           Lihat Semua
         </Link>
       </div>
-      <div className="flex justify-center items-center h-[230px] gap-5">
+      <div className="flex justify-start items-center h-[230px] gap-5">
         {dataCardProgress.length === 0 ? (
           <div className="w-full py-12 flex justify-center items-center text-center">
             <p className="text-slate-400 font-medium">

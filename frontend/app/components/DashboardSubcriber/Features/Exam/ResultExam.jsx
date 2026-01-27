@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { Link, useLocation, useNavigate, useLoaderData } from "react-router";
+import React, { useState, useEffect, useMemo } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import {
   CheckCircle2,
   XCircle,
@@ -8,82 +8,43 @@ import {
   ArrowRight,
   LayoutDashboard,
 } from "lucide-react";
-import BreadCrumbs from "../../Common/BreadCrumbs";
-import { slugify } from "../../../../utils/slugify.ts";
-import { useFolder } from "../../../../context/FolderContext.tsx";
-
-// Dataset Statis agar sinkron dengan file Exam lainnya
-const DATA_UJIAN_LATIHAN = [
-  { id: "lat-1", label: "Tes Bahasa Inggris: Structure & Usage" },
-  { id: "lat-2", label: "Tryout Matematika Saintek" },
-];
-
-const DATA_UJIAN_STATUS = [
-  { id: "st-1", label: "Paket Soal 1 - Logika Dasar" },
-  { id: "st-2", label: "Paket Soal 2 - TPA Kuantitatif" },
-  { id: "st-3", label: "Ujian Logika Dasar Sekolah Menengah Atas" },
-];
-
-export async function loader({ params, request }) {
-  const labelParam = params.label;
-  const url = request?.url ?? "";
-
-  // Identifikasi Mode Berdasarkan URL
-  if (url.includes("/dashboard-subscriber/tersimpan/")) {
-    return { mode: "folder", id: labelParam };
-  }
-
-  const allExams = [...DATA_UJIAN_LATIHAN, ...DATA_UJIAN_STATUS];
-  const examFound = allExams.find((e) => slugify(e.label) === labelParam);
-
-  return {
-    mode: "package",
-    exam: examFound || { label: params.label },
-  };
-}
+import { useFolder } from "../../../../context/FolderContext";
 
 export default function ResultExam() {
-  const loaderResult = useLoaderData();
-  const { folders } = useFolder();
+  const { label } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { folders } = useFolder();
 
-  // Mengambil data skor yang dikirim via state
+  // State untuk menggantikan loader
+  const [config, setConfig] = useState({ mode: "package", id: null });
+
+  // Data Skor dari Backend melalui state navigation
   const results = location.state?.results;
 
+  useEffect(() => {
+    // Identifikasi Mode Berdasarkan URL
+    const isFolderMode = window.location.pathname.includes(
+      "/dashboard-subscriber/tersimpan/",
+    );
+    setConfig({
+      mode: isFolderMode ? "folder" : "package",
+      id: label,
+    });
+  }, [label]);
+
   const displayTitle = useMemo(() => {
-    if (loaderResult.mode === "folder") {
+    if (config.mode === "folder") {
       const folder = folders.find(
-        (f) => String(f.id_folder) === String(loaderResult.id)
+        (f) => String(f.id_folder) === String(config.id),
       );
       return folder?.folder_name || "Hasil Latihan Folder";
     }
-    return loaderResult.exam?.label || "Hasil Ujian";
-  }, [loaderResult, folders]);
-
-  // Proteksi jika data skor kosong (akibat refresh)
-  if (!results) {
-    return (
-      <div className="w-full h-screen flex flex-col items-center justify-center gap-6 bg-slate-50 font-sans">
-        <div className="text-center">
-          <p className="font-bold text-slate-500 mb-2">
-            Oops! Skor tidak ditemukan.
-          </p>
-          <p className="text-sm text-slate-400">
-            Silakan kerjakan ujian terlebih dahulu untuk melihat hasil.
-          </p>
-        </div>
-        <Link
-          to="/dashboard-subscriber"
-          className="px-8 py-3 bg-primary text-white rounded-2xl font-bold active:scale-95 transition-all shadow-lg"
-        >
-          Kembali ke Dashboard
-        </Link>
-      </div>
-    );
-  }
+    return results?.examLabel || "Hasil Ujian";
+  }, [config, folders, results]);
 
   const feedback = useMemo(() => {
+    if (!results) return null;
     const score = results.score || 0;
     if (score >= 80)
       return {
@@ -105,7 +66,30 @@ export default function ResultExam() {
       color: "text-amber-500",
       bg: "bg-amber-50",
     };
-  }, [results.score]);
+  }, [results]);
+
+  if (!results) {
+    return (
+      <div className="w-full h-screen flex flex-col items-center justify-center gap-6 bg-slate-50 font-sans p-6 text-center">
+        <div className="bg-white p-10 rounded-[32px] border shadow-sm max-w-md">
+          <HelpCircle size={48} className="mx-auto text-slate-300 mb-4" />
+          <p className="font-bold text-slate-500 text-lg mb-2">
+            Oops! Skor tidak ditemukan.
+          </p>
+          <p className="text-sm text-slate-400 mb-8">
+            Silakan kerjakan ujian terlebih dahulu untuk melihat hasil
+            pengerjaanmu.
+          </p>
+          <Link
+            to="/dashboard-subscriber"
+            className="inline-block w-full px-8 py-3 bg-primary text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all"
+          >
+            Kembali ke Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-slate-50/50 font-sans antialiased pb-20">
@@ -121,9 +105,6 @@ export default function ResultExam() {
       </nav>
 
       <div className="max-w-4xl mx-auto px-8 pt-8 flex flex-col gap-8">
-        <BreadCrumbs />
-
-        {/* HERO SECTION */}
         <div className="bg-white border border-slate-200 rounded-[32px] p-10 shadow-sm flex flex-col md:flex-row items-center gap-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="relative flex items-center justify-center">
             <svg className="w-48 h-48 transform -rotate-90">
@@ -177,7 +158,6 @@ export default function ResultExam() {
           </div>
         </div>
 
-        {/* STATS GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <StatCard
             icon={<CheckCircle2 size={24} className="text-emerald-500" />}
@@ -202,7 +182,6 @@ export default function ResultExam() {
           />
         </div>
 
-        {/* ACTION BUTTONS */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4">
           <button
             onClick={() => navigate("/dashboard-subscriber")}

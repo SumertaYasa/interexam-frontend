@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useLoaderData, useNavigate } from "react-router";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { useNavigate, useParams, useLocation } from "react-router";
 import { slugify, humanizeSlug } from "../../../../utils/slugify";
 import QuestionCard from "./Components/QuestionCard";
 import GuideModal from "../../Common/GuideModal";
@@ -8,67 +8,224 @@ import SaveToFolderModal from "./Components/SaveToFolderModal";
 import ReportModal from "./Components/ReportModal";
 import { useAuth } from "../../../../context/AuthContext";
 import { useFolder } from "../../../../context/FolderContext";
+import { courseService } from "../../../../services/subscriber";
 import { HelpCircle, Timer, CheckCircle2 } from "lucide-react";
 
-// Dataset Statis tetap diperlukan
-const DATA_UJIAN_LATIHAN = [
-  { id: "lat-1", label: "Tes Bahasa Inggris: Structure & Usage" },
-  { id: "lat-2", label: "Tryout Matematika Saintek" },
-];
-
-const DATA_UJIAN_STATUS = [
-  { id: "st-1", label: "Paket Soal 1 - Logika Dasar" },
-  { id: "st-2", label: "Paket Soal 2 - TPA Kuantitatif" },
-  { id: "st-3", label: "Ujian Logika Dasar Sekolah Menengah Atas" },
-];
-
-export async function loader({ params, request }) {
-  const labelParam = params.label;
-  const url = request?.url ?? "";
-  if (url.includes("/dashboard-subscriber/tersimpan/")) {
-    return { mode: "folder", folderId: labelParam };
-  }
-  const allExams = [...DATA_UJIAN_LATIHAN, ...DATA_UJIAN_STATUS];
-  const examFound = allExams.find((e) => slugify(e.label) === labelParam);
-  return { mode: "package", exam: examFound || { label: params.label } };
+function LoadingQuestions() {
+  return (
+    <div className="w-full py-20 flex justify-center items-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-gray-500 font-semibold text-lg animate-pulse">
+          Memuat soal...
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default function ExamAttempt() {
   const navigate = useNavigate();
-  const loaderResult = useLoaderData();
+  const { label } = useParams();
+  const location = useLocation();
   const { showAlert } = useAuth();
   const {
-    availableQuestions,
     folders,
     saveQuestionToFolder,
     addFolder,
     setProgress,
+    saveExamAnswers,
+    getExamAnswers,
+    clearExamAnswers,
   } = useFolder();
 
-  // State
   const [answers, setAnswers] = useState({});
   const [targetQuestionId, setTargetQuestionId] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
-  const [activeModal, setActiveModal] = useState(null); // 'save', 'exit', 'submit', 'guide'
+  const [activeModal, setActiveModal] = useState(null);
   const [reportQuestionIdx, setReportQuestionIdx] = useState(null);
   const [countdown, setCountdown] = useState(3);
   const [isCounting, setIsCounting] = useState(true);
+  const [questions, setQuestions] = useState([]);
+  const [paketData, setPaketData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [paketId, setPaketId] = useState(null);
 
-  const displayedQuestions = useMemo(() => {
-    if (loaderResult.mode === "folder") {
-      const folderSoalIds = folders
-        .filter(
-          (f) =>
-            String(f.id_folder) === String(loaderResult.folderId) &&
-            f.id_soal !== null,
-        )
-        .map((f) => String(f.id_soal));
-      return availableQuestions.filter((q) =>
-        folderSoalIds.includes(String(q.id)),
-      );
+  const getMode = () => {
+    if (
+      location.pathname.includes("/dashboard-subscriber/status-ujian-terakhir/")
+    ) {
+      return "status";
+    } else if (location.pathname.includes("/dashboard-subscriber/tersimpan/")) {
+      return "folder";
     }
-    return availableQuestions;
-  }, [loaderResult, availableQuestions, folders]);
+    return "latihan";
+  };
+
+  const mode = getMode();
+
+  // --- FETCH QUESTIONS FROM PACKAGE ---
+  // PERBAIKAN: Hapus getExamAnswers dari dependency array agar tidak re-fetch saat menjawab
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await courseService.getAllPaketsWithProgress();
+        const items =
+          response && Array.isArray(response.data) ? response.data : [];
+
+        const paket = items.find(
+          (item) => slugify(item.label || item.nama_paket) === label,
+        );
+
+        if (!paket) {
+          setError("Paket soal tidak ditemukan");
+          setLoading(false);
+          return;
+        }
+
+        const currentPaketId = paket.id || paket.id_paket_soal;
+        setPaketId(currentPaketId);
+        setPaketData(paket);
+
+        const paketDetail = await courseService.getPaketDetail(currentPaketId);
+
+        if (paketDetail && paketDetail.soal_paket_soal) {
+          const formattedQuestions = paketDetail.soal_paket_soal.map(
+            (item, index) => {
+              const soal = item.soal;
+              return {
+                id: soal.id_soal,
+                index: index,
+                text_soal: soal.text_soal,
+                options: [
+                  soal.option_a || "",
+                  soal.option_b || "",
+                  soal.option_c || "",
+                  soal.option_d || "",
+                  soal.option_e || "",
+                ].filter((opt) => opt !== ""),
+                correctAnswer: 0,
+                deskripsi: soal.deskripsi || "",
+                paketId: currentPaketId,
+              };
+            },
+          );
+
+          setQuestions(formattedQuestions);
+
+          // Restore saved answers HANYA sekali saat paket pertama kali dimuat
+          const savedAnswers = getExamAnswers(String(currentPaketId));
+          if (Object.keys(savedAnswers).length > 0) {
+            setAnswers(savedAnswers);
+          }
+        } else {
+          setQuestions([]);
+        }
+      } catch (err) {
+        console.error("Error fetching questions:", err);
+        setError(err.message || "Gagal memuat soal");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (label) {
+      fetchQuestions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [label]); // Hanya berjalan jika label berubah (pindah paket)
+
+  // --- HANDLER JAWABAN ---
+  const handleAnswerChange = useCallback(
+    (idx, val) => {
+      // Update state lokal secara instan tanpa memicu loading
+      setAnswers((prev) => {
+        const next = { ...prev, [idx]: val };
+        // Simpan ke context setelah state terupdate
+        if (paketId) {
+          saveExamAnswers(String(paketId), next);
+        }
+        return next;
+      });
+    },
+    [paketId, saveExamAnswers],
+  );
+
+  // --- HANDLERS LAINNYA ---
+  const handleFinishSave = async () => {
+    if (selectedFolder && targetQuestionId) {
+      try {
+        saveQuestionToFolder(
+          targetQuestionId,
+          selectedFolder.id_folder,
+          selectedFolder.folder_name,
+        );
+        setActiveModal(null);
+        setSelectedFolder(null);
+        showAlert("Soal berhasil disimpan!", "success");
+      } catch (err) {
+        showAlert("Gagal menyimpan soal", "error");
+      }
+    }
+  };
+
+  const handleConfirmExit = async () => {
+    try {
+      if (mode !== "folder" && paketId) {
+        await courseService.saveProgress(paketId, answers);
+      }
+      if (paketId) setProgress(String(paketId), Object.keys(answers).length);
+      navigate(-1);
+      showAlert("Progres pengerjaan disimpan!", "success");
+    } catch (err) {
+      navigate(-1);
+    }
+  };
+
+  const handleSubmitExam = async () => {
+    try {
+      setLoading(true);
+      const response = await courseService.submitExam(paketId, answers);
+
+      if (response.status === "success") {
+        const results = {
+          ...response.data,
+          examLabel: displayTitle,
+          paketId: paketId,
+        };
+
+        if (paketId) {
+          clearExamAnswers(String(paketId));
+          setProgress(String(paketId), Object.keys(answers).length);
+        }
+
+        navigate("../result", { state: { results }, relative: "path" });
+      }
+    } catch (err) {
+      showAlert("Gagal mengumpulkan jawaban. Coba lagi.", "error");
+    } finally {
+      setLoading(false);
+      setActiveModal(null);
+    }
+  };
+
+  const handleSendReport = (data) => {
+    showAlert("Laporan berhasil dikirim, terima kasih!", "success");
+    setActiveModal(null);
+  };
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setTimeout(() => setIsCounting(false), 500);
+    }
+  }, [countdown]);
 
   const uniqueFolders = useMemo(() => {
     return folders.reduce((acc, current) => {
@@ -82,75 +239,25 @@ export default function ExamAttempt() {
     }, []);
   }, [folders]);
 
-  const totalQuestions = displayedQuestions.length;
-  const totalAnswered = Object.keys(answers).length;
+  const displayedQuestions = useMemo(() => {
+    if (mode === "folder") {
+      const folderSoalIds = folders
+        .filter(
+          (f) => String(f.id_folder) === String(label) && f.id_soal !== null,
+        )
+        .map((f) => String(f.id_soal));
+      return questions.filter((q) => folderSoalIds.includes(String(q.id)));
+    }
+    return questions;
+  }, [mode, label, questions, folders]);
+
   const displayTitle =
-    loaderResult.mode === "folder"
-      ? folders.find(
-          (f) => String(f.id_folder) === String(loaderResult.folderId),
-        )?.folder_name || "Latihan Folder"
-      : loaderResult.exam?.id
-        ? loaderResult.exam.label
-        : humanizeSlug(loaderResult.exam?.label, { capitalize: true });
+    mode === "folder"
+      ? folders.find((f) => String(f.id_folder) === String(label))
+          ?.folder_name || "Latihan Folder"
+      : paketData?.label || paketData?.nama_paket || "Paket Soal";
 
-  // --- HANDLERS ---
-  const handleFinishSave = () => {
-    if (selectedFolder && targetQuestionId) {
-      saveQuestionToFolder(
-        targetQuestionId,
-        selectedFolder.id_folder,
-        selectedFolder.folder_name,
-      );
-      setActiveModal(null);
-      setSelectedFolder(null);
-      showAlert("Soal berhasil disimpan!", "success");
-    }
-  };
-
-  const handleConfirmExit = () => {
-    const id =
-      loaderResult.mode === "folder"
-        ? loaderResult.folderId
-        : loaderResult.exam?.id;
-    if (id) setProgress(id, totalAnswered);
-    navigate(-1);
-  };
-
-  const handleSubmitExam = () => {
-    let correctCount = 0;
-    displayedQuestions.forEach((q, index) => {
-      if (answers[index] === q.options[q.correctAnswer]) correctCount++;
-    });
-    const results = {
-      score: Math.round((correctCount / totalQuestions) * 100),
-      correct: correctCount,
-      wrong: totalAnswered - correctCount,
-      unanswered: totalQuestions - totalAnswered,
-      totalSoal: totalQuestions,
-      examLabel: displayTitle,
-    };
-    const id =
-      loaderResult.mode === "folder"
-        ? loaderResult.folderId
-        : loaderResult.exam?.id;
-    if (id) setProgress(id, totalAnswered);
-    navigate("../result", { state: { results }, relative: "path" });
-  };
-
-  const handleSendReport = (data) => {
-    console.log("Laporan dikirim:", data);
-    showAlert("Laporan berhasil dikirim, terima kasih!", "success");
-    setActiveModal(null);
-  };
-
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setTimeout(() => setIsCounting(false), 500);
-    }
-  }, [countdown]);
+  if (loading && !isCounting) return <LoadingQuestions />;
 
   return (
     <div className="w-full relative min-h-screen bg-slate-50/30 font-sans antialiased pb-20">
@@ -191,7 +298,7 @@ export default function ExamAttempt() {
               key={q.id}
               index={i}
               question={q}
-              onAnswer={(idx, val) => setAnswers((s) => ({ ...s, [idx]: val }))}
+              onAnswer={handleAnswerChange}
               selectedAnswer={answers[i]}
               onBookmark={(id) => {
                 setTargetQuestionId(id);
@@ -208,7 +315,7 @@ export default function ExamAttempt() {
         <div className="w-full flex justify-end py-5">
           <button
             onClick={() => setActiveModal("submit")}
-            disabled={totalQuestions === 0}
+            disabled={questions.length === 0}
             className="px-12 py-4 bg-primary text-white font-bold rounded-xl active:scale-95 disabled:bg-slate-300"
           >
             Selesai
@@ -216,45 +323,40 @@ export default function ExamAttempt() {
         </div>
       </div>
 
-      {/* --- MODALS SECTION --- */}
       <SaveToFolderModal
         isOpen={activeModal === "save"}
         onClose={() => setActiveModal(null)}
         folders={uniqueFolders}
-        onAddFolder={(name) => addFolder(name)}
+        onAddFolder={addFolder}
         onSelectFolder={setSelectedFolder}
         selectedFolder={selectedFolder}
         onSave={handleFinishSave}
       />
-
       <ActionModal
         isOpen={activeModal === "submit"}
         onClose={() => setActiveModal(null)}
         onConfirm={handleSubmitExam}
         title="Kumpulkan Jawaban?"
-        description={`Kamu telah menjawab ${totalAnswered} dari ${totalQuestions} soal.`}
+        description={`Kamu telah menjawab ${Object.keys(answers).length} dari ${questions.length} soal.`}
         icon={CheckCircle2}
         iconClass="bg-emerald-50 text-emerald-500"
         confirmText="Ya, Kumpulkan"
-        confirmClass="bg-emerald-500 shadow-emerald-200"
+        confirmClass="bg-emerald-500"
       />
-
       <ActionModal
         isOpen={activeModal === "exit"}
         onClose={() => setActiveModal(null)}
         onConfirm={handleConfirmExit}
         title="Keluar dari Ujian?"
-        description={`Progres Anda ${totalAnswered} soal akan disimpan secara otomatis.`}
+        description="Progres Anda akan disimpan secara otomatis di database agar bisa dilanjutkan nanti."
         icon={HelpCircle}
         iconClass="bg-amber-50 text-amber-500"
         confirmText="Simpan & Keluar"
-        confirmClass="bg-slate-900 shadow-slate-200"
+        confirmClass="bg-slate-900"
       />
-
       {activeModal === "guide" && (
         <GuideModal onClose={() => setActiveModal(null)} />
       )}
-
       <ReportModal
         isOpen={activeModal === "report"}
         onClose={() => setActiveModal(null)}
