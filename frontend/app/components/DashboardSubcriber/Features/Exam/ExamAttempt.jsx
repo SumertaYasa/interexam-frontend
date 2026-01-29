@@ -142,17 +142,15 @@ export default function ExamAttempt() {
   // --- HANDLER JAWABAN ---
   const handleAnswerChange = useCallback(
     (idx, val) => {
-      // Update state lokal secara instan tanpa memicu loading
-      setAnswers((prev) => {
-        const next = { ...prev, [idx]: val };
-        // Simpan ke context setelah state terupdate
-        if (paketId) {
-          saveExamAnswers(String(paketId), next);
-        }
-        return next;
-      });
+      const newAnswers = { ...answers, [idx]: val };
+
+      setAnswers(newAnswers);
+
+      if (paketId) {
+        saveExamAnswers(String(paketId), newAnswers);
+      }
     },
-    [paketId, saveExamAnswers],
+    [answers, paketId, saveExamAnswers],
   );
 
   // --- HANDLERS LAINNYA ---

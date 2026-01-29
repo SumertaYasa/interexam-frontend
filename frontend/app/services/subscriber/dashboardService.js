@@ -22,7 +22,7 @@ export const dashboardService = {
     }
   },
 
-  // Ambil statistik ringkas (ujian, skor, waktu belajar)
+  // Ambil statistik ringkas (ujian, skor, waktu belajar, XP)
   getStatisticsSummary: async () => {
     try {
       const response = await axios.get(
@@ -32,11 +32,18 @@ export const dashboardService = {
       return response.data.data || {};
     } catch (error) {
       console.error("Gagal ambil statistik:", error);
-      // Fallback structure harus match dengan Frontend expectation
+      // Fallback data
       return {
         totalExamsCompleted: 0,
         averageScore: 0,
-        totalStudyTime: "0j 0m",
+        studyTime: { hours: 0, minutes: 0, fullText: "0 jam 0 menit" },
+        experience: {
+          level: 1,
+          label: "Pemula",
+          currentXP: 0,
+          maxXP: 500,
+          percentage: 0,
+        },
         comparedToPreviousWeek: {
           exams: 0,
           scoreIncrease: 0,
@@ -46,20 +53,44 @@ export const dashboardService = {
     }
   },
 
-  // Ambil streak dan target mingguan
+  // Ambil streak dan target mingguan (Untuk Widget Dashboard Utama)
   getStreakAndTarget: async () => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/subscriber/statistics/streak`,
         getAuthHeader(),
       );
-      // Backend sekarang mengembalikan data flat langsung
       return (
         response.data.data || { streak: 0, weeklyProgress: 0, weeklyTarget: 10 }
       );
     } catch (error) {
       console.error("Gagal ambil streak:", error);
       return { streak: 0, weeklyProgress: 0, weeklyTarget: 10 };
+    }
+  },
+
+  // --- [BARU] AMBIL ANALITIK PERKEMBANGAN (HARI INI / MINGGUAN) ---
+  // Fungsi ini dipanggil saat tombol "Hari Ini" atau "Mingguan" diklik
+  getProgressAnalytics: async (period = "weekly") => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/subscriber/statistics/progress`,
+        {
+          ...getAuthHeader(),
+          params: { period }, // Mengirim query ?period=today atau ?period=weekly
+        },
+      );
+      return response.data.data || {};
+    } catch (error) {
+      console.error("Gagal ambil analytics:", error);
+      // Fallback Data agar grafik tidak crash
+      return {
+        exams: { current: 0, diff: 0 },
+        score: { current: 0, diff: 0 },
+        studyTime: { current: 0, diff: 0, formatted: "0m" },
+        chart: { labels: [], data: [], unit: "" },
+        logs: [],
+      };
     }
   },
 

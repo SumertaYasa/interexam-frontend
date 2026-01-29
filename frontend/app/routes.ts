@@ -9,7 +9,9 @@ export default [
   index("routes/landing.tsx"),
 
   // --- RUTE LANDING (PUBLIK) ---
-  route("/tes", "landing/tes/tes.tsx"),
+  route("/tes", "landing/tes/tes.jsx"),
+  route("/tes/:slug", "landing/tes/publicDetailExam.jsx"),
+
   route("/paket", "landing/paket/paket.tsx"),
   route("/tentang-kami", "landing/tentangKami/tentangKami.tsx"),
   route("/coba-gratis", "landing/cobaGratis/cobaGratis.tsx"),
@@ -149,14 +151,17 @@ export default [
     route(
       "dashboard-subscriber/status-ujian-terakhir/:label",
       "components/DashboardSubcriber/Features/Exam/DetailExam.jsx",
+      { id: "status" },
     ),
     route(
       "dashboard-subscriber/status-ujian-terakhir/:label/attempt",
       "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx",
+      { id: "status-attempt" },
     ),
     route(
       "dashboard-subscriber/status-ujian-terakhir/:label/result",
       "components/DashboardSubcriber/Features/Exam/ResultExam.jsx",
+      { id: "status-result" },
     ),
 
     // 2. Semua Detail Latihan

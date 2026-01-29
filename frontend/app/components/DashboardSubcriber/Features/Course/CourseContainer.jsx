@@ -54,7 +54,7 @@ function CourseContainer() {
             rating: 4.5,
             totalSoal: it.progress?.totalSoal || 0,
             answeredSoal: it.progress?.answered || 0,
-            participants: 0,
+            participants: it.participants || 0,
             category: it.category || "Umum",
             path: `/dashboard-subscriber/latihan/${slugify(it.label || it.nama_paket || "paket")}`,
             linkState: {

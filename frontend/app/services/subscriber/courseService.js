@@ -64,7 +64,7 @@ export const courseService = {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/subscriber/pakets/submit`,
-        { id_paket_soal: paketId, answers }, // Kirim paketId dan answers terbaru
+        { id_paket_soal: paketId, answers },
         getAuthHeader(),
       );
       return response.data;
@@ -87,6 +87,18 @@ export const courseService = {
     } catch (error) {
       console.error("Gagal simpan progres:", error);
       throw error;
+    }
+  },
+  getExamLeaderboard: async (paketId) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/subscriber/pakets/${paketId}/leaderboard`,
+        getAuthHeader(),
+      );
+      return response.data.data || [];
+    } catch (error) {
+      console.error("Gagal ambil leaderboard:", error);
+      return [];
     }
   },
 };

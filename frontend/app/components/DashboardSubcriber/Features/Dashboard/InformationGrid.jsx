@@ -29,7 +29,6 @@ export function InformationGrid() {
       icon: CircleCheckBig,
       label: "total ujian diselesaikan",
       value: stats?.totalExamsCompleted || 0,
-      // Akses ke object nested comparedToPreviousWeek
       messageInformation: `+${stats?.comparedToPreviousWeek?.exams || 0} minggu ini`,
       messageAlert: "Pertahankan ritmemu minggu ini.",
     },
@@ -37,7 +36,6 @@ export function InformationGrid() {
       id: 2,
       icon: TrendingUp,
       label: "rata-rata skor",
-      // Backend mengirim number (misal 75), kita tambah % di sini
       value:
         stats?.averageScore !== undefined ? `${stats.averageScore}%` : "0%",
       messageInformation: `+${stats?.comparedToPreviousWeek?.scoreIncrease || 0}% dari minggu lalu`,
@@ -47,7 +45,12 @@ export function InformationGrid() {
       id: 3,
       icon: Clock,
       label: "waktu belajar aktif",
-      value: stats?.totalStudyTime || "0j 0m",
+      // --- PERBAIKAN DISINI ---
+      // Kita ambil dari object stats.studyTime, lalu format manual jadi "Xj Ym" agar singkat
+      value: stats?.studyTime
+        ? `${stats.studyTime.hours}j ${stats.studyTime.minutes}m`
+        : "0j 0m",
+
       messageInformation: `+${stats?.comparedToPreviousWeek?.studyTimeIncrease || 0}m dari minggu lalu`,
       messageAlert: "Konsistensi adalah kunci kemajuanmu",
     },

@@ -16,7 +16,7 @@ function CardCourse({
   image = "/person.jpg",
   rating = 4.8,
   totalSoal = 50,
-  participants = 1234,
+  participants,
   category = "Bahasa Inggris",
   path = "#",
   linkState = null,
