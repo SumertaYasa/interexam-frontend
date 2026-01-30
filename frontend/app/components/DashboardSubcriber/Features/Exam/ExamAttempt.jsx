@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router";
-import { slugify, humanizeSlug } from "../../../../utils/slugify";
+import { slugify } from "../../../../utils/slugify";
 import QuestionCard from "./Components/QuestionCard";
 import GuideModal from "../../Common/GuideModal";
 import ActionModal from "../../Common/ActionModal";
@@ -9,7 +9,7 @@ import ReportModal from "./Components/ReportModal";
 import { useAuth } from "../../../../context/AuthContext";
 import { useFolder } from "../../../../context/FolderContext";
 import { courseService } from "../../../../services/subscriber";
-import { HelpCircle, Timer, CheckCircle2 } from "lucide-react";
+import { HelpCircle, CheckCircle2 } from "lucide-react";
 
 function LoadingQuestions() {
   return (
@@ -29,8 +29,9 @@ export default function ExamAttempt() {
   const { label } = useParams();
   const location = useLocation();
   const { showAlert } = useAuth();
+
   const {
-    folders,
+    folders, // <-- DATA LANGSUNG DARI API
     saveQuestionToFolder,
     addFolder,
     setProgress,
@@ -55,28 +56,23 @@ export default function ExamAttempt() {
   const getMode = () => {
     if (
       location.pathname.includes("/dashboard-subscriber/status-ujian-terakhir/")
-    ) {
+    )
       return "status";
-    } else if (location.pathname.includes("/dashboard-subscriber/tersimpan/")) {
+    if (location.pathname.includes("/dashboard-subscriber/tersimpan/"))
       return "folder";
-    }
     return "latihan";
   };
-
   const mode = getMode();
 
-  // --- FETCH QUESTIONS FROM PACKAGE ---
-  // PERBAIKAN: Hapus getExamAnswers dari dependency array agar tidak re-fetch saat menjawab
+  // --- FETCH QUESTIONS ---
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
         setError(null);
-
         const response = await courseService.getAllPaketsWithProgress();
         const items =
           response && Array.isArray(response.data) ? response.data : [];
-
         const paket = items.find(
           (item) => slugify(item.label || item.nama_paket) === label,
         );
@@ -102,12 +98,12 @@ export default function ExamAttempt() {
                 index: index,
                 text_soal: soal.text_soal,
                 options: [
-                  soal.option_a || "",
-                  soal.option_b || "",
-                  soal.option_c || "",
-                  soal.option_d || "",
-                  soal.option_e || "",
-                ].filter((opt) => opt !== ""),
+                  soal.option_a,
+                  soal.option_b,
+                  soal.option_c,
+                  soal.option_d,
+                  soal.option_e,
+                ].filter(Boolean),
                 correctAnswer: 0,
                 deskripsi: soal.deskripsi || "",
                 paketId: currentPaketId,
@@ -116,66 +112,61 @@ export default function ExamAttempt() {
           );
 
           setQuestions(formattedQuestions);
-
-          // Restore saved answers HANYA sekali saat paket pertama kali dimuat
           const savedAnswers = getExamAnswers(String(currentPaketId));
-          if (Object.keys(savedAnswers).length > 0) {
-            setAnswers(savedAnswers);
-          }
+          if (Object.keys(savedAnswers).length > 0) setAnswers(savedAnswers);
         } else {
           setQuestions([]);
         }
       } catch (err) {
-        console.error("Error fetching questions:", err);
-        setError(err.message || "Gagal memuat soal");
+        console.error(err);
+        setError("Gagal memuat soal");
       } finally {
         setLoading(false);
       }
     };
 
-    if (label) {
-      fetchQuestions();
-    }
+    if (label) fetchQuestions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [label]); // Hanya berjalan jika label berubah (pindah paket)
+  }, [label]);
 
-  // --- HANDLER JAWABAN ---
   const handleAnswerChange = useCallback(
     (idx, val) => {
       const newAnswers = { ...answers, [idx]: val };
-
       setAnswers(newAnswers);
-
-      if (paketId) {
-        saveExamAnswers(String(paketId), newAnswers);
-      }
+      if (paketId) saveExamAnswers(String(paketId), newAnswers);
     },
     [answers, paketId, saveExamAnswers],
   );
 
-  // --- HANDLERS LAINNYA ---
+  // --- [FIX] HANDLE FINISH SAVE ---
   const handleFinishSave = async () => {
-    if (selectedFolder && targetQuestionId) {
-      try {
-        saveQuestionToFolder(
-          targetQuestionId,
-          selectedFolder.id_folder,
-          selectedFolder.folder_name,
-        );
-        setActiveModal(null);
-        setSelectedFolder(null);
-        showAlert("Soal berhasil disimpan!", "success");
-      } catch (err) {
-        showAlert("Gagal menyimpan soal", "error");
-      }
+    if (!targetQuestionId) return;
+
+    // FIX: Ambil ID dan Nama dengan pengecekan properti API (.id) dan Legacy (.id_folder)
+    let folderId = null;
+    let folderName = "";
+
+    if (selectedFolder) {
+      folderId = selectedFolder.id || selectedFolder.id_folder; // Prioritas .id (API baru)
+      folderName = selectedFolder.nama || selectedFolder.folder_name;
+    }
+
+    try {
+      // Panggil fungsi context
+      await saveQuestionToFolder(targetQuestionId, folderId, folderName);
+
+      setActiveModal(null);
+      setSelectedFolder(null);
+      // showAlert sudah dipanggil di dalam saveQuestionToFolder (Context)
+    } catch (err) {
+      showAlert("Gagal menyimpan soal", "error");
     }
   };
 
   const handleConfirmExit = async () => {
     try {
-      if (mode !== "folder" && paketId) {
+      if (mode !== "folder" && paketId)
         await courseService.saveProgress(paketId, answers);
-      }
       if (paketId) setProgress(String(paketId), Object.keys(answers).length);
       navigate(-1);
       showAlert("Progres pengerjaan disimpan!", "success");
@@ -188,23 +179,20 @@ export default function ExamAttempt() {
     try {
       setLoading(true);
       const response = await courseService.submitExam(paketId, answers);
-
       if (response.status === "success") {
         const results = {
           ...response.data,
           examLabel: displayTitle,
           paketId: paketId,
         };
-
         if (paketId) {
           clearExamAnswers(String(paketId));
           setProgress(String(paketId), Object.keys(answers).length);
         }
-
         navigate("../result", { state: { results }, relative: "path" });
       }
     } catch (err) {
-      showAlert("Gagal mengumpulkan jawaban. Coba lagi.", "error");
+      showAlert("Gagal mengumpulkan jawaban.", "error");
     } finally {
       setLoading(false);
       setActiveModal(null);
@@ -212,7 +200,7 @@ export default function ExamAttempt() {
   };
 
   const handleSendReport = (data) => {
-    showAlert("Laporan berhasil dikirim, terima kasih!", "success");
+    showAlert("Laporan berhasil dikirim!", "success");
     setActiveModal(null);
   };
 
@@ -225,35 +213,8 @@ export default function ExamAttempt() {
     }
   }, [countdown]);
 
-  const uniqueFolders = useMemo(() => {
-    return folders.reduce((acc, current) => {
-      if (!acc.find((item) => item.id_folder === current.id_folder)) {
-        const count = folders.filter(
-          (f) => f.id_folder === current.id_folder && f.id_soal !== null,
-        ).length;
-        acc.push({ ...current, count });
-      }
-      return acc;
-    }, []);
-  }, [folders]);
-
-  const displayedQuestions = useMemo(() => {
-    if (mode === "folder") {
-      const folderSoalIds = folders
-        .filter(
-          (f) => String(f.id_folder) === String(label) && f.id_soal !== null,
-        )
-        .map((f) => String(f.id_soal));
-      return questions.filter((q) => folderSoalIds.includes(String(q.id)));
-    }
-    return questions;
-  }, [mode, label, questions, folders]);
-
   const displayTitle =
-    mode === "folder"
-      ? folders.find((f) => String(f.id_folder) === String(label))
-          ?.folder_name || "Latihan Folder"
-      : paketData?.label || paketData?.nama_paket || "Paket Soal";
+    paketData?.label || paketData?.nama_paket || "Paket Soal";
 
   if (loading && !isCounting) return <LoadingQuestions />;
 
@@ -261,10 +222,7 @@ export default function ExamAttempt() {
     <div className="w-full relative min-h-screen bg-slate-50/30 font-sans antialiased pb-20">
       {isCounting && (
         <div className="fixed inset-0 z-[500] bg-white flex flex-col items-center justify-center transition-all">
-          <div
-            key={countdown}
-            className="text-[12rem] font-black text-primary animate-in zoom-in duration-500"
-          >
+          <div className="text-[12rem] font-black text-primary animate-in zoom-in duration-500">
             {countdown > 0 ? countdown : "GO!"}
           </div>
         </div>
@@ -291,7 +249,7 @@ export default function ExamAttempt() {
         </div>
 
         <div className="flex flex-col gap-4">
-          {displayedQuestions.map((q, i) => (
+          {questions.map((q, i) => (
             <QuestionCard
               key={q.id}
               index={i}
@@ -324,12 +282,13 @@ export default function ExamAttempt() {
       <SaveToFolderModal
         isOpen={activeModal === "save"}
         onClose={() => setActiveModal(null)}
-        folders={uniqueFolders}
+        folders={folders} // PASSING FOLDERS DARI CONTEXT
         onAddFolder={addFolder}
         onSelectFolder={setSelectedFolder}
         selectedFolder={selectedFolder}
         onSave={handleFinishSave}
       />
+
       <ActionModal
         isOpen={activeModal === "submit"}
         onClose={() => setActiveModal(null)}
@@ -341,20 +300,23 @@ export default function ExamAttempt() {
         confirmText="Ya, Kumpulkan"
         confirmClass="bg-emerald-500"
       />
+
       <ActionModal
         isOpen={activeModal === "exit"}
         onClose={() => setActiveModal(null)}
         onConfirm={handleConfirmExit}
         title="Keluar dari Ujian?"
-        description="Progres Anda akan disimpan secara otomatis di database agar bisa dilanjutkan nanti."
+        description="Progres Anda akan disimpan secara otomatis."
         icon={HelpCircle}
         iconClass="bg-amber-50 text-amber-500"
         confirmText="Simpan & Keluar"
         confirmClass="bg-slate-900"
       />
+
       {activeModal === "guide" && (
         <GuideModal onClose={() => setActiveModal(null)} />
       )}
+
       <ReportModal
         isOpen={activeModal === "report"}
         onClose={() => setActiveModal(null)}

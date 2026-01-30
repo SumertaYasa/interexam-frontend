@@ -180,7 +180,7 @@ export default [
 
     // 3. Semua Detail Tersimpan
     route(
-      "dashboard-subscriber/tersimpan/:id",
+      "dashboard-subscriber/tersimpan/:label",
       "components/DashboardSubcriber/Features/Save/DetailSave.jsx",
     ),
     route(
