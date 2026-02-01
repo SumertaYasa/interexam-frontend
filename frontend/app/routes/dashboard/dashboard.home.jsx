@@ -1,5 +1,5 @@
 export function meta() {
-  return [{ title: "Dashboard Overview - InterExam" }];
+  return [{ title: "Dashboard - InterExam" }];
 }
 
 export default function DashboardHome() {

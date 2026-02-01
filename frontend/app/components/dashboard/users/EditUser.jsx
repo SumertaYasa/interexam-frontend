@@ -31,16 +31,13 @@ export default function EditUser() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                // 1. PERBAIKAN: Gunakan userService agar token terkirim otomatis
                 const subjectsData = await userService.getSubjectsForDropdown();
                 
-                // Map data dari id_subject ke value dan nama_subject ke label
                 setSubjectsList(subjectsData.map(s => ({ 
                     label: s.nama_subject, 
                     value: s.id_subject 
                 })));
 
-                // 2. Ambil Data User yang mau diedit
                 const user = await userService.getUserById(id);
 
                 setFormData({
@@ -49,7 +46,6 @@ export default function EditUser() {
                     phone_number: user.phone || "",
                     password: "",
                     role: user.role,
-                    // Pastikan backend mengirim subject_ids dalam bentuk array [1, 2]
                     keahlian: user.subject_ids || [], 
                     fotoProfile: null
                 });
@@ -178,11 +174,11 @@ export default function EditUser() {
                         label="No Telepon" name="phone_number" value={formData.phone_number} 
                         onChange={handleChange} required 
                     />
-                    <InputField 
+                    {/* <InputField 
                         label="Password Baru" name="password" type="password" 
                         value={formData.password} onChange={handleChange} 
                         placeholder="Isi hanya jika ingin ganti password" 
-                    />
+                    /> */}
                 </div>
 
                 {/* KOLOM KANAN */}

@@ -1,7 +1,7 @@
 import AddArtikel from "../../../components/dashboard/content/Artikel/AddArtikel";
 
 export function meta() {
-  return [{ title: "Konten Artikel - InterExam" }];
+  return [{ title: "Add Artikel - InterExam" }];
 }
 
 export default function AddArtikelPage() {

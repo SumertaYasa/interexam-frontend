@@ -123,5 +123,51 @@ export const userService = {
             console.error("Error changing status:", error);
             throw error;
         }
+    },
+
+    getMe: async () => {
+        try {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (!user) throw new Error("User tidak ditemukan di local storage");
+            
+            const response = await fetch(`${API_BASE_URL}/admin/user/${user.id_user}`, {
+                headers: getAuthHeaders()
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            return result.data;
+        } catch (error) {
+            console.error("Error fetch profile:", error);
+            throw error;
+        }
+    },
+
+    // [BARU] Update Profile Sendiri
+    updateProfile: async (id, formData) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/user/${id}`, { // Endpoint sama dengan update user biasa
+                method: 'PUT',
+                headers: getAuthHeaders(true), // true karena pakai FormData (Multipart)
+                body: formData
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            
+            // Jika berhasil, update juga data user di localStorage agar header berubah
+            const localUser = JSON.parse(localStorage.getItem("user"));
+            if (result.data) {
+                const updatedUser = { 
+                    ...localUser, 
+                    nama_user: result.data.nama_user,
+                    foto: result.data.foto 
+                };
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+            }
+            
+            return result;
+        } catch (error) {
+            console.error("Error update profile:", error);
+            throw error;
+        }
     }
 };

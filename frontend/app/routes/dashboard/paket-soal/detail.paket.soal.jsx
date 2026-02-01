@@ -4,7 +4,7 @@ export function meta() {
   return [{ title: "Detail Paket Soal - InterExam" }];
 }
 
-export default function EditPaketSoalPage() {
+export default function DetailPaketSoalPage() {
   return (
     <div className="">
  

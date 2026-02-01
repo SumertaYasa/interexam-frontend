@@ -111,7 +111,7 @@ export default function EditKategori() {
                         name="nama_category"
                         value={formData.nama_category}
                         onChange={handleChange}
-                        placeholder="Contoh: Sains, Matematika"
+                        placeholder="Contoh: Latihan Soal, Tryout, dsb..."
                         required
                     />
 

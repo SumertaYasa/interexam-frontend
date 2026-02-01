@@ -33,7 +33,7 @@ export default function Header({
             {/* Button Toggle Mobile */}
             <button
               onClick={toggleMobileSidebar}
-              className="p-2 mr-2 text-gray-600 rounded-lg cursor-pointer lg:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:ring-2 focus:ring-gray-100"
+              className="p-2 mr-2 text-gray-600 rounded-lg cursor-pointer md:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:ring-2 focus:ring-gray-100"
             >
               <svg
                 className="w-[18px] h-[18px]"
@@ -70,7 +70,7 @@ export default function Header({
             <button
               id="toggleSidebar"
               onClick={toggleDesktopSidebar}
-              className="hidden p-2 mr-3 text-gray-600 rounded-full cursor-pointer lg:flex hover:text-gray-900 hover:bg-gray-100"
+              className="hidden p-2 mr-3 text-gray-600 rounded-full cursor-pointer md:flex hover:text-gray-900 hover:bg-gray-100"
             >
               <svg
                 className="w-5 h-5"
