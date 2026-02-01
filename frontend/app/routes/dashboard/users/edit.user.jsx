@@ -4,7 +4,7 @@ export function meta() {
   return [{ title: "Edit User - InterExam" }];
 }
 
-export default function UsersPage() {
+export default function EditUserPage() {
   return (
     <div className="">
 

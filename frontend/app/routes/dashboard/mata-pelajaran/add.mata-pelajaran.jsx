@@ -1,7 +1,7 @@
 import AddMataPelajaran from "../../../components/dashboard/kategori/mata-pelajaran/AddMataPelajaran";
 
 export function meta() {
-  return [{ title: "Manajemen Topik - InterExam" }];
+  return [{ title: "Add Mata Pelajaran - InterExam" }];
 }
 
 export default function TambahMataPelajaran() {

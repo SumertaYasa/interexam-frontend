@@ -14,6 +14,8 @@ interface User {
   id_subscriber: string | number;
   nama_subscriber: string;
   role: "admin" | "validator" | "contributor" | "subscriber";
+
+  foto?: string;
 }
 
 interface AuthContextType {
@@ -62,10 +64,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (response.data && response.data.user) {
           console.log("DEBUG AUTH - User Set:", response.data.user);
           setUser(response.data.user);
+
+          localStorage.setItem("user", JSON.stringify(response.data.user));
         }
       } catch (error: any) {
         if (error.response?.status === 401) {
           localStorage.removeItem("token");
+
+          localStorage.removeItem("user");
+
           setUser(null);
         }
       } finally {
@@ -85,6 +92,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     localStorage.removeItem("token");
+
+    localStorage.removeItem("user");
+    
     setUser(null);
     const target = location.pathname.includes("/dashboard-subscriber")
       ? "/login"

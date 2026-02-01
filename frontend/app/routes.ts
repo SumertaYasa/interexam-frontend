@@ -90,6 +90,8 @@ export default [
 
     route("edit-profile/", "routes/dashboard/users/edit.profile.user.jsx"),
 
+    route("reset-password/", "routes/dashboard/users/reset.password.user.jsx"),
+
     route(
       "paket-langganan",
       "routes/dashboard/paket-langganan/data.paket.langganan.jsx"

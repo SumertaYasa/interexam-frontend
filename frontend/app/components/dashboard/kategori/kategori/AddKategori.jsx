@@ -69,7 +69,7 @@ export default function AddKategori() {
                         name="nama_category" 
                         value={formData.nama_category}
                         onChange={handleChange}
-                        placeholder="Contoh: Pemrograman, Desain, Matematika"
+                        placeholder="Contoh: Latihan Soal, Tryout, dsb..."
                         required
                     />
 
