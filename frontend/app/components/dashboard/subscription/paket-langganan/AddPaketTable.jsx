@@ -6,6 +6,8 @@ import ButtonSave from "../../common/ButtonSave";
 import ButtonCancel from "../../common/ButtonCancel";
 import Dropdown from "../../common/Dropdown";
 
+import { subscriptionService } from "../../../../services/subscriptionService";
+
 export default function AddPaketTable() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -28,12 +30,9 @@ export default function AddPaketTable() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        // Validasi angka untuk masa berlaku & harga asli
-        if (name === "masa_berlaku" || name === "harga_asli") {
-            if (value !== "" && !/^\d+$/.test(value)) return;
-        }
-
+        // Validasi input angka
+        if ((name === "masa_berlaku" || name === "harga_asli") && value !== "" && !/^\d+$/.test(value)) return;
+        
         setFormData({ ...formData, [name]: value });
     };
 
@@ -46,24 +45,27 @@ export default function AddPaketTable() {
         setFormData({ ...formData, status: newStatus });
     };
 
-    const handleSubmit = (e) => {
-        if (e) e.preventDefault();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         
-        // Validasi sederhana
-        if (!formData.masa_periode) {
-            alert("Silakan pilih masa periode!");
+        if (!formData.nama_paket || !formData.harga_asli || !formData.masa_berlaku || !formData.masa_periode) {
+            alert("Mohon lengkapi semua data wajib (*)");
             return;
         }
 
         setIsLoading(true);
 
-        // Simulasi proses simpan
-        setTimeout(() => {
-            console.log("Data dikirim:", formData);
-            setIsLoading(false);
+        try {
+            await subscriptionService.createPackage(formData);
+            
             alert("Paket Berhasil Disimpan!");
-            navigate("../paket-langganan");
-        }, 1500);
+            navigate("/dashboard/paket-langganan"); 
+        } catch (error) {
+            console.error(error);
+            alert("Gagal menyimpan paket. Pastikan server backend menyala.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

@@ -102,6 +102,11 @@ export default [
     ),
 
     route(
+      "paket-langganan/edit/:id",
+      "routes/dashboard/paket-langganan/edit.paket.langganan.jsx"
+    ),
+
+    route(
       "daftar-subscriber",
       "routes/dashboard/subscriber/daftar.subscriber.jsx"
     ),
