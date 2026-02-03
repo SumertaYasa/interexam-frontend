@@ -1,9 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Card from "../../Common/Card";
 import { Flame } from "lucide-react";
 import CircularProgress from "../../Common/CircularProgress";
+import { dashboardService } from "../../../../services/subscriber";
 
 function RecentActivityList({ value }) {
+  const [streakData, setStreakData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStreakData = async () => {
+      try {
+        setLoading(true);
+        const data = await dashboardService.getStreakAndTarget();
+        setStreakData(data);
+      } catch (error) {
+        console.error("Error fetching streak data:", error);
+        setStreakData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStreakData();
+  }, []);
+
+  const currentStreak = streakData?.currentStreak || 0;
+  const weeklyTarget = streakData?.weeklyTarget || 10;
+  const completed = streakData?.completedThisWeek || 0;
   return (
     <div className="flex flex-col md:flex-row items-center gap-6 w-full ">
       {/* Kartu Rekor (Ritme Belajar) */}
@@ -20,7 +44,7 @@ function RecentActivityList({ value }) {
         <div className="flex items-center gap-4">
           <div className="text-right">
             <span className="text-5xl font-black text-orange-500 tracking-tighter block mb-1">
-              10
+              {loading ? "-" : currentStreak}
             </span>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Rekor saat ini
@@ -51,15 +75,15 @@ function RecentActivityList({ value }) {
         <div className="flex items-center gap-5">
           <div className="text-right">
             <span className="text-5xl font-black text-green-600 tracking-tighter block mb-1">
-              7
+              {loading ? "-" : completed}
             </span>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Tes Selesai
             </p>
           </div>
           <CircularProgress
-            value={7}
-            maxValue={10}
+            value={loading ? 0 : completed}
+            maxValue={loading ? 10 : weeklyTarget}
             size={90}
             strokeWidth={10}
           />

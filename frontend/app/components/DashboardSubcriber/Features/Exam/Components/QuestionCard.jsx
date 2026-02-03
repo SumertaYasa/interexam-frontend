@@ -7,6 +7,7 @@ export default function QuestionCard({
   onAnswer,
   selectedAnswer = null,
   onBookmark,
+  onReport,
 }) {
   const [selected, setSelected] = useState(selectedAnswer ?? null);
 
@@ -19,10 +20,13 @@ export default function QuestionCard({
       <div className="flex justify-between items-start gap-4">
         <div className="text-lg font-bold text-slate-800 tracking-tight leading-relaxed">
           <span className="font-black tracking-tighter mr-1">{index + 1}.</span>{" "}
-          {question.text}
+          {question.text_soal || question.text}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button className="p-2 rounded-full hover:bg-slate-100 transition-colors">
+          <button
+            onClick={() => onReport(index)}
+            className="p-2 rounded-full hover:bg-slate-100 transition-colors"
+          >
             <AlertCircle size={18} className="text-slate-400" />
           </button>
           <button

@@ -1,16 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { GoogleLogin } from "@react-oauth/google";
 
 function LoginForm() {
   const [loading, setLoading] = useState(false);
-
-  let navigateFn = null;
-  try {
-    navigateFn = useNavigate();
-  } catch (err) {
-    navigateFn = null;
-  }
+  const navigate = useNavigate();
 
   const handleGoogleLoginSuccess = async (res) => {
     setLoading(true);
@@ -26,21 +20,18 @@ function LoginForm() {
       if (response.ok && data.token) {
         localStorage.setItem("token", data.token);
         alert("Login sukses!");
-        if (navigateFn) {
-          navigateFn("/dashboard");
-        } else {
-          window.location.href = "/dashboard";
-        }
+        // Redirect ke dashboard
+        navigate("/dashboard");
       } else if (response.status === 403 && data.status === "pending") {
         alert(
-          data.message || "Akun belum diverifikasi oleh admin. Silakan tunggu."
+          data.message || "Akun belum diverifikasi oleh admin. Silakan tunggu.",
         );
       } else {
         alert(data.message || "Login gagal");
       }
     } catch (err) {
-      console.error(err);
-      alert("Terjadi kesalahan saat login");
+      console.error("Login error:", err);
+      alert("Terjadi kesalahan saat login: " + err.message);
     } finally {
       setLoading(false);
     }

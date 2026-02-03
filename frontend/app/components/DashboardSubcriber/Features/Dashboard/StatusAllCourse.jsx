@@ -6,58 +6,8 @@ import BreadCrumbs from "../../Common/BreadCrumbs";
 import SearchBar from "../../Common/SearchBar";
 import FilterPanel from "../../Common/FilterPanel";
 import { slugify } from "../../../../utils/slugify.ts";
-
-const Courses = [
-  {
-    id: 1,
-    label: "Paket Soal 1 - Logika Dasar",
-    image: "/person.jpg",
-    progress: { answered: 15, totalSoal: 50 },
-    category: "Logika",
-  },
-  {
-    id: 2,
-    label: "Paket Soal 2 - TPA Kuantitatif",
-    image: "/person.jpg",
-    progress: { answered: 30, totalSoal: 40 },
-    category: "Matematika",
-  },
-  {
-    id: 3,
-    label: "Paket Soal 3 - Bahasa Inggris",
-    image: "/person.jpg",
-    progress: { answered: 6, totalSoal: 60 },
-    category: "Bahasa Inggris",
-  },
-  {
-    id: 4,
-    label: "Paket Soal 4 - Penalaran Umum",
-    image: "/person.jpg",
-    progress: { answered: 45, totalSoal: 50 },
-    category: "Logika",
-  },
-  {
-    id: 5,
-    label: "Paket Soal 5 - Pemahaman Bacaan",
-    image: "/person.jpg",
-    progress: { answered: 9, totalSoal: 20 },
-    category: "Bahasa Inggris",
-  },
-  {
-    id: 11,
-    label: "Paket Soal 11 - Sejarah Indonesia",
-    image: "/person.jpg",
-    progress: { answered: 40, totalSoal: 40 },
-    category: "Sejarah",
-  },
-  {
-    id: 16,
-    label: "Paket Soal 16 - Tryout Akbar",
-    image: "/person.jpg",
-    progress: { answered: 0, totalSoal: 20 },
-    category: "Umum",
-  },
-];
+import { dashboardService } from "../../../../services/subscriber";
+import { getAssetUrl } from "../../../../utils/assetHelpper.ts";
 
 function LoadingCards() {
   return (
@@ -73,6 +23,8 @@ function StatusAllCourse() {
   const [searchValue, setSearchValue] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // State Filter
   const defaultFilters = { category: "all", minRating: 0, sortBy: "relevance" };
@@ -86,23 +38,45 @@ function StatusAllCourse() {
     return false;
   });
 
+  // Fetch pakets dari API
+  useEffect(() => {
+    const fetchPakets = async () => {
+      try {
+        setLoading(true);
+        const data = await dashboardService.getAllPaketsWithProgress();
+        // Filter hanya paket yang sudah dijawab (answered > 0)
+        const answeredPakets = data.filter(
+          (paket) => paket.progress?.answered > 0,
+        );
+        setCourses(answeredPakets);
+      } catch (error) {
+        console.error("Error fetching pakets:", error);
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPakets();
+  }, []);
+
   useEffect(() => {
     const handler = setTimeout(
       () => setDebouncedValue(searchValue.trim()),
-      500
+      500,
     );
     return () => clearTimeout(handler);
   }, [searchValue]);
 
   const categories = useMemo(() => {
     const set = new Set();
-    Courses.forEach((c) => set.add(c.category || "Umum"));
+    courses.forEach((c) => set.add(c.category || "Umum"));
     return ["all", ...Array.from(set)];
-  }, []);
+  }, [courses]);
 
   // filtering
   const filteredCourses = useMemo(() => {
-    let list = Courses.filter((course) => {
+    let list = courses.filter((course) => {
       //  Pencarian
       const matchesSearch = course.label
         .toLowerCase()
@@ -114,7 +88,7 @@ function StatusAllCourse() {
 
       // progress
       const progressPercent =
-        (course.progress.answered / course.progress.totalSoal) * 5;
+        (course.progress.answered / course.progress.totalSoal) * 100;
       const matchesProgress = progressPercent >= Number(filters.minRating);
 
       return matchesSearch && matchesCategory && matchesProgress;
@@ -127,12 +101,12 @@ function StatusAllCourse() {
       list = [...list].sort(
         (a, b) =>
           b.progress.answered / b.progress.totalSoal -
-          a.progress.answered / a.progress.totalSoal
+          a.progress.answered / a.progress.totalSoal,
       );
     }
 
     return list;
-  }, [debouncedValue, filters]);
+  }, [debouncedValue, filters, courses]);
 
   useEffect(() => {
     localStorage.setItem("isHandleLayout", String(isHandleLayout));
@@ -207,7 +181,9 @@ function StatusAllCourse() {
       </div>
 
       <div className="w-full">
-        {searchValue !== debouncedValue ? (
+        {loading ? (
+          <LoadingCards />
+        ) : searchValue !== debouncedValue ? (
           <LoadingCards />
         ) : filteredCourses.length === 0 ? (
           <div className="py-20 text-center text-gray-500 font-medium">
@@ -226,7 +202,7 @@ function StatusAllCourse() {
                 <CardProgressList
                   key={course.id}
                   label={course.label}
-                  image={course.image}
+                  image={getAssetUrl(course.image)}
                   progress={course.progress}
                   path={`/dashboard-subscriber/status-ujian-terakhir/${slugify(course.label)}`}
                 />
@@ -234,11 +210,11 @@ function StatusAllCourse() {
                 <CardProgress
                   key={course.id}
                   label={course.label}
-                  image={course.image}
+                  image={getAssetUrl(course.image)}
                   progress={course.progress}
                   path={`/dashboard-subscriber/status-ujian-terakhir/${slugify(course.label)}`}
                 />
-              )
+              ),
             )}
           </div>
         )}

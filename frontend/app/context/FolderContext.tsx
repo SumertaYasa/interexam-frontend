@@ -1,236 +1,227 @@
-import React, { createContext, useContext, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { useAuth } from "./AuthContext";
+import {
+  saveService,
+  type FolderData,
+} from "../services/subscriber/saveService";
 
-interface Question {
-  id: string;
-  text: string;
-  options: string[];
-  subject?: string;
-  correctAnswer: number;
-}
-
-interface FolderItem {
-  id_folder: number | string;
-  id_subscriber: number | string;
-  id_soal: string | null;
-  date: string;
-  folder_name: string;
-  note?: string;
-  question_text?: string;
-  subject?: string;
-}
+// --- DEFINISI TIPE (INTERFACE) ---
 
 interface FolderContextType {
-  availableQuestions: Question[];
-  folders: FolderItem[];
-  addFolder: (name: string) => void;
-  deleteFolder: (id: string | number) => void;
+  folders: FolderData[];
+  loadingFolders: boolean;
+  refreshFolders: () => Promise<void>;
+  addFolder: (name: string) => Promise<boolean>;
+  deleteFolder: (id: number | string) => Promise<void>;
   saveQuestionToFolder: (
-    idSoalInput: any,
-    idFolder: string | number,
-    folderName: string
-  ) => void;
-  deleteQuestionFromFolder: (idSoal: string, idFolder: string | number) => void;
-  updateQuestionNote: (
-    idSoal: string,
-    idFolder: string | number,
-    note: string
-  ) => void;
+    idSoal: number | string | { id: number | string },
+    idFolder?: number | string | null,
+    folderName?: string,
+  ) => Promise<boolean>;
+  deleteQuestionFromFolder: (idFavorite: number | string) => Promise<void>;
+
+  // Client-side Exam Progress
   examProgress: Record<string, number>;
   setProgress: (examId: string, count: number) => void;
+  examAnswers: Record<string, Record<string, string>>;
+  saveExamAnswers: (examId: string, answers: Record<string, string>) => void;
+  getExamAnswers: (examId: string) => Record<string, string>;
+  clearExamAnswers: (examId: string) => void;
 }
 
+// Inisialisasi Context dengan tipe undefined agar aman saat pengecekan di hook
 const FolderContext = createContext<FolderContextType | undefined>(undefined);
 
-export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
+export const FolderProvider = ({ children }: { children: ReactNode }) => {
   const { user, showAlert } = useAuth();
 
-  const [availableQuestions] = useState<Question[]>([
-    {
-      id: "q1",
-      text: "She _______ to the market when it started to rain.",
-      options: ["go", "goes", "went", "was going"],
-      correctAnswer: 3,
-      subject: "Bahasa Inggris",
-    },
-    {
-      id: "q2",
-      text: "Choose the correct sentence:",
-      options: ["He don't like coffee.", "He doesn't like coffee."],
-      correctAnswer: 1,
-      subject: "Bahasa Inggris",
-    },
-    {
-      id: "q3",
-      text: "If I _______ enough money, I would buy a new phone.",
-      options: ["have", "had", "would have"],
-      correctAnswer: 1,
-      subject: "Bahasa Inggris",
-    },
-    {
-      id: "q4",
-      text: "I ______ my breakfast at 7 AM this morning.",
-      options: ["ate", "eaten", "eat", "was eating"],
-      correctAnswer: 0,
-      subject: "Bahasa Inggris",
-    },
-    {
-      id: "q5",
-      text: "The movie was so ______ that I fell asleep.",
-      options: ["excited", "exciting", "bored", "boring"],
-      correctAnswer: 3,
-      subject: "Bahasa Inggris",
-    },
-    {
-      id: "q6",
-      text: "She is the ______ girl in our class.",
-      options: ["smart", "smarter", "smartest", "most smart"],
-      correctAnswer: 2,
-      subject: "Bahasa Inggris",
-    },
-    {
-      id: "q7",
-      text: "Look! The cat ______ on the sofa right now.",
-      options: ["sleep", "sleeps", "is sleeping", "was sleeping"],
-      correctAnswer: 2,
-      subject: "Bahasa Inggris",
-    },
-    {
-      id: "q8",
-      text: "We ______ to Japan for our holiday last year.",
-      options: ["go", "gone", "went", "going"],
-      correctAnswer: 2,
-      subject: "Bahasa Inggris",
-    },
-    {
-      id: "q9",
-      text: "Would you mind ______ the window? It's hot in here.",
-      options: ["open", "to open", "opening", "opened"],
-      correctAnswer: 2,
-      subject: "Bahasa Inggris",
-    },
-    {
-      id: "q10",
-      text: "If I ______ a bird, I would fly around the world.",
-      options: ["am", "was", "be", "were"],
-      correctAnswer: 3,
-      subject: "Bahasa Inggris",
-    },
-  ]);
+  // State untuk Folder (Data dari API)
+  const [folders, setFolders] = useState<FolderData[]>([]);
+  const [loadingFolders, setLoadingFolders] = useState<boolean>(false);
 
-  const [folders, setFolders] = useState<FolderItem[]>([]);
+  // State untuk Progress Ujian (Tetap Local/Session)
+  const [examProgress, setExamProgress] = useState<Record<string, number>>({});
+  const [examAnswers, setExamAnswers] = useState<
+    Record<string, Record<string, string>>
+  >({});
 
-  const addFolder = (name: string) => {
-    const newFolder: FolderItem = {
-      id_folder: Date.now(),
-      id_subscriber: user?.id || "guest",
-      id_soal: null,
-      date: new Date().toISOString(),
-      folder_name: name,
-    };
-    setFolders((prev) => [...prev, newFolder]);
-    showAlert("Folder berhasil dibuat!");
-  };
+  // ==========================================
+  // 1. MANAJEMEN FOLDER (API)
+  // ==========================================
 
-  const deleteFolder = (id: string | number) => {
-    setFolders((prev) => prev.filter((f) => f.id_folder !== id));
-    showAlert("Folder dihapus");
-  };
-
-  const saveQuestionToFolder = (
-    idSoalInput: any,
-    idFolder: string | number,
-    folderName: string
-  ) => {
-    // GUARD: Jika input berupa object, ambil ID-nya. Jika string, gunakan langsung.
-    const idSoal =
-      typeof idSoalInput === "object" ? idSoalInput.id : idSoalInput;
-
-    const questionDetail = availableQuestions.find((q) => q.id === idSoal);
-
-    if (!questionDetail) {
-      console.error("ID Soal tidak ditemukan di Bank Soal:", idSoal);
-      return showAlert("Data soal tidak ditemukan!", "error");
+  // Fetch Folders dari Backend
+  const refreshFolders = useCallback(async () => {
+    if (!user) return;
+    try {
+      setLoadingFolders(true);
+      const data = await saveService.getFolders();
+      setFolders(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Gagal load folder:", error);
+    } finally {
+      setLoadingFolders(false);
     }
+  }, [user]);
 
-    setFolders((prev) => {
-      // Bandingkan ID sebagai string agar lebih aman
-      const isAlreadySaved = prev.some(
-        (f) =>
-          String(f.id_folder) === String(idFolder) &&
-          String(f.id_soal) === String(idSoal)
-      );
+  // Load folder saat pertama kali mount
+  useEffect(() => {
+    refreshFolders();
+  }, [refreshFolders]);
 
-      if (isAlreadySaved) {
-        showAlert("Soal sudah ada di folder ini!", "error");
-        return prev;
+  // Buat Folder Baru
+  const addFolder = async (name: string) => {
+    try {
+      await saveService.createFolder(name);
+      await refreshFolders();
+      showAlert("Folder berhasil dibuat!", "success");
+      return true;
+    } catch (error) {
+      showAlert("Gagal membuat folder", "error");
+      return false;
+    }
+  };
+
+  // Hapus Folder
+  const deleteFolder = async (id: number | string) => {
+    try {
+      await saveService.deleteFolder(id);
+      // Optimistic update: filter folder yang dihapus dari state lokal
+      setFolders((prev) => prev.filter((f) => f.id !== id));
+      showAlert("Folder dihapus", "success");
+    } catch (error) {
+      showAlert("Gagal menghapus folder", "error");
+    }
+  };
+
+  // Simpan Soal (Bookmark + Masuk Folder)
+  const saveQuestionToFolder = async (
+    idSoalInput: number | string | { id: number | string },
+    idFolder: number | string | null = null,
+    folderName: string = "",
+  ) => {
+    try {
+      // idSoalInput bisa berupa object atau string ID, kita ambil ID-nya saja
+      const realIdSoal =
+        typeof idSoalInput === "object" ? idSoalInput.id : idSoalInput;
+
+      // 1. Simpan ke Favorites dulu
+      const saveResponse = await saveService.saveSoal(realIdSoal);
+      const idFavorite = saveResponse.data?.id_favorite;
+
+      // 2. Jika user memilih folder, pindahkan item ke folder tersebut
+      if (idFolder && idFavorite) {
+        await saveService.moveItemToFolder(idFavorite, Number(idFolder));
+        showAlert(`Soal disimpan ke folder ${folderName}!`, "success");
+      } else {
+        showAlert("Soal berhasil disimpan ke favorit!", "success");
       }
 
-      const newEntry: FolderItem = {
-        id_folder: idFolder,
-        id_subscriber: user?.id || 5,
-        id_soal: idSoal,
-        date: new Date().toISOString(),
-        folder_name: folderName,
-        question_text: questionDetail.text,
-        subject: questionDetail.subject || "Umum",
-        note: "",
-      };
-
-      showAlert("Berhasil menyimpan soal!");
-      return [...prev, newEntry];
-    });
+      // 3. Refresh data folder
+      await refreshFolders();
+      return true;
+    } catch (error: any) {
+      // Handle jika error karena duplikat
+      if (error.response?.status === 400) {
+        // Note: showAlert mungkin hanya menerima "success" | "error" di AuthContext kamu.
+        // Jadi kita gunakan "error" atau "info" jika didukung.
+        // Saya ganti ke "error" agar aman sesuai pesan error VSCode kamu.
+        showAlert("Soal sudah ada di daftar favorit Anda.", "error");
+      } else {
+        showAlert("Gagal menyimpan soal.", "error");
+      }
+      return false;
+    }
   };
 
-  const deleteQuestionFromFolder = (
-    idSoal: string,
-    idFolder: string | number
-  ) => {
-    setFolders((prev) =>
-      prev.filter((f) => {
-        const isMatch =
-          String(f.id_soal) === String(idSoal) &&
-          String(f.id_folder) === String(idFolder);
-
-        return !isMatch;
-      })
-    );
+  // Hapus Soal dari Folder
+  const deleteQuestionFromFolder = async (idFavorite: number | string) => {
+    try {
+      await saveService.removeSoal(idFavorite);
+      await refreshFolders();
+      showAlert("Soal dihapus dari folder.", "success");
+    } catch (error) {
+      showAlert("Gagal menghapus soal.", "error");
+    }
   };
 
-  const updateQuestionNote = (
-    idSoal: string,
-    idFolder: string | number,
-    note: string
-  ) => {
-    setFolders((prev) =>
-      prev.map((f) =>
-        f.id_soal === idSoal && f.id_folder === idFolder ? { ...f, note } : f
-      )
-    );
-    showAlert("Catatan berhasil diperbarui!");
-  };
-
-  const [examProgress, setExamProgress] = useState<Record<string, number>>({});
+  // ==========================================
+  // 2. PROGRESS UJIAN (SESSION STORAGE)
+  // ==========================================
 
   const setProgress = (examId: string, count: number) => {
-    setExamProgress((prev) => ({
-      ...prev,
-      [examId]: count,
-    }));
+    setExamProgress((prev) => ({ ...prev, [examId]: count }));
+  };
+
+  const saveExamAnswers = useCallback(
+    (examId: string, answers: Record<string, string>) => {
+      setExamAnswers((prev) => {
+        if (JSON.stringify(prev[examId]) === JSON.stringify(answers))
+          return prev;
+        return { ...prev, [examId]: answers };
+      });
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(
+          `exam-answers-${examId}`,
+          JSON.stringify(answers),
+        );
+      }
+    },
+    [],
+  );
+
+  const getExamAnswers = useCallback(
+    (examId: string): Record<string, string> => {
+      if (examAnswers[examId]) return examAnswers[examId];
+      if (typeof window !== "undefined") {
+        const stored = sessionStorage.getItem(`exam-answers-${examId}`);
+        if (stored) {
+          try {
+            return JSON.parse(stored);
+          } catch (e) {
+            console.error("Error parsing exam answers:", e);
+          }
+        }
+      }
+      return {};
+    },
+    [examAnswers],
+  );
+
+  const clearExamAnswers = (examId: string) => {
+    setExamAnswers((prev) => {
+      const updated = { ...prev };
+      delete updated[examId];
+      return updated;
+    });
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(`exam-answers-${examId}`);
+    }
   };
 
   return (
     <FolderContext.Provider
       value={{
-        availableQuestions,
         folders,
+        loadingFolders,
+        refreshFolders,
         addFolder,
         deleteFolder,
         saveQuestionToFolder,
         deleteQuestionFromFolder,
-        updateQuestionNote,
         examProgress,
         setProgress,
+        examAnswers,
+        saveExamAnswers,
+        getExamAnswers,
+        clearExamAnswers,
       }}
     >
       {children}
