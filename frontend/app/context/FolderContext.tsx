@@ -36,7 +36,7 @@ interface FolderContextType {
   clearExamAnswers: (examId: string) => void;
 }
 
-// Inisialisasi Context dengan tipe undefined agar aman saat pengecekan di hook
+// Inisialisasi Context
 const FolderContext = createContext<FolderContextType | undefined>(undefined);
 
 export const FolderProvider = ({ children }: { children: ReactNode }) => {
@@ -46,7 +46,7 @@ export const FolderProvider = ({ children }: { children: ReactNode }) => {
   const [folders, setFolders] = useState<FolderData[]>([]);
   const [loadingFolders, setLoadingFolders] = useState<boolean>(false);
 
-  // State untuk Progress Ujian (Tetap Local/Session)
+  // State untuk Progress Ujian (Local/Session)
   const [examProgress, setExamProgress] = useState<Record<string, number>>({});
   const [examAnswers, setExamAnswers] = useState<
     Record<string, Record<string, string>>
@@ -56,9 +56,11 @@ export const FolderProvider = ({ children }: { children: ReactNode }) => {
   // 1. MANAJEMEN FOLDER (API)
   // ==========================================
 
-  // Fetch Folders dari Backend
+  // [PERBAIKAN 1] Tambahkan cek Role agar Admin tidak fetch API subscriber
   const refreshFolders = useCallback(async () => {
-    if (!user) return;
+    // Pastikan user ada DAN role-nya subscriber
+    if (!user || user.role !== "subscriber") return;
+
     try {
       setLoadingFolders(true);
       const data = await saveService.getFolders();
@@ -70,10 +72,12 @@ export const FolderProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  // Load folder saat pertama kali mount
+  // Load folder saat pertama kali mount (Hanya jika subscriber)
   useEffect(() => {
-    refreshFolders();
-  }, [refreshFolders]);
+    if (user?.role === "subscriber") {
+      refreshFolders();
+    }
+  }, [refreshFolders, user]);
 
   // Buat Folder Baru
   const addFolder = async (name: string) => {
@@ -92,7 +96,7 @@ export const FolderProvider = ({ children }: { children: ReactNode }) => {
   const deleteFolder = async (id: number | string) => {
     try {
       await saveService.deleteFolder(id);
-      // Optimistic update: filter folder yang dihapus dari state lokal
+      // Optimistic update
       setFolders((prev) => prev.filter((f) => f.id !== id));
       showAlert("Folder dihapus", "success");
     } catch (error) {
@@ -100,42 +104,60 @@ export const FolderProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Simpan Soal (Bookmark + Masuk Folder)
+  // [PERBAIKAN 2] Logika Simpan Soal yang lebih robust
   const saveQuestionToFolder = async (
     idSoalInput: number | string | { id: number | string },
     idFolder: number | string | null = null,
     folderName: string = "",
   ) => {
     try {
-      // idSoalInput bisa berupa object atau string ID, kita ambil ID-nya saja
       const realIdSoal =
         typeof idSoalInput === "object" ? idSoalInput.id : idSoalInput;
 
-      // 1. Simpan ke Favorites dulu
-      const saveResponse = await saveService.saveSoal(realIdSoal);
-      const idFavorite = saveResponse.data?.id_favorite;
+      // STEP 1: Simpan ke Favorites (Dapatkan ID Favorit)
+      let idFavorite: number;
 
-      // 2. Jika user memilih folder, pindahkan item ke folder tersebut
-      if (idFolder && idFavorite) {
-        await saveService.moveItemToFolder(idFavorite, Number(idFolder));
-        showAlert(`Soal disimpan ke folder ${folderName}!`, "success");
-      } else {
-        showAlert("Soal berhasil disimpan ke favorit!", "success");
+      try {
+        const saveResponse = await saveService.saveSoal(realIdSoal);
+        // Backend harus mengembalikan id_favorite meskipun data sudah ada (status 200)
+        idFavorite = saveResponse.data?.id_favorite;
+      } catch (saveError: any) {
+        // Fallback: Jika backend error karena duplikat tapi tidak mengembalikan ID
+        // Kita tidak bisa lanjut memindahkan folder karena butuh ID Favorit
+        console.error("Save Error:", saveError);
+        showAlert("Gagal menyimpan ke favorit utama.", "error");
+        return false;
       }
 
-      // 3. Refresh data folder
+      if (!idFavorite) {
+        showAlert("Terjadi kesalahan sistem (ID tidak ditemukan).", "error");
+        return false;
+      }
+
+      // STEP 2: Pindahkan ke Folder (Jika user memilih folder spesifik atau memilih 'Umum')
+      // idFolder bisa berupa angka (Folder User) atau null (Folder Umum)
+      if (idFolder !== undefined) {
+        await saveService.moveItemToFolder(
+          idFavorite,
+          idFolder ? Number(idFolder) : null,
+        );
+
+        if (idFolder) {
+          showAlert(`Tersimpan di folder ${folderName}!`, "success");
+        } else {
+          showAlert("Tersimpan di Favorit Umum!", "success");
+        }
+      } else {
+        // Default behavior jika hanya klik bookmark tanpa milih folder
+        showAlert("Soal berhasil disimpan!", "success");
+      }
+
+      // STEP 3: Refresh data folder untuk update counter
       await refreshFolders();
       return true;
     } catch (error: any) {
-      // Handle jika error karena duplikat
-      if (error.response?.status === 400) {
-        // Note: showAlert mungkin hanya menerima "success" | "error" di AuthContext kamu.
-        // Jadi kita gunakan "error" atau "info" jika didukung.
-        // Saya ganti ke "error" agar aman sesuai pesan error VSCode kamu.
-        showAlert("Soal sudah ada di daftar favorit Anda.", "error");
-      } else {
-        showAlert("Gagal menyimpan soal.", "error");
-      }
+      console.error("Proses Simpan Gagal:", error);
+      showAlert("Gagal memproses penyimpanan.", "error");
       return false;
     }
   };
@@ -143,10 +165,12 @@ export const FolderProvider = ({ children }: { children: ReactNode }) => {
   // Hapus Soal dari Folder
   const deleteQuestionFromFolder = async (idFavorite: number | string) => {
     try {
+      // Pastikan kirim idFavorite (bukan idSoal)
       await saveService.removeSoal(idFavorite);
       await refreshFolders();
-      showAlert("Soal dihapus dari folder.", "success");
+      showAlert("Soal berhasil dihapus.", "success");
     } catch (error) {
+      console.error(error);
       showAlert("Gagal menghapus soal.", "error");
     }
   };
@@ -154,6 +178,7 @@ export const FolderProvider = ({ children }: { children: ReactNode }) => {
   // ==========================================
   // 2. PROGRESS UJIAN (SESSION STORAGE)
   // ==========================================
+  // (Bagian ini tidak ada perubahan signifikan, sudah oke)
 
   const setProgress = (examId: string, count: number) => {
     setExamProgress((prev) => ({ ...prev, [examId]: count }));
