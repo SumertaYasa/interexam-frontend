@@ -298,7 +298,7 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
 
 
           {/*Konten */}
-          {userRole === "admin" && (
+          {/* {userRole === "admin" && (
           <li>
              <button type="button" 
               onClick={() => setIsKontenOpen(!isKontenOpen)}
@@ -345,7 +345,7 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
               </li>
             </ul>
           </li>
-          )}
+          )} */}
 
           {/*Laporan */}
           {userRole === "admin" && (
