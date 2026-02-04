@@ -1,53 +1,103 @@
 import { useNavigate, useParams } from "react-router";
+import { useEffect, useState } from "react";
+
+import { subscriptionService } from "../../../../services/subscriptionService";
+
 import PageHeader from "../../common/PageHeader";
 import ButtonSave from "../../common/ButtonSave";
 import ButtonCancel from "../../common/ButtonCancel";
-import InfoCard from "../../common/InfoCard"; // Sesuaikan path
-import DetailPembayaranCard from "../../common/DetailPembayaranCard"; // Sesuaikan path
+import InfoCard from "../../common/InfoCard"; 
+import DetailPembayaranCard from "../../common/DetailPembayaranCard";
 
 export default function DetailPembayaran() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const data = {
-    tanggal_pembayaran: "15 November 2025, 19:20 WITA",
-    status: "Active",
-    jenis_pembayaran: "Bank Transfer",
-    id_transaksi: "f028473465-345646456456475",
-    nama: "I Komang Adi Wirata",
-    email: "Mangadi@gmail.com",
-    telepon: "081265434343",
-    paket: "1 Tahun",
-    masa_berlaku: "13/11/2025 - 13/11/2026",
-    harga_asli: 1200000,
-    diskon: "25%",
-    total_bayar: 900000,
+  const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const handleResendInvoice = async () => {
+    if(!window.confirm("Kirim ulang invoice ke email subscriber?")) return;
+    
+    const btn = document.activeElement; 
+    if(btn) { btn.innerText = "Mengirim..."; btn.disabled = true; }
+
+    try {
+        await subscriptionService.resendInvoice(id); 
+        alert("Sukses! Invoice telah dikirim ke email user.");
+    } catch (error) {
+        console.error(error);
+        alert("Gagal mengirim invoice.");
+    } finally {
+        if(btn) { btn.innerText = "Kirim Ulang Invoice"; btn.disabled = false; }
+    }
   };
 
-  const formatIDR = (val) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(val);
+  useEffect(() => {
+    const fetchDetail = async () => {
+        try {
+            const response = await subscriptionService.getAdminTransactionDetail(id);
+            setDetail(response);
+        } catch (error) {
+            console.error("Error", error);
+            alert("Data transaksi tidak ditemukan");
+            navigate(-1);
+        } finally {
+            setLoading(false);
+        }
+    };
+    if (id) fetchDetail();
+  }, [id]);
+
+  if (loading) return <div className="p-8 text-center">Memuat data...</div>;
+  if (!detail) return null;
+
+  const dataDisplay = {
+    tanggal_pembayaran: new Date(detail.created_at).toLocaleString("id-ID", {
+        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    }),
+    
+    // Status Logic
+    status: detail.status === 'success' ? 'Active' : detail.status,
+    statusClass: detail.status === 'success' 
+        ? "bg-green-100 text-green-600" 
+        : detail.status === 'suspended' 
+            ? "bg-gray-200 text-gray-700" 
+            : "bg-yellow-100 text-yellow-600",
+
+    jenis_pembayaran: (detail.payment_type || "Manual").toUpperCase(),
+    id_transaksi: detail.id_transaksi,
+    
+    nama: detail.subscriber?.nama_user || "Tanpa Nama",
+    email: detail.subscriber?.email_user || "-",
+    telepon: detail.subscriber?.phone || "-",
+    
+    paket: detail.paketLangganan?.nama_paket || "Paket Terhapus",
+    masa_berlaku: detail.pricing_detail?.masa_berlaku_text || "Tidak diketahui",
+    
+    harga_asli: detail.pricing_detail?.harga_asli || 0,
+    diskon: detail.pricing_detail?.diskon_persen, 
+    total_bayar: detail.pricing_detail?.total_bayar || 0,
   };
+
+  const formatIDR = (val) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(val);
 
   const infoPembayaranItems = [
-    { label: "Tanggal Pembayaran", value: data.tanggal_pembayaran },
+    { label: "Tanggal Pembayaran", value: dataDisplay.tanggal_pembayaran },
     { 
       label: "Status", 
-      value: data.status, 
+      value: dataDisplay.status.toUpperCase(), 
       type: "badge", 
-      className: "bg-green-100 text-green-600 border-green-200" 
+      className: dataDisplay.statusClass 
     },
-    { label: "Jenis Pembayaran", value: data.jenis_pembayaran },
-    { label: "ID Transaksi Mitrands", value: data.id_transaksi },
+    { label: "Jenis Pembayaran", value: dataDisplay.jenis_pembayaran },
+    { label: "ID Transaksi", value: dataDisplay.id_transaksi },
   ];
 
   const infoSubscriberItems = [
-    { label: "Nama", value: data.nama },
-    { label: "Alamat Email", value: data.email },
-    { label: "No Telepon", value: data.telepon },
+    { label: "Nama", value: dataDisplay.nama },
+    { label: "Alamat Email", value: dataDisplay.email },
+    { label: "No Telepon", value: dataDisplay.telepon },
   ];
 
   return (
@@ -56,7 +106,7 @@ export default function DetailPembayaran() {
         title="Detail Pembayaran"
         breadcrumbs={[
           { label: "Dashboard", link: "/dashboard" },
-          { label: "Data Subscriber", link: "/dashboard/subscriber" },
+          { label: "Data Subscriber", link: "/dashboard/daftar-subscriber" },
           { label: "Detail Pembayaran", link: null },
         ]}
       />
@@ -70,7 +120,9 @@ export default function DetailPembayaran() {
 
         {/* KOLOM KANAN */}
         <div className="space-y-6">
-          <DetailPembayaranCard data={data} formatIDR={formatIDR} />
+          
+          {/* Card Rincian Harga */}
+          <DetailPembayaranCard data={dataDisplay} formatIDR={formatIDR} />
 
           {/* Card Aksi */}
           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
@@ -78,7 +130,7 @@ export default function DetailPembayaran() {
             <div className="flex flex-col gap-3">
               <ButtonSave 
                 text="Kirim Ulang Invoice" 
-                onClick={() => alert("Invoice dikirim!")}
+                onClick={handleResendInvoice}
                 className="w-full justify-center" 
               />
               <ButtonCancel 

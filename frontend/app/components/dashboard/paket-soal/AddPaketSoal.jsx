@@ -491,7 +491,7 @@ export default function AddPaketSoal() {
                                     label="Jenis Paket"
                                     required
                                     options={jenisPaketOptions}
-                                    selectedText={formData.jenis || "Pilih jenis paket"}
+                                    selectedText={formData.jenis || "Jenis paket"}
                                     onSelect={handleSelectJenis}
                                     selectedValues={formData.jenis}
                                     disabled={isJenisDisabled()}

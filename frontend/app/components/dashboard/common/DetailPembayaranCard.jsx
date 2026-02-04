@@ -15,7 +15,9 @@ export default function DetailPembelianCard({ data, formatIDR }) {
         <div className="border-t border-gray-100 my-2"></div>
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-400 font-noto-sans">Harga Asli</span>
-          <span className="font-noto-sans text-gray-800">{formatIDR(data.harga_asli)}</span>
+          <span className={`${data.diskon ? 'line-through text-gray-400 text-sm' : 'text-gray-900 font-semibold'}`}>
+            {formatIDR(data.harga_asli)}
+          </span>
         </div>
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-400 font-noto-sans">Diskon</span>
