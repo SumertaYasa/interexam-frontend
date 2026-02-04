@@ -17,10 +17,16 @@ import { FolderProvider } from "./context/FolderContext";
 // Ambil Client ID dari env frontend
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
+
 if (!GOOGLE_CLIENT_ID) {
   console.warn(
     "⚠️ VITE_GOOGLE_CLIENT_ID tidak diset di .env.local. Google OAuth tidak akan berfungsi.",
   );
+}
+
+if (!MIDTRANS_CLIENT_KEY) {
+  console.warn("⚠️ VITE_MIDTRANS_CLIENT_KEY belum diset di .env!");
 }
 
 // Link Google Fonts & preconnect
@@ -50,6 +56,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           src="https://accounts.google.com/gsi/client"
           async
           defer
+        ></script>
+        <script 
+          src="https://app.sandbox.midtrans.com/snap/snap.js" 
+          data-client-key={MIDTRANS_CLIENT_KEY}
         ></script>
       </head>
       <body>

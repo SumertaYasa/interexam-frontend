@@ -97,15 +97,28 @@ export default function EditPaketSoal() {
                     paketSoalService.getPaketDetail(id)
                 ]);
 
+                // setSubjectOptions(subjects.map(s => ({ label: s.nama_subject, value: s.nama_subject })));
+                // setKategoriOptions(categories.map(c => ({ label: c.nama_category, value: c.id_category })));
+
                 setSubjectOptions(subjects.map(s => ({ label: s.nama_subject, value: s.nama_subject })));
-                setKategoriOptions(categories.map(c => ({ label: c.nama_category, value: c.id_category })));
+                // setKategoriOptions(categories.map(c => ({ label: c.nama_category, value: String(c.id_category) })));
+                setKategoriOptions(categories.map(c => ({ 
+                    label: c.nama_category, 
+                    value: String(c.id_category) // Paksa jadi String
+                })));
 
                 const data = responseDetail.data;
                 
                 setFormData({
                     nama_paket: data.nama_paket,
+                    // matapelajaran: extractSubjectsFromSoal(data.soal_paket_soal), 
+                    // id_category: data.id_category,
+
                     matapelajaran: extractSubjectsFromSoal(data.soal_paket_soal), 
-                    id_category: data.id_category,
+                
+                    // id_category: data.id_category ? String(data.id_category) : "",
+                    id_category: data.id_category ? String(data.id_category) : "",
+                    
                     jenis: data.jenis, 
                     status: data.status,
                     deskripsi: data.deskripsi || "",
@@ -117,8 +130,10 @@ export default function EditPaketSoal() {
                 const mappedSoal = data.soal_paket_soal.map(item => ({
                     id: item.soal.id_soal,
                     nama_soal: item.soal.text_soal,
-                    mata_pelajaran: item.soal.topic?.subject?.nama_subject || "-", 
-                    jenjang: item.soal.topic?.jenjang?.nama_jenjang || "-",
+                    // mata_pelajaran: item.soal.topic?.subject?.nama_subject || "-", 
+                    // jenjang: item.soal.topic?.jenjang?.nama_jenjang || "-",
+                    mata_pelajaran: item.soal.subject || "-", 
+                    jenjang: item.soal.jenjang || "-",
                     
                     tipe_soal: formatTipeSoal(item.soal.jenis_soal || item.soal.tipe_soal),
                     
@@ -145,10 +160,10 @@ export default function EditPaketSoal() {
         if (!soalList) return [];
         const subjects = new Set();
         soalList.forEach(item => {
-            if (item.soal?.topic?.subject?.nama_subject) {
-                subjects.add(item.soal.topic.subject.nama_subject);
-            }
-        });
+        if (item.soal && item.soal.subject) {
+            subjects.add(item.soal.subject);
+        }
+    });
         return Array.from(subjects);
     };
 
@@ -442,7 +457,7 @@ export default function EditPaketSoal() {
                             selectedText={
                                 formData.matapelajaran.length > 0 
                                 ? formData.matapelajaran.join(", ") 
-                                : "Pilih Mapel (Bisa > 1)"
+                                : "Pilih Mata Pelajaran"
                             }
                             onSelect={handleSelectMapel}
                             multiSelect={true}

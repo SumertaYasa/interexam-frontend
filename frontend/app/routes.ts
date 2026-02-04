@@ -12,7 +12,7 @@ export default [
   route("/tes", "landing/tes/tes.jsx"),
   route("/tes/:slug", "landing/tes/publicDetailExam.jsx"),
 
-  route("/paket", "landing/paket/paket.tsx"),
+  route("/paket", "landing/paket/paket.jsx"),
   route("/tentang-kami", "landing/tentangKami/tentangKami.tsx"),
   route("/coba-gratis", "landing/cobaGratis/cobaGratis.tsx"),
 
@@ -112,7 +112,7 @@ export default [
       "routes/dashboard/subscriber/daftar.subscriber.jsx",
     ),
     route(
-      "detail-pembayaran",
+      "detail-pembayaran/:id",
       "routes/dashboard/subscriber/detail.pembayaran.jsx",
     ),
 

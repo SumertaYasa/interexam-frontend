@@ -82,5 +82,56 @@ export const subscriptionService = {
             console.error("Error update package:", error);
             throw error;
         }
+    },
+
+    createTransaction: async (paketId) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/payment/charge`, 
+        { id_paket_langganan: paketId },
+        {
+          headers: {
+             Authorization: `Bearer ${localStorage.getItem("token")}` 
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating transaction:", error);
+      throw error;
+    }
+  },
+
+    getAdminSubscribers: async () => {
+        const response = await axios.get(`${API_BASE_URL}/admin/subscribers`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        return response.data;
+    },
+
+    getAdminTransactionDetail: async (id) => {
+        const response = await axios.get(`${API_BASE_URL}/admin/subscribers/${id}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        return response.data;
+    },
+
+    updateStatusAdmin: async (transactionId, actionType) => {
+        // actionType bisa: 'verify', 'reject', 'suspend'
+        const response = await axios.put(
+            `${API_BASE_URL}/admin/transactions/${transactionId}/status`,
+            { action: actionType },
+            { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        );
+        return response.data;
+    },
+
+    resendInvoice: async (transactionId) => {
+        const response = await axios.post(
+            `${API_BASE_URL}/admin/transactions/${transactionId}/resend-invoice`,
+            {},
+            { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        );
+        return response.data;
     }
 };
