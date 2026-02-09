@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router"; 
-import { useState, useMemo, useEffect } from "react"; 
+import { useState, useMemo, useEffect, useCallback } from "react";
 
 import { subscriptionService } from "../../../../services/subscriptionService";
 
@@ -34,31 +34,41 @@ export default function DaftarSubscriber() {
         }).format(value || 0);
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const data = await subscriptionService.getAdminSubscribers();
-                setSubscribers(data);
-                const newStats = {
-                    total: data.length,
-                    active: data.filter(i => i.status === 'active').length,
-                    pending: data.filter(i => i.status === 'pending').length,
-                    suspended: data.filter(i => i.status === 'suspended').length,
-                    expired: data.filter(i => i.status === 'expired' || i.status === 'failed').length,
-                    revenue: data
-                        .filter(i => i.status === 'active' || i.status === 'suspended' || i.status === 'success')
-                        .reduce((acc, curr) => acc + (curr.amount || 0), 0)
-                };
-                setStats(newStats);
+    const fetchData = useCallback(async (isBackground = false) => {
+        try {
+            if (!isBackground) setIsLoading(true);
 
-            } catch (error) {
-                console.error("Gagal load data", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchData();
+            const data = await subscriptionService.getAdminSubscribers();
+            setSubscribers(data);
+            
+            const newStats = {
+                total: data.length,
+                active: data.filter(i => i.status === 'active').length,
+                pending: data.filter(i => i.status === 'pending').length,
+                suspended: data.filter(i => i.status === 'suspended').length,
+                expired: data.filter(i => i.status === 'expired' || i.status === 'failed').length,
+                revenue: data
+                    .filter(i => i.status === 'active' || i.status === 'suspended' || i.status === 'success')
+                    .reduce((acc, curr) => acc + (curr.amount || 0), 0)
+            };
+            setStats(newStats);
+
+        } catch (error) {
+            console.error("Gagal load data", error);
+        } finally {
+            if (!isBackground) setIsLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchData(false);
+        const intervalId = setInterval(() => {
+            console.log("Auto-refreshing table data..."); 
+            fetchData(true); 
+        }, 10000);
+
+        return () => clearInterval(intervalId);
+    }, [fetchData]);
     
     const [searchTerm, setSearchTerm] = useState("");
     const [filterState, setFilterState] = useState({ 
@@ -102,7 +112,6 @@ export default function DaftarSubscriber() {
     const handleAction = async (e, type, id) => {
         e.stopPropagation(); 
         
-        // Konfirmasi agar tidak salah klik
         const confirmMsg = {
             verify: "Yakin ingin memverifikasi transaksi ini? Invoice akan dikirim otomatis.",
             reject: "Yakin ingin menolak transaksi ini?",
@@ -120,28 +129,13 @@ export default function DaftarSubscriber() {
 
         setActionLoading({ id: id, type: type });
 
-        // setIsLoading(true);
 
 
         try {
             await subscriptionService.updateStatusAdmin(id, type);
-            
             alert(`Berhasil: ${type.toUpperCase()}`);
             
-            const data = await subscriptionService.getAdminSubscribers();
-            setSubscribers(data);
-            
-            // Update statistik juga
-            setStats({
-                total: data.length,
-                active: data.filter(i => i.status === 'active').length,
-                pending: data.filter(i => i.status === 'pending').length,
-                suspended: data.filter(i => i.status === 'suspended').length,
-                expired: data.filter(i => i.status === 'expired' || i.status === 'failed').length,
-                revenue: data
-                    .filter(i => i.status === 'active' || i.status === 'suspended' || i.status === 'success')
-                    .reduce((acc, curr) => acc + (curr.amount || 0), 0)
-            });
+            await fetchData(true); 
 
         } catch (error) {
             console.error("Gagal update status:", error);

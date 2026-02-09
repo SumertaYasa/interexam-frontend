@@ -85,6 +85,10 @@ export default [
       "routes/dashboard/paket-soal/detail.paket.soal.jsx",
     ),
 
+    route("event", "routes/dashboard/event/data.event.jsx"),
+    route("event/add", "routes/dashboard/event/add.event.jsx"),
+    route("event/edit/:id", "routes/dashboard/event/edit.event.jsx"),
+
     route("users", "routes/dashboard/users/data.user.jsx"),
     route("users/add", "routes/dashboard/users/add.user.jsx"),
     route("users/edit/:id", "routes/dashboard/users/edit.user.jsx"),

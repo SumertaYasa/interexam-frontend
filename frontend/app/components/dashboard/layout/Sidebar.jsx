@@ -214,7 +214,7 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
           )}
 
           
-           {/*Paket Soal */}
+          {/*Paket Soal */}
           {["admin", "validator"].includes(userRole) && (
           <li>
             <Link
@@ -224,6 +224,20 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12.1429 11v9m0-9c-2.50543-.7107-3.19099-1.39543-6.13657-1.34968-.48057.00746-.86348.38718-.86348.84968v7.2884c0 .4824.41455.8682.91584.8617 2.77491-.0362 3.45995.6561 6.08421 1.3499m0-9c2.5053-.7107 3.1067-1.39542 6.0523-1.34968.4806.00746.9477.38718.9477.84968v7.2884c0 .4824-.4988.8682-1 .8617-2.775-.0362-3.3758.6561-6 1.3499m2-14c0 1.10457-.8955 2-2 2-1.1046 0-2-.89543-2-2s.8954-2 2-2c1.1045 0 2 .89543 2 2Z"/>
               </svg>
               <span className={`ms-3 sidebar-menu-text font-noto-sans text-base whitespace-nowrap transition-all duration-300 ease-in-out ${textClass}`}>Paket Soal</span>
+            </Link>
+          </li>
+          )}
+
+          {/*Event */}
+          {["admin", "validator"].includes(userRole) && (
+          <li>
+            <Link
+              to="/dashboard/event"
+              className={`${baseClass} ${isActive("/dashboard/event") ? activeClass : inactiveClass}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 transition duration-75 min-w-[24px] ml-2 flex-shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+              </svg>
+              <span className={`ms-3 sidebar-menu-text font-noto-sans text-base whitespace-nowrap transition-all duration-300 ease-in-out ${textClass}`}>Event</span>
             </Link>
           </li>
           )}
