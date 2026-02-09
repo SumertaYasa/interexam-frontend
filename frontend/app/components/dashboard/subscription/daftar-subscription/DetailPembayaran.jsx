@@ -33,6 +33,7 @@ export default function DetailPembayaran() {
     }
   };
 
+
   useEffect(() => {
     const fetchDetail = async () => {
         try {
@@ -47,7 +48,42 @@ export default function DetailPembayaran() {
         }
     };
     if (id) fetchDetail();
-  }, [id]);
+  }, [id, navigate]);
+
+  useEffect(() => {
+    
+    if (!detail) return;
+    const finalStatuses = ['success', 'active', 'expired', 'failed', 'suspended'];
+    if (finalStatuses.includes(detail.status)) return;
+
+    console.log("Polling aktif: Memantau status pembayaran...");
+
+    const intervalId = setInterval(async () => {
+        try {
+            const newData = await subscriptionService.getAdminTransactionDetail(id);
+            
+            setDetail((currentDetail) => {
+                if (newData.status !== currentDetail.status) {
+                    console.log(`✅ Status Berubah! ${currentDetail.status} -> ${newData.status}`);
+                    
+                    if (newData.status === 'success' || newData.status === 'active') {
+                        alert("Pembayaran Diterima! Status kini Active.");
+                    }
+                    return newData;
+                }
+                return currentDetail; 
+            });
+
+        } catch (error) {
+            console.error("Gagal polling:", error);
+        }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+
+  }, [detail?.status, id]);
+
+  
 
   if (loading) return <div className="p-8 text-center">Memuat data...</div>;
   if (!detail) return null;
