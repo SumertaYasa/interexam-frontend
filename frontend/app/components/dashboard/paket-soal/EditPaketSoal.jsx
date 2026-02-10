@@ -306,8 +306,8 @@ export default function EditPaketSoal() {
     const handleDrop = (e) => { e.preventDefault(); cleanupVisuals(); const dragIndex = dragItem.current; const dropIndex = dragOverItem.current; if (dragIndex === null || dropIndex === null || dragIndex === dropIndex) return; const listCopy = [...paketSoalList]; const draggedItem = listCopy[dragIndex]; listCopy.splice(dragIndex, 1); listCopy.splice(dropIndex, 0, draggedItem); setPaketSoalList(listCopy); dragItem.current = null; dragOverItem.current = null; };
 
     const handleSubmit = async () => {
-        if (!formData.nama_paket || !formData.id_category) {
-            return alert("Nama Paket dan Kategori wajib diisi.");
+        if (!formData.nama_paket) {
+            return alert("Nama Paket harus diisi.");
         }
         if (paketSoalList.length === 0) {
             return alert("Paket soal tidak boleh kosong.");
@@ -466,7 +466,7 @@ export default function EditPaketSoal() {
 
                         <Dropdown 
                             label="Kategori"
-                            required
+                            // required
                             options={kategoriOptions}
                             selectedText={getSelectedLabel(kategoriOptions, formData.id_category)}
                             onSelect={handleSelectKategori}

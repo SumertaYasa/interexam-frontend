@@ -281,8 +281,8 @@ export default function AddPaketSoal() {
     };
 
     const handleSubmit = async () => {
-        if (!formData.nama_paket || formData.matapelajaran.length === 0 || !formData.id_category) {
-            return alert("Mohon lengkapi Nama Paket, Mata Pelajaran, dan Kategori.");
+        if (!formData.nama_paket || formData.matapelajaran.length === 0 ) {
+            return alert("Mohon lengkapi Nama Paket dan Mata Pelajaran");
         }
         if (paketSoalList.length === 0) {
             return alert("Pilih minimal satu soal.");
@@ -469,7 +469,7 @@ export default function AddPaketSoal() {
                         {/* Kategori */}
                         <Dropdown 
                             label="Kategori"
-                            required
+                            // required
                             options={kategoriOptions}
                             selectedText={getSelectedLabel(kategoriOptions, formData.id_category)}
                             onSelect={handleSelectKategori}
