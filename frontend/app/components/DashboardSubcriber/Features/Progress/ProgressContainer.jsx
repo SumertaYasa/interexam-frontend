@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../../../../context/AuthContext";
 import InfoCards from "./Components/InfoCards";
 import BarChart from "./Components/BarChart";
 import ActivitySummary from "./Components/ActivitySummary";
 import { dashboardService } from "../../../../services/subscriber";
+import LockedFeature from "../../Common/LockedFeature";
 
 export default function ProgressContainer() {
+  const { isPremium } = useAuth();
   const [mode, setMode] = useState("Mingguan");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -111,9 +114,16 @@ export default function ProgressContainer() {
 
             {/* Bottom Section: Chart & Summary */}
             <div className="flex flex-col lg:flex-row gap-8 items-stretch pb-10">
-              <BarChart mode={mode} data={processedChart} />
+              <LockedFeature title="Fitur Grafik" isLocked={!isPremium}>
+                <BarChart mode={mode} data={processedChart} />
+              </LockedFeature>
               {/* Pastikan ActivitySummary bisa menerima prop summaries */}
-              <ActivitySummary mode={mode} summaries={processedSummary} />
+              <LockedFeature
+                title="Fitur Ringkasan Aktivitas"
+                isLocked={!isPremium}
+              >
+                <ActivitySummary mode={mode} summaries={processedSummary} />
+              </LockedFeature>
             </div>
           </>
         )}
