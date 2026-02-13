@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router";
 import axios from "axios";
 import Alert from "../components/Common/Alert";
+import { googleLogout } from "@react-oauth/google";
 
 interface User {
   id_subscriber: string | number;
@@ -90,8 +91,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    googleLogout();
 
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
     
     setUser(null);

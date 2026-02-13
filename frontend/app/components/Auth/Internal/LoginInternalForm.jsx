@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "../../../context/AuthContext.tsx";
 
 function LoginForm() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const handleGoogleLoginSuccess = async (res) => {
     setLoading(true);
@@ -18,7 +20,8 @@ function LoginForm() {
       const data = await response.json();
 
       if (response.ok && data.token) {
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("token", data.token); 
+        setUser(data.user);
         alert("Login sukses!");
         // Redirect ke dashboard
         navigate("/dashboard");
