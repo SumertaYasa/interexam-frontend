@@ -26,8 +26,8 @@ const statusOptions = [
 ];
 
 const jenisPaketOptions = [
-    { label: "Gratis", value: "latihan" }, 
-    { label: "Berbayar", value: "try_out" }, 
+    { label: "Gratis", value: "gratis" }, 
+    { label: "Berbayar", value: "berbayar" }, 
 ];
 
 export default function EditPaketSoal() {
@@ -119,7 +119,7 @@ export default function EditPaketSoal() {
                     // id_category: data.id_category ? String(data.id_category) : "",
                     id_category: data.id_category ? String(data.id_category) : "",
                     
-                    jenis: data.jenis, 
+                    jenis: data.jenis || 'gratis',
                     status: data.status,
                     deskripsi: data.deskripsi || "",
                     fotoSampul: data.image 
@@ -168,24 +168,25 @@ export default function EditPaketSoal() {
     };
 
     // LOGIKA KATEGORI ---
-    useEffect(() => {
+   useEffect(() => {
         if (isLoading || isFirstRender.current) return;
-
         if (formData.id_category) {
             const selectedCat = kategoriOptions.find(c => c.value == formData.id_category);
             if (selectedCat) {
                 const catName = selectedCat.label.toLowerCase();
-                if (!catName.includes("latihan soal")) {
-                    setFormData(prev => ({ ...prev, jenis: "latihan" })); 
+                
+                // Logic: Try Out/Ujian -> Berbayar, Lainnya -> Gratis
+                if (catName.includes("try out") || catName.includes("ujian")) {
+                    setFormData(prev => ({ ...prev, jenis: "berbayar" })); 
+                } else {
+                    setFormData(prev => ({ ...prev, jenis: "gratis" })); 
                 }
             }
         }
     }, [formData.id_category, kategoriOptions]);
 
     const isJenisDisabled = () => {
-        const selectedCat = kategoriOptions.find(c => c.value == formData.id_category);
-        if (!selectedCat) return false;
-        return !selectedCat.label.toLowerCase().includes("latihan soal");
+        return false; 
     };
 
     // FETCH BANK SOAL
@@ -464,14 +465,14 @@ export default function EditPaketSoal() {
                             selectedValues={formData.matapelajaran}
                         />
 
-                        <Dropdown 
+                        {/* <Dropdown 
                             label="Kategori"
                             // required
                             options={kategoriOptions}
                             selectedText={getSelectedLabel(kategoriOptions, formData.id_category)}
                             onSelect={handleSelectKategori}
                             selectedValues={formData.id_category}
-                        />
+                        /> */}
 
                         <InputField 
                             label="Nama Paket Soal"
