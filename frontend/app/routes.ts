@@ -108,7 +108,7 @@ export default [
 
     route(
       "paket-langganan/edit/:id",
-      "routes/dashboard/paket-langganan/edit.paket.langganan.jsx"
+      "routes/dashboard/paket-langganan/edit.paket.langganan.jsx",
     ),
 
     route(
@@ -187,6 +187,16 @@ export default [
     route(
       "dashboard-subscriber/latihan/:label/result",
       "components/DashboardSubcriber/Features/Exam/ResultExam.jsx",
+    ),
+
+    route(
+      "dashboard-subscriber/latihan/events",
+      "components/DashboardSubcriber/Features/Course/components/eventListContainer.jsx",
+    ),
+
+    route(
+      "dashboard-subscriber/latihan/events/:label",
+      "components/DashboardSubcriber/Features/Course/EventDetailContainer.jsx",
     ),
 
     // 3. Semua Detail Tersimpan

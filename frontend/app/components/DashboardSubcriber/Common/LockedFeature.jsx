@@ -1,14 +1,14 @@
 import React from "react";
 import { Lock, Crown, ChevronRight } from "lucide-react";
 
-const LockedFeature = ({
+function LockedFeature({
   title = "Fitur Premium",
   description = "Upgrade paket langganan Anda untuk mengakses fitur eksklusif ini.",
   children,
   isLocked = true,
   minHeight = "min-h-[300px]",
   className = "",
-}) => {
+}) {
   // Fungsi redirect ke halaman harga/payment
   const handleUpgrade = () => {
     window.location.href = "/paket";
@@ -72,6 +72,6 @@ const LockedFeature = ({
       </div>
     </div>
   );
-};
+}
 
 export default LockedFeature;

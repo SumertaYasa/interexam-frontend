@@ -21,7 +21,7 @@ export const courseService = {
         },
         ...getAuthHeader(),
       });
-      return response.data; // Mengembalikan { status, data, meta }
+      return response.data;
     } catch (error) {
       console.error(
         "Gagal ambil paket:",
@@ -45,19 +45,19 @@ export const courseService = {
   },
 
   // Simpan soal ke folder
-  saveQuestionToFolder: async (soalId, folderId) => {
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/folders/save-question`,
-        { id_soal: soalId, id_folder: folderId },
-        getAuthHeader(),
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Gagal simpan soal:", error);
-      throw error;
-    }
-  },
+  // saveQuestionToFolder: async (soalId, folderId) => {
+  //   try {
+  //     const response = await axios.post(
+  //       `${API_BASE_URL}/folders/add-item`,
+  //       { id_soal: soalId, id_folder: folderId },
+  //       getAuthHeader(),
+  //     );
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error("Gagal simpan soal:", error);
+  //     throw error;
+  //   }
+  // },
 
   // Submit ujian
   submitExam: async (paketId, answers) => {
