@@ -225,4 +225,6 @@ export default [
       "components/Auth/Internal/RegisFormWrapper.jsx",
     ),
   ]),
+
+  route("logout", "components/Auth/Logout.jsx"),
 ] satisfies RouteConfig;

@@ -4,15 +4,20 @@ import { useState, useEffect, useRef } from "react";
 import { getPhotoUrl } from "../../../utils/urlHelper";
 import NotificationDropdown from "../common/NotificationDropdown";
 
+import { useAuth } from "../../../context/AuthContext";
+
 export default function Header({
   toggleDesktopSidebar,
   toggleMobileSidebar,
-  username,
-  email,
-  avatar,
 }) {
   const [isUserOpen, setIsUserOpen] = useState(false);
   const userMenuRef = useRef(null);
+
+  const { user } = useAuth();
+
+  const username = user?.nama_user || "User";
+  const email = user?.email_user || "email@example.com";
+  const avatar = user?.foto || null;
 
   useEffect(() => {
     function handleClickOutside(event) {

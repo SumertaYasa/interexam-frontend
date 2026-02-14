@@ -5,7 +5,7 @@ export default function EventCard({ event, onEdit, onDelete }) {
     const getJenisBadge = (jenis) => {
         return jenis === 'Gratis' 
             ? 'bg-emerald-500 text-white' 
-            : 'bg-indigo-600 text-white';
+            : 'bg-primary text-white';
     };
 
     const getStatusColor = (status) => {
@@ -25,6 +25,10 @@ export default function EventCard({ event, onEdit, onDelete }) {
                     src={event.image || "https://placehold.co/600x400/e2e8f0/1e293b?text=No+Image"} 
                     alt={event.nama_event} 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                        e.target.onerror = null; 
+                        e.target.src = "https://placehold.co/600x400/e2e8f0/1e293b?text=Error+Load+Image";
+                    }}
                 />
                 
                 <div className="absolute top-2 left-2 flex gap-2">
