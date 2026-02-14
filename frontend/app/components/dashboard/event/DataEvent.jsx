@@ -1,69 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 
+import { eventService } from "../../../services/eventService";
+
 import PageHeader from "../common/PageHeader";
 import SearchInput from "../common/SearchInput";
 import DynamicFilter from "../common/DynamicFilter";
 import ActionButton from "../common/ActionButton";
 import EventCard from "../common/EventCard"; 
 
-const DUMMY_EVENTS_LIST = [
-    { 
-        id: 1, 
-        nama_event: "Mega Tryout UTBK SNBT 2026 Gelombang 1", 
-        kategori: "UTBK SNBT", 
-        jenis: "Berbayar", 
-        status: "active", 
-        jumlah_paket: 4, 
-        tanggal_mulai: "12 Feb 2026",
-        image: "https://placehold.co/600x400/1e40af/ffffff?text=TRYOUT+UTBK"
-    },
-    { 
-        id: 2, 
-        nama_event: "Simulasi CPNS SKD Nasional", 
-        kategori: "CPNS", 
-        jenis: "Gratis", 
-        status: "active", 
-        jumlah_paket: 2, 
-        tanggal_mulai: "20 Feb 2026",
-        image: "https://placehold.co/600x400/991b1b/ffffff?text=CPNS+SKD"
-    },
-    { 
-        id: 3, 
-        nama_event: "Ujian Akhir Semester Matematika SD", 
-        kategori: "Sekolah Dasar", 
-        jenis: "Gratis", 
-        status: "draft", 
-        jumlah_paket: 1, 
-        tanggal_mulai: "01 Mar 2026",
-        image: "https://placehold.co/600x400/166534/ffffff?text=UAS+SD"
-    },
-    { 
-        id: 4, 
-        nama_event: "Olimpiade Sains Nasional (OSN) Fisika", 
-        kategori: "Olimpiade", 
-        jenis: "Berbayar", 
-        status: "inactive", 
-        jumlah_paket: 5, 
-        tanggal_mulai: "15 Apr 2026",
-        image: "https://placehold.co/600x400/6b21a8/ffffff?text=OSN+FISIKA"
-    },
-    { 
-        id: 5, 
-        nama_event: "Latihan Soal Harian Bahasa Inggris", 
-        kategori: "Bahasa", 
-        jenis: "Gratis", 
-        status: "active", 
-        jumlah_paket: 10, 
-        tanggal_mulai: "Setiap Hari",
-        image: "https://placehold.co/600x400/ea580c/ffffff?text=ENGLISH+DAILY"
-    },
-];
 
 export default function DataEvent() {
     const navigate = useNavigate();
 
     const [events, setEvents] = useState([]);
+    
     const [search, setSearch] = useState("");
     const [filters, setFilters] = useState({ jenis: "all", status: "all" });
 
@@ -78,9 +29,35 @@ export default function DataEvent() {
         }
     ];
 
+    const fetchData = async () => {
+        try {
+            const params = {
+                search: search,
+                jenis: filters.jenis,
+                status: filters.status
+            };
+
+            const response = await eventService.getAllEvents(params);
+            
+            setEvents(response.data || []);
+            
+        } catch (error) {
+            console.error("Gagal memuat event:", error);
+        }
+    };
+
     useEffect(() => {
-        setEvents(DUMMY_EVENTS_LIST);
-    }, []);
+        const timeoutId = setTimeout(() => {
+            fetchData();
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [search, filters]); 
+
+    // Edit Handler
+    const handleEdit = (id) => {
+        navigate(`edit/${id}`);
+    };
 
     const filteredData = events.filter(item => {
         const matchSearch = item.nama_event.toLowerCase().includes(search.toLowerCase());
@@ -89,13 +66,15 @@ export default function DataEvent() {
         return matchSearch && matchJenis && matchStatus;
     });
 
-    const handleEdit = (id) => {
-        navigate(`edit/${id}`);
-    };
-
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if(window.confirm("Yakin ingin menghapus event ini?")) {
-            setEvents(prev => prev.filter(e => e.id !== id));
+            try {
+                await eventService.deleteEvent(id);
+                setEvents(prev => prev.filter(e => e.id !== id));
+            } catch (error) {
+                console.error("Gagal hapus:", error);
+                alert("Gagal menghapus event.");
+            }
         }
     };
 
