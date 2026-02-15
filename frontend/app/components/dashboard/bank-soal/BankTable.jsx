@@ -149,6 +149,7 @@ export default function BankTable() {
     if(confirm("Apakah Anda yakin ingin menyetujui soal ini secara langsung?")) {
         try {
             await bankSoalService.updateSoal(id, { status: 'Disetujui' });
+            window.dispatchEvent(new Event('refreshNotif'));
             alert("Soal berhasil disetujui!");
             fetchData();
         } catch (error) {
