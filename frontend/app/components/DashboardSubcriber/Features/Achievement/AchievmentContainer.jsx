@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router";
+import { dashboardService } from "../../../../services/subscriber/dashboardService";
+import { DATA_LENCANA } from "./BadgeData";
+import { useAuth } from "../../../../context/AuthContext";
 import AchievementCard from "./Components/AchievementCard";
 import ProgressCircle from "./Components/ProgressCircle";
 import BadgeItem from "./Components/BadgeItem";
-import { DATA_LENCANA } from "./BadgeData";
-import { dashboardService } from "../../../../services/subscriber/dashboardService";
+import LockedFeature from "../../Common/LockedFeature";
 
 export default function AchievementContainer() {
+  const { ispremium } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -148,29 +151,31 @@ export default function AchievementContainer() {
           </AchievementCard>
 
           {/* CARD 6: LIST LENCANA (PUTIH) */}
-          <div className="bg-white border-2 border-[#f2a289]/30 rounded-[2.5rem] p-8 flex flex-col">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-black text-slate-800">Lencana</h3>
-              <Link
-                to="/dashboard-subscriber/pencapaian/lencana"
-                className="text-sm font-bold text-slate-900 border-b-2 border-slate-900"
-              >
-                Lihat Semua
-              </Link>
+          <LockedFeature title="Fitur Lencana" isLocked={!ispremium}>
+            <div className="bg-white border-2 border-[#f2a289]/30 rounded-[2.5rem] p-8 flex flex-col">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-xl font-black text-slate-800">Lencana</h3>
+                <Link
+                  to="/dashboard-subscriber/pencapaian/lencana"
+                  className="text-sm font-bold text-slate-900 border-b-2 border-slate-900"
+                >
+                  Lihat Semua
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 gap-4 flex-1">
+                {displayedBadges.map((badge) => (
+                  <BadgeItem
+                    key={badge.id}
+                    label={badge.title}
+                    color={badge.color}
+                    icon={badge.icon}
+                    isUnlocked={badge.isUnlocked}
+                    date={badge.date}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 flex-1">
-              {displayedBadges.map((badge) => (
-                <BadgeItem
-                  key={badge.id}
-                  label={badge.title}
-                  color={badge.color}
-                  icon={badge.icon}
-                  isUnlocked={badge.isUnlocked}
-                  date={badge.date}
-                />
-              ))}
-            </div>
-          </div>
+          </LockedFeature>
         </div>
       </div>
     </div>

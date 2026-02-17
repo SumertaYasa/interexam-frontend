@@ -4,6 +4,7 @@ import SearchBar from "../../Common/SearchBar";
 import CardCourseList from "../../Common/CardCourseList";
 import CardCourse from "../../Common/CardCourse";
 import FilterPanel from "../../Common/FilterPanel";
+import EventEntryWidget from "./components/EventEntryWidget";
 import { slugify } from "../../../../utils/slugify";
 import { courseService } from "../../../../services/subscriber";
 import { getAssetUrl } from "../../../../utils/assetHelpper";
@@ -56,6 +57,7 @@ function CourseContainer() {
             answeredSoal: it.progress?.answered || 0,
             participants: it.participants || 0,
             category: it.category || "Umum",
+            jenisPaket: it.jenis,
             path: `/dashboard-subscriber/latihan/${slugify(it.label || it.nama_paket || "paket")}`,
             linkState: {
               from: "course",
@@ -145,7 +147,7 @@ function CourseContainer() {
       </div>
 
       {/* Filter Button */}
-      <div className="relative mt-4">
+      <div className="relative mt-4 mb-6">
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -186,8 +188,18 @@ function CourseContainer() {
         )}
       </div>
 
+      {!query && <EventEntryWidget />}
+
+      {/* Separator */}
+      {!query && <div className="border-t border-gray-100 my-8"></div>}
+
+      {/* Title */}
+      <h2 className="text-xl font-bold text-slate-900 mb-4">
+        Daftar Paket Latihan
+      </h2>
+
       {/* Main Content Area */}
-      <div className="py-5">
+      <div className="py-2">
         {loading ? (
           <LoadingCards />
         ) : filtered.length === 0 ? (
@@ -226,6 +238,7 @@ function CourseContainer() {
                   category={course.category}
                   participants={course.participants}
                   answered={course.answeredSoal}
+                  jenisPaket={course.jenisPaket}
                 />
               ) : (
                 <CardCourseList
@@ -239,6 +252,7 @@ function CourseContainer() {
                   answered={course.answeredSoal}
                   path={course.path}
                   linkState={course.linkState}
+                  jenisPaket={course.jenisPaket}
                 />
               ),
             )}

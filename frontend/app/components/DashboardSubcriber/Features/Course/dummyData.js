@@ -1,0 +1,53 @@
+export const EVENTS_DATA = [
+  {
+    id: "evt-01",
+    title: "Tryout Akbar Nasional 2026",
+    date: "12 Mar 2026",
+    location: "Online",
+    image: "/event-1.jpg",
+    courses: [
+      {
+        id: "p1",
+        title: "TO Akbar - Saintek",
+        image: "/saintek.jpg",
+        rating: 4.9,
+        totalSoal: 120,
+        participants: 500,
+        category: "Saintek",
+        jenisPaket: "premium",
+        path: "/dashboard-subscriber/latihan/events/to-akbar-saintek",
+      },
+      {
+        id: "p2",
+        title: "TO Akbar - Soshum",
+        image: "/soshum.jpg",
+        rating: 4.8,
+        totalSoal: 110,
+        participants: 480,
+        category: "Soshum",
+        jenisPaket: "premium",
+        path: "/dashboard-subscriber/latihan/events/to-akbar-soshum",
+      },
+    ],
+  },
+  {
+    id: "evt-02",
+    title: "Gebyar Olimpiade Matematika",
+    date: "20 Apr 2026",
+    location: "Hybrid",
+    image: "/event-2.jpg",
+    courses: [
+      {
+        id: "p3",
+        title: "Olimpiade Penyisihan",
+        image: "/math.jpg",
+        rating: 4.7,
+        totalSoal: 50,
+        participants: 200,
+        category: "Matematika",
+        jenisPaket: "gratis",
+        path: "/dashboard-subscriber/latihan/events/olimpiade-math",
+      },
+    ],
+  },
+];
