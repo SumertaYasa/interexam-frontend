@@ -57,7 +57,7 @@ function EventDetailContainer() {
 
         <div className="absolute bottom-0 left-0 p-6 md:p-8 text-white w-full">
           <Link
-            to="/dashboard-subscriber/events"
+            to="/dashboard-subscriber/latihan/events"
             className="inline-flex items-center gap-2 text-white/80 hover:text-white font-bold text-sm mb-4 bg-black/20 backdrop-blur-md w-fit px-3 py-1.5 rounded-full"
           >
             <ArrowLeft size={14} /> Kembali ke List Event

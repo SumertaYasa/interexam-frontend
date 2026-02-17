@@ -22,7 +22,7 @@ function EventEntryWidget() {
             Event & Kompetisi Nasional
           </h2>
           <p className="text-slate-400 text-sm font-medium">
-            Ikuti Tryout Akbar dan menangkan hadiah menarik.
+            check untuk informasi event dan tryout lebih lanjut.
           </p>
         </div>
       </div>
