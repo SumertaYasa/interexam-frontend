@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router";
 import axios from "axios";
 import Alert from "../components/Common/Alert";
+import { googleLogout } from "@react-oauth/google";
 
 // --- 1. UPDATE INTERFACE ---
 interface User {
@@ -138,18 +139,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAlert({ message, type });
   };
 
-  const doLogout = () => {
+  const logout = () => {
+    googleLogout();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
-  };
-
-  const logout = () => {
-    doLogout();
-    const target = location.pathname.includes("/dashboard-subscriber")
-      ? "/login"
-      : "/login-internal";
-    navigate(target, { replace: true });
   };
 
   return (

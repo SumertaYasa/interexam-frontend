@@ -22,8 +22,8 @@ const statusOptions = [
 ];
 
 const jenisPaketOptions = [
-    { label: "Gratis", value: "latihan" }, 
-    { label: "Berbayar", value: "try_out" }, 
+    { label: "Gratis", value: "gratis" }, 
+    { label: "Berbayar", value: "berbayar" }, 
 ];
 
 export default function DetailPaketSoal() {
@@ -99,7 +99,7 @@ export default function DetailPaketSoal() {
                     nama_paket: data.nama_paket,
                     matapelajaran: extractSubjectsFromSoal(data.soal_paket_soal), 
                     id_category: data.id_category ? String(data.id_category) : "",
-                    jenis: data.jenis, 
+                    jenis: data.jenis || 'gratis',
                     status: data.status,
                     deskripsi: data.deskripsi || "-",
                     fotoSampul: data.image 
@@ -207,12 +207,12 @@ export default function DetailPaketSoal() {
                             disabled={true} 
                         />
 
-                        <Dropdown 
+                        {/* <Dropdown 
                             label="Kategori"
                             options={kategoriOptions}
                             selectedText={getSelectedLabel(kategoriOptions, formData.id_category)}
                             disabled={true} 
-                        />
+                        /> */}
 
                         <InputField 
                             label="Nama Paket Soal"

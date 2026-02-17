@@ -122,6 +122,8 @@ export default [
 
     route("artikel", "routes/dashboard/artikel/data.artikel.jsx"),
     route("artikel/add", "routes/dashboard/artikel/add.artikel.jsx"),
+
+    route("report", "routes/dashboard/report/report.jsx"),
   ]),
 
   // --- LAYOUT DASHBOARD SUBSCRIBER (DENGAN SIDEBAR) ---
@@ -235,4 +237,6 @@ export default [
       "components/Auth/Internal/RegisFormWrapper.jsx",
     ),
   ]),
+
+  route("logout", "components/Auth/Logout.jsx"),
 ] satisfies RouteConfig;

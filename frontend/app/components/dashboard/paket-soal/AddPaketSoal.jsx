@@ -25,8 +25,8 @@ const statusOptions = [
 ];
 
 const jenisPaketOptions = [
-    { label: "Gratis", value: "Gratis" }, 
-    { label: "Berbayar", value: "Berbayar" }, 
+    { label: "Gratis", value: "gratis" }, 
+    { label: "Berbayar", value: "berbayar" }, 
 ];
 
 export default function AddPaketSoal() {
@@ -113,18 +113,20 @@ export default function AddPaketSoal() {
             const selectedCat = kategoriOptions.find(c => c.value == formData.id_category);
             if (selectedCat) {
                 const catName = selectedCat.label.toLowerCase();
-                if (catName.includes("latihan soal")) {
+                
+                // Logic: Jika nama kategori mengandung "try out" atau "ujian" -> Default Berbayar
+                // Selain itu -> Default Gratis
+                if (catName.includes("try out") || catName.includes("ujian")) {
+                     setFormData(prev => ({ ...prev, jenis: "berbayar" }));
                 } else {
-                    setFormData(prev => ({ ...prev, jenis: "Gratis" }));
+                     setFormData(prev => ({ ...prev, jenis: "gratis" }));
                 }
             }
         }
     }, [formData.id_category, kategoriOptions]);
 
     const isJenisDisabled = () => {
-        const selectedCat = kategoriOptions.find(c => c.value == formData.id_category);
-        if (!selectedCat) return false;
-        return !selectedCat.label.toLowerCase().includes("latihan soal");
+        return false; 
     };
 
     useEffect(() => {
@@ -467,14 +469,14 @@ export default function AddPaketSoal() {
                         />
 
                         {/* Kategori */}
-                        <Dropdown 
+                        {/* <Dropdown 
                             label="Kategori"
                             // required
                             options={kategoriOptions}
                             selectedText={getSelectedLabel(kategoriOptions, formData.id_category)}
                             onSelect={handleSelectKategori}
                             selectedValues={formData.id_category}
-                        />
+                        /> */}
 
                         <InputField 
                             label="Nama Paket Soal"

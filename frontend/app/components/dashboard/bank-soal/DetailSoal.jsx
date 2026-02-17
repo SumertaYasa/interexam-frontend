@@ -93,6 +93,7 @@ export default function DetailSoal() {
             setIsSubmitting(true);
             try {
                 await bankSoalService.updateSoal(id, { status: 'disetujui' });
+                window.dispatchEvent(new Event('refreshNotif'));
                 alert("Soal berhasil disetujui!");
                 navigate("/dashboard/bank-soal");
             } catch (error) {
@@ -112,6 +113,7 @@ export default function DetailSoal() {
                     status: 'ditolak',
                     catatan_revisi: pesanContributor
                 });
+                window.dispatchEvent(new Event('refreshNotif'));
                 alert("Soal ditolak!");
                 navigate("/dashboard/bank-soal");
             } catch (error) {
