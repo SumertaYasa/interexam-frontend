@@ -112,6 +112,11 @@ export default [
     ),
 
     route(
+      "akun-subscriber",
+      "routes/dashboard/subscriber/akun.subscriber.jsx"
+    ),
+
+    route(
       "daftar-subscriber",
       "routes/dashboard/subscriber/daftar.subscriber.jsx",
     ),
