@@ -79,11 +79,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // ============================================================
       if (userData && userData.role === "subscriber") {
         try {
-          // OPSI A: Jika Backend /auth/me sudah mengirim field 'active_subscription'
-          // const hasActiveSub = userData.active_subscription && new Date(userData.active_subscription.tanggal_selesai) > new Date();
-
-          // OPSI B: Fetch Status Terpisah (Lebih Aman untuk memastikan data terbaru)
-          // Kita panggil endpoint ringan, misal check-status
           const subResponse = await axios.get(
             "http://localhost:5000/api/v1/subscriber/check-status",
             {
@@ -104,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("user", JSON.stringify(userData));
     } catch (error: any) {
       if (error.response?.status === 401) {
-        doLogout();
+        googleLogout();
       }
     } finally {
       setIsLoading(false);
@@ -151,7 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         isAuthenticated,
-        isPremium, // <--- Value ini yang dipakai di UI Gembok
+        isPremium,
         isLoading,
         setUser,
         logout,

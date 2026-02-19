@@ -8,7 +8,7 @@ const getAuthHeader = () => {
 };
 
 export const courseService = {
-  // Mengambil paket pengerjaan khusus subscriber
+  // 1. Mengambil daftar paket (List)
   getAllPaketsWithProgress: async (params = {}) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/subscriber/pakets`, {
@@ -31,35 +31,43 @@ export const courseService = {
     }
   },
 
+  // 2. Mengambil Detail Paket & Soal (PENTING untuk ExamAttempt)
   getPaketDetail: async (id) => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/subscriber/pakets/${id}`,
         getAuthHeader(),
       );
-      return response.data.data;
+
+      const { data, is_locked } = response.data;
+
+      return {
+        ...data,
+        is_locked: is_locked || false,
+      };
     } catch (error) {
       console.error("Gagal ambil detail:", error);
       return null;
     }
   },
 
-  // Simpan soal ke folder
-  // saveQuestionToFolder: async (soalId, folderId) => {
-  //   try {
-  //     const response = await axios.post(
-  //       `${API_BASE_URL}/folders/add-item`,
-  //       { id_soal: soalId, id_folder: folderId },
-  //       getAuthHeader(),
-  //     );
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error("Gagal simpan soal:", error);
-  //     throw error;
-  //   }
-  // },
+  // 3. Simpan Progress (Auto-save)
+  saveProgress: async (paketId, answers) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/subscriber/pakets/save-progress`,
+        { id_paket_soal: paketId, answers },
+        getAuthHeader(),
+      );
+      return response.data;
+    } catch (error) {
+      // Tidak perlu throw error agar tidak mengganggu user saat mengetik (silent fail)
+      console.error("Gagal simpan progres (Silent):", error.message);
+      return null;
+    }
+  },
 
-  // Submit ujian
+  // 4. Submit Ujian (Selesai)
   submitExam: async (paketId, answers) => {
     try {
       const response = await axios.post(
@@ -73,22 +81,11 @@ export const courseService = {
         "Gagal submit ujian:",
         error.response?.data || error.message,
       );
-      throw error;
+      throw error; // Throw agar UI bisa menampilkan pesan error
     }
   },
-  saveProgress: async (paketId, answers) => {
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/subscriber/pakets/save-progress`,
-        { id_paket_soal: paketId, answers },
-        getAuthHeader(),
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Gagal simpan progres:", error);
-      throw error;
-    }
-  },
+
+  // 5. Leaderboard
   getExamLeaderboard: async (paketId) => {
     try {
       const response = await axios.get(
@@ -99,6 +96,53 @@ export const courseService = {
     } catch (error) {
       console.error("Gagal ambil leaderboard:", error);
       return [];
+    }
+  },
+
+  getAllEvents: async (params = {}) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/subscriber/events`, {
+        params: {
+          search: params.search || "",
+          category: params.category || "all",
+          page: params.page || 1,
+          limit: params.limit || 10,
+        },
+        ...getAuthHeader(),
+      });
+      return response.data.data || [];
+    } catch (error) {
+      console.error("Gagal ambil events:", error);
+      return [];
+    }
+  },
+
+  // Mengambil Detail Event (Termasuk status user join/belum)
+  getEventDetail: async (id) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/subscriber/events/${id}`,
+        getAuthHeader(),
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Gagal ambil detail event:", error);
+      return null;
+    }
+  },
+
+  // Mendaftar Event
+  joinEvent: async (eventId) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/subscriber/events/join`,
+        { id_event: eventId },
+        getAuthHeader(),
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Gagal join event:", error);
+      throw error;
     }
   },
 };

@@ -2,15 +2,7 @@ import React from "react";
 import { Calendar, MapPin, ChevronRight } from "lucide-react";
 import { Link } from "react-router";
 
-function CardEvent({
-  id,
-  title,
-  date,
-  location,
-  image,
-  totalPaket,
-  path, // Link tujuan saat diklik
-}) {
+function CardEvent({ id, title, date, location, image, totalPaket, path }) {
   return (
     <Link
       to={path}

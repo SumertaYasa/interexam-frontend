@@ -201,6 +201,11 @@ export default [
       "components/DashboardSubcriber/Features/Course/EventDetailContainer.jsx",
     ),
 
+    route(
+      "dashboard-subscriber/latihan/events/:eventLabel/:label",
+      "components/DashboardSubcriber/Features/Exam/DetailExam.jsx",
+    ),
+
     // 3. Semua Detail Tersimpan
     route(
       "dashboard-subscriber/tersimpan/:label",
