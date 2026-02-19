@@ -203,7 +203,12 @@ export default [
 
     route(
       "dashboard-subscriber/latihan/events/:eventLabel/:label",
-      "components/DashboardSubcriber/Features/Exam/DetailExam.jsx",
+      "components/DashboardSubcriber/Features/Course/components/ExamEventDetail.jsx",
+    ),
+
+    route(
+      "dashboard-subscriber/latihan/events/:eventLabel/:label/attempt",
+      "components/DashboardSubcriber/Features/Course/components/ExamEventAttempt.jsx",
     ),
 
     // 3. Semua Detail Tersimpan

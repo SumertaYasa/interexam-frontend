@@ -76,11 +76,10 @@ function EventListContainer() {
               key={evt.id}
               id={evt.id}
               title={evt.title}
-              // Tampilkan tanggal mulai - selesai atau status
               date={`${formatDate(evt.date_start)} - ${formatDate(evt.date_end)}`}
-              location="Online" // Bisa dinamis jika ada field location di BE
+              location="Online"
               image={getAssetUrl(evt.image)}
-              totalPaket={evt.participants || 0} // Atau ganti logic peserta/paket sesuai kebutuhan
+              totalPaket={evt.total_paket || 0}
               path={`/dashboard-subscriber/latihan/events/${slugify(evt.title)}`}
             />
           ))}

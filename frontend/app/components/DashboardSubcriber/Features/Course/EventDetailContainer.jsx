@@ -125,14 +125,14 @@ function EventDetailContainer() {
         <img
           src={getAssetUrl(event.banner || event.image)}
           alt={event.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          className="w-full h-full object-cover "
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent" />
 
         <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 text-white flex flex-col md:flex-row justify-between items-end gap-6">
           <div className="flex-1">
             <Link
-              to="/dashboard-subscriber/latihan"
+              to="/dashboard-subscriber/latihan/events"
               className="inline-flex items-center gap-2 text-white/80 hover:text-white font-bold text-sm mb-4 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full transition-colors border border-white/10"
             >
               <ArrowLeft size={14} /> Kembali
@@ -232,12 +232,9 @@ function EventDetailContainer() {
                 totalSoal={course.total_soal || 0}
                 category={event.category}
                 jenisPaket={!is_registered ? "locked" : "gratis"}
-                path={`/dashboard-subscriber/latihan/event/${slugify(event.title)}/${slugify(course.title)}`}
+                path={`/dashboard-subscriber/latihan/events/${slugify(event.title)}/${slugify(course.title)}`}
+                lockedReason={course.locked_reason}
               />
-
-              {(!is_registered || course.is_locked) && (
-                <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl cursor-not-allowed"></div>
-              )}
             </div>
           ))
         ) : (

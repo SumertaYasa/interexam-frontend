@@ -145,4 +145,26 @@ export const courseService = {
       throw error;
     }
   },
+
+  getEventPaketDetail: async (eventId, paketId) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/subscriber/events/${eventId}/pakets/${paketId}`,
+        getAuthHeader(),
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Gagal ambil detail paket event:",
+        error.response?.data || error.message,
+      );
+
+      return {
+        status: "error",
+        message: error.response?.data?.message || "Gagal memuat soal event.",
+        is_locked: error.response?.data?.is_locked || false,
+      };
+    }
+  },
 };
