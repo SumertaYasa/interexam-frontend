@@ -151,4 +151,8 @@ export const subscriptionService = {
     );
     return response.data;
   },
+ getDashboardSubscribers: async () => {
+    const response = await axios.get(`${API_BASE_URL}/admin/all-subscribers`);
+    return response.data;
+  }
 };

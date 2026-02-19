@@ -81,6 +81,22 @@ export default function NotificationDropdown() {
     };
   }, []);
 
+  const handleClearAllNotifications = async () => {
+    // Optional: Bisa pakai confirm alert jika takut user tidak sengaja klik
+    if (!window.confirm("Apakah Anda yakin ingin menghapus seluruh notifikasi Anda?")) return;
+
+    try {
+      await notificationService.deleteAllNotifications();
+
+      // Kosongkan tampilan secara instan (Optimistic UI Update)
+      setNotifications([]);
+      setUnreadCount(0);
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Gagal menghapus notifikasi:", error);
+    }
+  };
+
   // Tutup dropdown jika klik di luar
   useEffect(() => {
     function handleClickOutside(event) {
@@ -157,9 +173,13 @@ export default function NotificationDropdown() {
           </ul>
 
           <div className="py-2 bg-gray-50 rounded-b-xl text-center border-t border-gray-100">
-            <Link to="/dashboard/notifications" onClick={() => setIsOpen(false)} className="block w-full py-1 font-noto-sans text-xs font-semibold text-gray-500 hover:text-primary transition-colors">
-              Lihat Semua Notifikasi
-            </Link>
+            <button
+              type="button"
+              onClick={handleClearAllNotifications}
+              className="block w-full py-1 font-noto-sans text-xs font-semibold text-red-500 hover:text-red-700 transition-colors"
+            >
+              Hapus Semua Notifikasi
+            </button>
           </div>
         </div>
       )}

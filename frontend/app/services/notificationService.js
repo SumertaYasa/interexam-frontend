@@ -51,5 +51,19 @@ export const notificationService = {
             console.error("Kesalahan API Update Single:", error);
             throw error;
         }
+    },
+    deleteAllNotifications: async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/workflow/alerts`, {
+                method: 'DELETE', 
+                headers: getAuthHeaders()
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || "Gagal menghapus notifikasi");
+            return result;
+        } catch (error) {
+            console.error("Kesalahan API Delete All:", error);
+            throw error;
+        }
     }
 };
