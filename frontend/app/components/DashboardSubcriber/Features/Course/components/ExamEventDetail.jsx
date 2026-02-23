@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   FileText,
   Lock,
+  CheckCircle, // <-- Tambahkan icon ini
 } from "lucide-react";
 
 function LoadingDetail() {
@@ -88,6 +89,9 @@ function ExamEventDetail() {
           image: getAssetUrl(currentCourseInEvent.image),
           totalSoal: currentCourseInEvent.total_soal || 0,
           category: detailEvent.category || "Event",
+
+          // --- TANGKAP STATUS PENGERJAAN DARI BACKEND ---
+          statusPengerjaan: currentCourseInEvent.status_pengerjaan,
         });
       } catch (err) {
         console.error("Error fetching event exam detail:", err);
@@ -141,14 +145,17 @@ function ExamEventDetail() {
     );
   }
 
-  // --- LOGIC TIME GATEKEEPER ---
+  // --- LOGIC TIME & STATUS GATEKEEPER ---
   const now = new Date();
   const startDate = new Date(eventData?.date_start);
   const endDate = new Date(eventData?.date_end);
 
   const isUpcoming = now < startDate;
   const isExpired = now > endDate;
-  const isOngoing = now >= startDate && now <= endDate;
+
+  // Deteksi apakah user sudah pernah menyelesaikan paket ini
+  const isFinished = examData?.statusPengerjaan === "selesai";
+  const isOngoingExam = examData?.statusPengerjaan === "sedang_mengerjakan";
 
   // --- RENDERING UTAMA ---
   const attemptPath = `/dashboard-subscriber/latihan/events/${eventLabel}/${label}/attempt`;
@@ -241,9 +248,17 @@ function ExamEventDetail() {
               </p>
             </div>
 
-            {/* Tombol Action (Disabled state logic) */}
+            {/* Tombol Action (Disabled state logic yang sudah disempurnakan) */}
             <div className="flex flex-col gap-3 mt-auto">
-              {isExpired ? (
+              {isFinished ? (
+                <button
+                  disabled
+                  className="w-full md:w-fit text-center px-10 py-4 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 bg-green-100 text-green-700 border border-green-200 cursor-not-allowed"
+                >
+                  <CheckCircle size={18} />
+                  Paket Sudah Diselesaikan
+                </button>
+              ) : isExpired ? (
                 <button
                   disabled
                   className="w-full md:w-fit text-center px-10 py-4 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 bg-slate-300 text-slate-500 cursor-not-allowed"
@@ -265,7 +280,9 @@ function ExamEventDetail() {
                   className="w-full md:w-fit text-center px-10 py-4 rounded-xl font-bold text-base transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 shadow-primary/20 text-white"
                 >
                   <Play size={18} fill="currentColor" />
-                  Mulai Ujian Event
+                  {isOngoingExam
+                    ? "Lanjutkan Ujian Event"
+                    : "Mulai Ujian Event"}
                 </Link>
               )}
             </div>

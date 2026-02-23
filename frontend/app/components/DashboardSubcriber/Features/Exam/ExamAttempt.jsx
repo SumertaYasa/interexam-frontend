@@ -280,9 +280,10 @@ export default function ExamAttempt() {
             <QuestionCard
               key={q.id}
               index={i}
-              question={q} // Question sudah mengandung jenis_soal & options
+              question={q}
               onAnswer={handleAnswerChange}
               selectedAnswer={answers[i]}
+              hideActions={false}
               onBookmark={(id) => {
                 setTargetQuestionId(id);
                 setActiveModal("save");

@@ -8,32 +8,57 @@ export default function QuestionCard({
   selectedAnswer = null,
   onBookmark,
   onReport,
+  hideActions = false,
 }) {
-  // State lokal untuk handling input text/checkbox sebelum dikirim ke parent
   const [localAnswer, setLocalAnswer] = useState(selectedAnswer);
 
-  // Sinkronisasi state lokal jika props selectedAnswer berubah (misal saat navigasi soal)
+  // --- STATE BARU: Untuk mencegah bug duplikat tampilan (UI Fix) ---
+  const [localSelectedIndex, setLocalSelectedIndex] = useState(null);
+
+  // Sinkronisasi state lokal jika props selectedAnswer berubah
   useEffect(() => {
     setLocalAnswer(selectedAnswer);
-  }, [selectedAnswer]);
+
+    // Sinkronisasi UI Index untuk Radio Button agar tepat sasaran
+    if (
+      question?.jenis_soal === "multiple_choice" ||
+      question?.jenis_soal === "true_false"
+    ) {
+      if (selectedAnswer !== null && selectedAnswer !== undefined) {
+        // Cek apakah index yang sedang aktif saat ini teksnya masih sama dengan jawaban.
+        // Jika ya, biarkan (untuk mempertahankan pilihan user saat ini).
+        // Jika tidak, cari index pertama yang cocok dengan jawaban tersebut.
+        const currentMatch =
+          question.options[localSelectedIndex]?.text === selectedAnswer;
+        if (!currentMatch) {
+          const idx = question.options.findIndex(
+            (o) => o.text === selectedAnswer,
+          );
+          setLocalSelectedIndex(idx !== -1 ? idx : null);
+        }
+      } else {
+        setLocalSelectedIndex(null);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAnswer, question]);
 
   // --- LOGIC DEBOUNCE KHUSUS SHORT ANSWER ---
   useEffect(() => {
-    // Hanya jalankan debounce jika jenis soal adalah short_answer dan nilai berbeda dari props
     if (
       question.jenis_soal === "short_answer" &&
       localAnswer !== selectedAnswer
     ) {
       const timeoutId = setTimeout(() => {
         onAnswer(index, localAnswer);
-      }, 500); // 0.5 detik
+      }, 500);
 
       return () => clearTimeout(timeoutId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localAnswer, question.jenis_soal, index]);
 
-  // Handler: Checkbox (Multiple Answer) - Langsung update parent karena interaksi klik jarang
+  // Handler: Checkbox (Multiple Answer)
   const handleCheckboxChange = (optionValue) => {
     let currentArray = Array.isArray(localAnswer) ? [...localAnswer] : [];
 
@@ -47,16 +72,16 @@ export default function QuestionCard({
     onAnswer(index, currentArray);
   };
 
-  // Handler: Radio (Multiple Choice) - Langsung update parent
-  const handleRadioChange = (optionValue) => {
+  // Handler: Radio (Multiple Choice)
+  const handleRadioChange = (optionValue, optIndex) => {
     setLocalAnswer(optionValue);
+    setLocalSelectedIndex(optIndex); // Simpan index spesifik yang diklik
     onAnswer(index, optionValue);
   };
 
-  // Handler: Textarea (Short Answer) - HANYA UPDATE STATE LOKAL
+  // Handler: Textarea (Short Answer)
   const handleTextChange = (e) => {
     setLocalAnswer(e.target.value);
-    // onAnswer dipanggil oleh useEffect debounce di atas
   };
 
   // Helper Format Jenis Soal
@@ -83,20 +108,23 @@ export default function QuestionCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={() => onReport(index)}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors"
-          >
-            <AlertCircle size={20} />
-          </button>
-          <button
-            onClick={() => onBookmark(question.id)}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-yellow-500 transition-colors"
-          >
-            <BookmarkIcon size={20} />
-          </button>
-        </div>
+        {/* --- KONDISI: TAMPILKAN TOMBOL JIKA hideActions FALSE --- */}
+        {!hideActions && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => onReport(index)}
+              className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors"
+            >
+              <AlertCircle size={20} />
+            </button>
+            <button
+              onClick={() => onBookmark(question.id)}
+              className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-yellow-500 transition-colors"
+            >
+              <BookmarkIcon size={20} />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* --- BODY JAWABAN --- */}
@@ -106,7 +134,9 @@ export default function QuestionCard({
           question.jenis_soal === "true_false") &&
           question.options.map((opt, i) => {
             const optionValue = opt.text;
-            const isSelected = localAnswer === optionValue;
+
+            const isSelected = localSelectedIndex === i;
+
             return (
               <label
                 key={opt.id || i}
@@ -117,7 +147,7 @@ export default function QuestionCard({
                     type="radio"
                     name={`q-${index}`}
                     checked={isSelected}
-                    onChange={() => handleRadioChange(optionValue)}
+                    onChange={() => handleRadioChange(optionValue, i)} // Mengirim index ke handler
                     className="accent-primary w-4 h-4 cursor-pointer"
                   />
                 </div>

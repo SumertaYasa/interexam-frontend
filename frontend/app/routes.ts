@@ -211,6 +211,21 @@ export default [
       "components/DashboardSubcriber/Features/Course/components/ExamEventAttempt.jsx",
     ),
 
+    route(
+      "/dashboard-subscriber/latihan/events/results",
+      "components/DashboardSubcriber/Features/Course/components/EventResultWrapper.jsx",
+    ),
+
+    route(
+      "/dashboard-subscriber/latihan/events/results/:label",
+      "components/DashboardSubcriber/Features/Course/components/EventResultDetail.jsx",
+    ),
+
+    route(
+      "/dashboard-subscriber/latihan/events/results/:slug/ranking/:rankingType",
+      "components/DashboardSubcriber/Features/Course/components/RankingTablePage.jsx",
+    ),
+
     // 3. Semua Detail Tersimpan
     route(
       "dashboard-subscriber/tersimpan/:label",

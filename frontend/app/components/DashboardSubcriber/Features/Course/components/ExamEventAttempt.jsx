@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { slugify } from "../../../../../utils/slugify";
-import QuestionCard from "../../Exam/Components/QuestionCard"; 
+import QuestionCard from "../../Exam/Components/QuestionCard";
 import GuideModal from "../../../Common/GuideModal";
 import ActionModal from "../../../Common/ActionModal";
 import { useAuth } from "../../../../../context/AuthContext";
@@ -93,7 +93,7 @@ export default function ExamEventAttempt() {
 
         if (detailResponse.is_time_up) {
           showAlert("Waktu pengerjaan event telah habis.", "error");
-          navigate(`../../${eventLabel}`, { relative: "path" });
+          navigate(-1);
           return;
         }
 
@@ -180,9 +180,13 @@ export default function ExamEventAttempt() {
   const executeSubmit = async (isAutoSubmit = false) => {
     try {
       setIsSubmitting(true);
-      if (!isAutoSubmit) setLoading(true); // Tampilkan loading penuh jika disubmit manual
+      if (!isAutoSubmit) setLoading(true);
 
-      const response = await courseService.submitExam(paketId, answers);
+      const response = await courseService.submitExam(
+        paketId,
+        answers,
+        eventId,
+      );
 
       if (response.status === "success") {
         if (paketId) {
@@ -196,7 +200,7 @@ export default function ExamEventAttempt() {
           showAlert("Ujian berhasil dikumpulkan!", "success");
         }
 
-        navigate(`../../${eventLabel}`, { relative: "path" });
+        navigate(-1);
       }
     } catch (err) {
       showAlert(
@@ -332,7 +336,7 @@ export default function ExamEventAttempt() {
               question={q}
               onAnswer={handleAnswerChange}
               selectedAnswer={answers[i]}
-              // Props di bawah ini di-disable / diberi fungsi kosong karena fitur tidak ada di Event
+              hideActions={true}
               onBookmark={() => {}}
               onReport={() => {}}
             />

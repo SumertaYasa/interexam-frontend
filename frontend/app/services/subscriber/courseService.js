@@ -68,13 +68,25 @@ export const courseService = {
   },
 
   // 4. Submit Ujian (Selesai)
-  submitExam: async (paketId, answers) => {
+  submitExam: async (paketId, answers, eventId = null) => {
     try {
+      // 1. Siapkan data dasar yang akan dikirim
+      const payload = {
+        id_paket_soal: paketId,
+        answers: answers,
+      };
+
+      // 2. Jika fungsi dipanggil dari Event, tambahkan id_event ke dalam data
+      if (eventId) {
+        payload.id_event = eventId;
+      }
+
       const response = await axios.post(
         `${API_BASE_URL}/subscriber/pakets/submit`,
-        { id_paket_soal: paketId, answers },
+        payload, // 3. Kirim payload yang sudah diperbarui
         getAuthHeader(),
       );
+
       return response.data;
     } catch (error) {
       console.error(

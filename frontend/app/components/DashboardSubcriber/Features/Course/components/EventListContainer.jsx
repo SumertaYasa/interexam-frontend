@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router";
 import BreadCrumbs from "../../../Common/BreadCrumbs";
 import CardEvent from "./CardEvent";
 import { slugify } from "../../../../../utils/slugify";
@@ -52,12 +53,23 @@ function EventListContainer() {
       {/* Header Navigation */}
       <div className="mb-8">
         <BreadCrumbs />
-        <h1 className="text-3xl font-bold text-slate-900 mt-4">
-          Event Tersedia
-        </h1>
-        <p className="text-slate-500 mt-1">
-          Pilih event, kerjakan soal-soal dan kalahkan seluruh peserta.
-        </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mt-4">
+              Event Tersedia
+            </h1>
+            <p className="text-slate-500 mt-1">
+              Pilih event, kerjakan soal-soal dan kalahkan seluruh peserta.
+            </p>
+          </div>
+
+          <Link
+            to="/dashboard-subscriber/latihan/events/results"
+            className="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold rounded-xl hover:bg-slate-50 hover:text-primary transition-all shadow-sm flex items-center gap-2"
+          >
+            Lihat Rapor & Hasil Event
+          </Link>
+        </div>
       </div>
 
       {/* Content Area */}
