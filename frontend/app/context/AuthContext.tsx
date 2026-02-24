@@ -18,6 +18,8 @@ interface User {
   role: "admin" | "validator" | "contributor" | "subscriber";
   foto?: string;
 
+  email_subscriber?: string;
+  phone?: string;
   // Field baru khusus Subscriber
   isPremium?: boolean;
   // Opsional: simpan tanggal expired jika butuh countdown

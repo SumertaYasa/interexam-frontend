@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { useAuth } from "../../../context/AuthContext";
 import {
@@ -50,9 +50,23 @@ const sideMenuLists = [
   },
 ];
 
-function Sidebar({ profile = "/person.jpg" }) {
+function Sidebar() {
   const { pathname } = useLocation();
-  const { logout } = useAuth();
+
+  const { user } = useAuth();
+
+  const [profileImage, setProfileImage] = useState("/person.jpg");
+
+  useEffect(() => {
+    if (user && user.foto) {
+      const fotoUrl = user.foto.startsWith("http")
+        ? user.foto
+        : `http://localhost:5000${user.foto}`;
+      setProfileImage(fotoUrl);
+    } else {
+      setProfileImage("/person.jpg");
+    }
+  }, [user]);
 
   return (
     <aside className="h-screen">
@@ -98,18 +112,25 @@ function Sidebar({ profile = "/person.jpg" }) {
         {/* BOTTOM AREA */}
         <div className="flex flex-col items-center gap-5">
           <div className="relative pt-5">
-            <button
-              onClick={logout}
+            <Link
+              to="/logout"
               className="p-2 rounded-xl border border-red-500 w-10 h-10 flex justify-center bg-red-100 text-red-500 cursor-pointer"
             >
               <LogOut />
-            </button>
+            </Link>
           </div>
 
           {/* PROFILE */}
-          <div className="h-7-5 w-7-5 border overflow-hidden rounded-full">
-            <img src={profile} alt={profile.split("/").pop().split(".")[0]} />
-          </div>
+          <Link
+            to="/dashboard-subscriber/pengaturan"
+            className="w-11 h-11 rounded-full border-1 border-slate-100 overflow-hidden mt-2 hover:border-blue-500 transition-colors"
+          >
+            <img
+              src={profileImage}
+              alt="Profile"
+              className="w-full h-full object-cover bg-slate-50"
+            />
+          </Link>
         </div>
       </div>
     </aside>

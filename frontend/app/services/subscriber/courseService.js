@@ -179,4 +179,48 @@ export const courseService = {
       };
     }
   },
+
+  /**
+   * Mengambil rapor pribadi user untuk sebuah event (akumulasi dan per paket)
+   * @param {number|string} eventId - ID dari Event
+   */
+  getEventUserReport: async (eventId) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/subscriber/events/${eventId}/report`,
+        getAuthHeader(),
+      );
+      return response.data.data; // Mengembalikan object { event_title, report: {...} }
+    } catch (error) {
+      console.error(
+        "Gagal mengambil rapor event:",
+        error.response?.data || error.message,
+      );
+      throw error;
+    }
+  },
+
+  /**
+   * Mengambil leaderboard untuk sebuah event (bisa difilter per paket)
+   * @param {number|string} eventId - ID dari Event
+   * @param {number|string} paketId - "all" untuk keseluruhan, atau ID paket spesifik
+   */
+  getEventLeaderboard: async (eventId, paketId = "all") => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/subscriber/events/${eventId}/leaderboard`,
+        {
+          ...getAuthHeader(),
+          params: { paketId }, // Mengirim query params ?paketId=all
+        },
+      );
+      return response.data.data; // Mengembalikan array of users
+    } catch (error) {
+      console.error(
+        "Gagal mengambil leaderboard event:",
+        error.response?.data || error.message,
+      );
+      throw error;
+    }
+  },
 };
