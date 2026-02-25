@@ -17,7 +17,7 @@ export default function EditProfile() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
 
-    const { setUser } = useAuth();
+    const { user, setUser } = useAuth();
 
     const [userId, setUserId] = useState(null);
 
@@ -35,6 +35,7 @@ export default function EditProfile() {
     const [subjectsOptions, setSubjectsOptions] = useState([]);
 
     useEffect(() => {
+        if (!user) return;
         const loadData = async () => {
             try {
                 const subjects = await userService.getSubjectsForDropdown();
@@ -43,9 +44,16 @@ export default function EditProfile() {
                     value: s.id_subject 
                 })));
 
-                const userData = await userService.getMe();
+                let userData = user; 
                 
-                setUserId(userData.id_user);
+                try {
+                    const freshData = await userService.getMe();
+                    if (freshData) userData = freshData;
+                } catch (err) {
+                    console.warn("Menggunakan data dari state Auth karena delay LocalStorage.");
+                }
+                
+                setUserId(userData.id_user || userData.id);
                 
                 setFormData({
                     nama_user: userData.nama_user || "",
@@ -53,7 +61,8 @@ export default function EditProfile() {
                     phone: userData.phone || "",
                     role: userData.role,
                     keahlian: userData.subject_ids || [],
-                    fotoFile: null
+                    fotoFile: null,
+                    deletePhoto: false
                 });
 
                 setPreviewFoto(getPhotoUrl(userData.foto));
@@ -64,7 +73,7 @@ export default function EditProfile() {
             }
         };
         loadData();
-    }, []);
+    }, [user]);
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -137,6 +146,14 @@ export default function EditProfile() {
                 setUser(updatedUser);
                 localStorage.setItem("user", JSON.stringify(updatedUser));
                 
+                setFormData(prev => ({
+                    ...prev,
+                    nama_user: updatedUser.nama_user || "",
+                    phone: updatedUser.phone || "",
+                    keahlian: updatedUser.subject_ids || [],
+                    fotoFile: null,
+                    deletePhoto: false
+                }));
                 setPreviewFoto(getPhotoUrl(updatedUser.foto));
             }
 

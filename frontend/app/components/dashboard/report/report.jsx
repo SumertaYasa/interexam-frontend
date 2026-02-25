@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import PageHeader from "../common/PageHeader";
 import StatCard from "../common/StatCard";
 import DynamicFilter from "../common/DynamicFilter";
@@ -9,6 +9,8 @@ import {
     BarChartCard, 
     DonutChartCard 
 } from "../common/ReportCharts";
+
+import { reportService } from "../../../services/reportService";
 
 const Icons = {
     subscriber: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -27,9 +29,34 @@ const Icons = {
             </svg>
 };
 
+const formatJutaCard = (num) => {
+    if (num >= 1000000) return `Rp ${(num / 1000000).toFixed(1).replace('.0', '')}jt`;
+    if (num >= 1000) return `Rp ${(num / 1000).toFixed(1).replace('.0', '')}rb`;
+    return `Rp ${num}`;
+};
+
 export default function LaporanPage() {
     const [filterState, setFilterState] = useState({ period: "year" });
+    const [isLoading, setIsLoading] = useState(true);
+    
+    // State untuk Data Keseluruhan (Atas)
+    const [summaryData, setSummaryData] = useState({
+        totalSub: 0,
+        totalPaket: 0,
+        totalIncome: 0,
+        totalEvent: 0
+    });
 
+    // State untuk Data Chart (Bawah)
+    const [chartData, setChartData] = useState({
+        lineData: { current: [0], previous: [0], labels: ['-'] },
+        legendText: ['Tahun Ini', 'Tahun Lalu'],
+        pieData: [],
+        barData: [],
+        donutPercent: 0
+    });
+
+    // 2. CONFIG FILTER
     const filterConfig = [
         {
             key: "period",
@@ -43,75 +70,53 @@ export default function LaporanPage() {
         }
     ];
 
-    const chartData = useMemo(() => {
-        const p = filterState.period;
+    // 3. FETCH DATA DARI API SAAT FILTER BERUBAH
+    useEffect(() => {
+        const fetchReport = async () => {
+            setIsLoading(true);
+            try {
+                const response = await reportService.getStats(filterState.period);
+                
+                // Set data summary (atas) dengan fallback 0 agar toLocaleString tidak error
+                setSummaryData({
+                    totalSub: response?.summary?.totalSub || 0,
+                    totalPaket: response?.summary?.totalPaket || 0,
+                    totalIncome: response?.summary?.totalIncome || 0,
+                    totalEvent: response?.summary?.totalEvent || 0
+                });
+                
+                // KUNCI PERBAIKAN: Memastikan data yang masuk tidak pernah 'undefined'
+                // Jika backend lupa mengirim 'previous', kita ganti dengan '[0]' secara otomatis
+                setChartData({
+                    lineData: {
+                        current: response?.filteredData?.lineData?.current || [0],
+                        previous: response?.filteredData?.lineData?.previous || [0],
+                        labels: response?.filteredData?.lineData?.labels || ['-']
+                    },
+                    legendText: response?.filteredData?.legendText || ['Tahun Ini', 'Tahun Lalu'],
+                    pieData: response?.filteredData?.pieData || [],
+                    barData: response?.filteredData?.barData || [],
+                    donutPercent: response?.filteredData?.donutPercent || 0
+                });
 
-        let lineData = { current: [], previous: [], labels: [] };
-        let legendText = ['Tahun ini', 'Tahun Lalu'];
+            } catch (error) {
+                console.error("Gagal mengambil data laporan", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-        if (p === 'week') {
-            legendText = ['Minggu ini', 'Minggu Lalu'];
-            lineData = {
-                current: [500000, 700000, 400000, 800000, 600000, 900000, 1000000],
-                previous: [400000, 600000, 500000, 700000, 500000, 800000, 900000],
-                labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
-            };
-        } else if (p === 'month') {
-            legendText = ['Bulan ini', 'Bulan Lalu'];
-            lineData = {
-                current: [1200000, 1500000, 1100000, 1800000],
-                previous: [1000000, 1300000, 1200000, 1600000],
-                labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4']
-            };
-        } else {
-            // Default Year
-            legendText = ['Tahun ini', 'Tahun Lalu'];
-            lineData = {
-                current: [2200000, 2900000, 3100000, 2500000, 2800000, 3500000],
-                previous: [2600000, 2800000, 2500000, 2700000, 2400000, 2900000],
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun']
-            };
-        }
-
-        let pieData = [];
-        if (p === 'week') {
-             pieData = [
-                { label: "Harian", value: 15, color: "#9ca3af" }, 
-                { label: "Mingguan", value: 40, color: "#60a5fa" }, 
-                { label: "Bulanan", value: 20, color: "#1e73be" }, 
-            ];
-        } else if (p === 'month') {
-             pieData = [
-                { label: "Bulanan", value: 50, color: "#9ca3af" }, 
-                { label: "Semester", value: 30, color: "#60a5fa" }, 
-                { label: "Tahunan", value: 20, color: "#1e73be" }, 
-            ];
-        } else {
-             pieData = [
-                { label: "Bulanan", value: 30, color: "#9ca3af" }, 
-                { label: "Semester", value: 45, color: "#60a5fa" }, 
-                { label: "Tahunan", value: 80, color: "#1e73be" }, 
-            ];
-        }
-
-        const m = p === 'week' ? 0.2 : p === 'month' ? 0.5 : 1;
-        const barData = [
-            { label: "Matik", value: Math.floor(100 * m + 20) },
-            { label: "B Indo", value: Math.floor(120 * m + 10) },
-            { label: "Fisika", value: Math.floor(180 * m + 5) },
-            { label: "Biologi", value: Math.floor(90 * m + 30) },
-            { label: "B Inggris", value: Math.floor(200 * m) },
-            { label: "Seni", value: Math.floor(240 * m) },
-            { label: "Sejarah", value: Math.floor(130 * m) },
-        ];
-
-        const donutPercent = p === 'week' ? 45 : p === 'month' ? 60 : 77;
-
-        return { lineData, legendText, pieData, barData, donutPercent };
-    }, [filterState.period]); 
+        fetchReport();
+    }, [filterState.period]);
 
     return (
         <div className="px-4 sm:px-6 lg:px-8 py-6 w-full max-w-9xl mx-auto min-h-screen bg-gray-50 font-noto-sans">
+
+            {isLoading && (
+                <div className="absolute inset-0 bg-white/50 z-50 flex items-center justify-center rounded-xl">
+                     <span className="text-primary font-bold animate-pulse">Memuat Data...</span>
+                </div>
+            )}
             
             {/* Header */}
             <PageHeader title="Laporan" breadcrumbs={[{ label: "Dashboard", link: "/dashboard" }, { label: "Laporan", link: null }]} />
@@ -121,28 +126,28 @@ export default function LaporanPage() {
                 
                 <StatCard 
                     title="Total Subscriber" 
-                    count={<span className="text-3xl sm:text-3xl font-bold leading-none block -mt-0">900</span>} 
+                    count={<span className="text-3xl sm:text-3xl font-bold leading-none block -mt-0">{summaryData.totalSub}</span>} 
                     iconWrapperClass="bg-primary/10 text-primary" 
                     icon={Icons.subscriber} 
                 />
                 
                 <StatCard 
                     title="Total Paket Soal" 
-                    count={<span className="text-3xl sm:text-3xl font-bold leading-none block -mt-0">70</span>} 
+                    count={<span className="text-3xl sm:text-3xl font-bold leading-none block -mt-0">{summaryData.totalPaket}</span>} 
                     iconWrapperClass="bg-primary/10 text-primary" 
                     icon={Icons.paket} 
                 />
                 
                 <StatCard 
                     title="Total Pendapatan" 
-                    count={<span className="text-2xl sm:text-3xl font-bold leading-none block -mt-0 truncate" title="Rp 100.000.000">Rp 100jt</span>} 
+                    count={<span className="text-2xl sm:text-3xl font-bold leading-none block -mt-0 truncate" title={`Rp ${summaryData.totalIncome.toLocaleString('id-ID')}`}>{formatJutaCard(summaryData.totalIncome)}</span>} 
                     iconWrapperClass="bg-primary/10 text-primary" 
                     icon={Icons.money} 
                 />
                 
                 <StatCard 
                     title="Total Event" 
-                    count={<span className="text-3xl sm:text-3xl font-bold leading-none block -mt-0">15</span>} 
+                    count={<span className="text-3xl sm:text-3xl font-bold leading-none block -mt-0">{summaryData.totalEvent}</span>} 
                     iconWrapperClass="bg-primary/10 text-primary" 
                     icon={Icons.event} 
                 />
