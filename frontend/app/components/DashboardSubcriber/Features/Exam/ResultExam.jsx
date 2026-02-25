@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom"; // Pastikan react-router-dom
 import {
   CheckCircle2,
   XCircle,
@@ -90,6 +90,12 @@ export default function ResultExam() {
       </div>
     );
   }
+
+  // --- FUNGSI NAVIGASI PEMBAHASAN ---
+  const handleLihatPembahasan = () => {
+    // Karena kita pakai slug/label, kita kirim user ke route yang sudah dibuat tadi
+    navigate(`/dashboard-subscriber/latihan/${label}/discussion`);
+  };
 
   return (
     <div className="w-full min-h-screen bg-slate-50/50 font-sans antialiased pb-20">
@@ -185,11 +191,15 @@ export default function ResultExam() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4">
           <button
             onClick={() => navigate("/dashboard-subscriber")}
-            className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-xl active:scale-95 transition-all"
+            className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-slate-800"
           >
             <LayoutDashboard size={20} /> Dashboard
           </button>
-          <button className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-4 border-2 border-slate-200 text-slate-700 font-bold rounded-2xl bg-white active:scale-95 transition-all">
+
+          <button
+            onClick={handleLihatPembahasan}
+            className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-4 border-2 border-slate-200 text-slate-700 font-bold rounded-2xl bg-white active:scale-95 transition-all hover:bg-slate-50 hover:border-slate-300"
+          >
             Lihat Pembahasan <ArrowRight size={20} />
           </button>
         </div>
@@ -200,7 +210,7 @@ export default function ResultExam() {
 
 function StatCard({ icon, label, value, total, subLabel }) {
   return (
-    <div className="bg-white border border-slate-200 p-6 rounded-[28px] flex items-center gap-5 shadow-sm">
+    <div className="bg-white border border-slate-200 p-6 rounded-[28px] flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
       <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0">
         {icon}
       </div>

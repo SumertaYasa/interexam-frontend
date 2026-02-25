@@ -111,6 +111,31 @@ export const courseService = {
     }
   },
 
+  /**
+   * Mengambil data pembahasan (discussion) dari riwayat pengerjaan terakhir
+   * @param {string|number} paketId - ID dari Paket Soal
+   * @param {string|number} eventId - (Opsional) ID Event jika dikerjakan di dalam event
+   * @returns {Promise<Object>} Data pembahasan beserta ringkasan
+   */
+  getAttemptDiscussion: async (paketId, eventId = null) => {
+    try {
+      const queryParam = eventId ? `?id_event=${eventId}` : "";
+
+      // UBAH API_URL menjadi API_BASE_URL di sini!
+      const response = await axios.get(
+        `${API_BASE_URL}/subscriber/attempt/${paketId}/discussion${queryParam}`,
+        getAuthHeader(),
+      );
+
+      return response.data.data;
+    } catch (error) {
+      console.error(
+        "Gagal memuat data pembahasan:",
+        error.response?.data || error.message,
+      );
+      throw error;
+    }
+  },
   getAllEvents: async (params = {}) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/subscriber/events`, {

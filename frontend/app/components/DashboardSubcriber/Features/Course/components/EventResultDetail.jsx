@@ -49,8 +49,6 @@ function CircularScore({ score }) {
 }
 
 // --- KOMPONEN BANTUAN: MINI RANKING TABLE ---
-// Nanti komponen ini akan punya fetching data sendiri
-// --- KOMPONEN BANTUAN: MINI RANKING TABLE ---
 function MiniRankingTable({ eventId, title, rankingType }) {
   const navigate = useNavigate();
   const [leaderboard, setLeaderboard] = useState([]);
@@ -341,10 +339,10 @@ export default function EventResultDetail() {
 
           {selectedFilter !== "all" && (
             <button
-              // Ganti URL ini sesuai dengan URL pembahasamu yang sebenarnya
               onClick={() =>
+                // URL baru yang membawa label event dan slug paket
                 navigate(
-                  `/dashboard-subscriber/latihan/${currentData.slug}/result`,
+                  `/dashboard-subscriber/latihan/events/results/${label}/discussion/${currentData.slug}`,
                 )
               }
               className="px-8 py-3.5 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl flex items-center gap-2 transition-colors shadow-sm"

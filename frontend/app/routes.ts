@@ -192,6 +192,11 @@ export default [
     ),
 
     route(
+      "dashboard-subscriber/latihan/:label/discussion",
+      "components/DashboardSubcriber/Features/Exam/Components/ExamDiscussion.jsx",
+    ),
+
+    route(
       "dashboard-subscriber/latihan/events",
       "components/DashboardSubcriber/Features/Course/components/eventListContainer.jsx",
     ),
@@ -222,7 +227,12 @@ export default [
     ),
 
     route(
-      "/dashboard-subscriber/latihan/events/results/:slug/ranking/:rankingType",
+      "/dashboard-subscriber/latihan/events/results/:eventLabel/discussion/:paketLabel",
+      "components/DashboardSubcriber/Features/Course/components/EventDiscussion.jsx",
+    ),
+
+    route(
+      "/dashboard-subscriber/latihan/events/results/:eventLabel/ranking/:rankingType",
       "components/DashboardSubcriber/Features/Course/components/RankingTablePage.jsx",
     ),
 

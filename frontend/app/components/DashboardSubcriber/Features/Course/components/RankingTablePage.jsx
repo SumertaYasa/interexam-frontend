@@ -1,47 +1,141 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy, Loader2 } from "lucide-react";
+import { courseService } from "../../../../../services/subscriber";
 
 export default function RankingDetailPage() {
   const navigate = useNavigate();
-  // Kita menangkap parameter dari URL (misal: 'all', 'paket1', 'paket2')
-  const { rankingType } = useParams();
+  // Tangkap eventLabel (slug event) dan rankingType (slug paket atau 'all')
+  const { eventLabel, rankingType } = useParams();
 
-  // Mapping judul berdasarkan tipe ranking
-  const titleMap = {
-    all: "Total (Semua Paket)",
-    paket1: "Paket 1: Penalaran Umum",
-    paket2: "Paket 2: Literasi Bahasa",
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [eventTitle, setEventTitle] = useState("");
+  const [paketTitle, setPaketTitle] = useState("");
+
+  useEffect(() => {
+    const fetchFullLeaderboard = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // 1. Cari ID Event berdasarkan eventLabel
+        const allEvents = await courseService.getAllEvents();
+        const targetEvent = allEvents.find(
+          (e) => e.title.toLowerCase().replace(/\s+/g, "-") === eventLabel,
+        );
+
+        if (!targetEvent) throw new Error("Event tidak ditemukan.");
+        const eventId = targetEvent.id;
+        setEventTitle(targetEvent.title);
+
+        // 2. Tentukan ID Paket (reqPaketId) dan Judul Paket
+        let reqPaketId = "all";
+
+        if (rankingType === "all") {
+          setPaketTitle("Total (Semua Paket)");
+        } else {
+          // Jika rankingType adalah slug paket, kita harus cari ID paketnya
+          const responsePaket = await courseService.getAllPaketsWithProgress();
+          const allPaket = responsePaket.data || [];
+
+          // Kita cari berdasarkan slug (asumsi rankingType di URL adalah slug/label paket)
+          const targetPaket = allPaket.find(
+            (p) =>
+              p.nama_paket.toLowerCase().replace(/\s+/g, "-") === rankingType,
+          );
+
+          if (targetPaket) {
+            reqPaketId = targetPaket.id_paket_soal;
+            setPaketTitle(targetPaket.nama_paket);
+          } else {
+            // Fallback jika tidak ketemu (misal URL format lama 'paket_45')
+            reqPaketId = rankingType.includes("_")
+              ? rankingType.split("_")[1]
+              : rankingType;
+            setPaketTitle(`Paket Detail`);
+          }
+        }
+
+        // 3. Tarik data Leaderboard dari API
+        const data = await courseService.getEventLeaderboard(
+          eventId,
+          reqPaketId,
+        );
+        setLeaderboard(data);
+      } catch (err) {
+        console.error("Gagal memuat ranking:", err);
+        setError(err.message || "Terjadi kesalahan saat memuat peringkat.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (eventLabel && rankingType) {
+      fetchFullLeaderboard();
+    }
+  }, [eventLabel, rankingType]);
+
+  // Helper URL Foto (Sama dengan yang di MiniRankingTable)
+  const getAvatarUrl = (path) => {
+    if (!path || path === "/person.jpg") return "/person.jpg";
+    if (path.startsWith("http")) return path;
+    return `http://localhost:5000${path}`;
   };
-  const title = titleMap[rankingType] || "Peringkat Lengkap";
 
-  // Data Dummy Panjang (Misal 50 orang)
-  const dummyFullLeaderboard = Array.from({ length: 50 }, (_, i) => ({
-    no: i + 1,
-    name: i === 14 ? "I Nengah Sumerta Yasa (Yasa)" : `Peserta Ujian ${i + 1}`,
-    stats: "3/5",
-    score: 100 - Math.floor(i * 1.5), // Simulasi skor menurun
-    isMe: i === 14, // Posisi kamu
-    avatar: "/person.jpg",
-  }));
+  // Rendering Loading State
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center">
+        <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+        <p className="text-slate-500 font-bold animate-pulse">
+          Menyiapkan Peringkat...
+        </p>
+      </div>
+    );
+  }
+
+  // Rendering Error State
+  if (error) {
+    return (
+      <div className="w-full min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-5 text-center">
+        <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4">
+          <Trophy size={32} />
+        </div>
+        <h2 className="text-xl font-bold text-slate-800 mb-2">
+          Gagal Memuat Peringkat
+        </h2>
+        <p className="text-slate-500 mb-6">{error}</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-6 py-2 bg-slate-900 text-white font-bold rounded-lg"
+        >
+          Kembali
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] font-sans antialiased pb-20">
       {/* Navbar Minimalis */}
-      <nav className="w-full bg-white border-b border-slate-200 px-4 md:px-6 py-4 flex items-center gap-4 sticky top-0 z-50">
+      <nav className="w-full bg-white border-b border-slate-200 px-4 md:px-6 py-4 flex items-center gap-4 sticky top-0 z-50 shadow-sm">
         <button
-          onClick={() => navigate(-1)} // Kembali ke halaman sebelumnya
+          onClick={() => navigate(-1)}
           className="p-2 -ml-2 text-slate-500 hover:text-primary hover:bg-slate-50 rounded-full transition-colors"
         >
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none">
-            Peringkat Lengkap
+          <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none line-clamp-1">
+            {eventTitle}
           </h1>
-          <span className="text-xs font-medium text-slate-500">{title}</span>
+          <span className="text-xs font-medium text-slate-500 line-clamp-1">
+            {paketTitle}
+          </span>
         </div>
-        <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
+        <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shrink-0">
           <Trophy size={16} />
         </div>
       </nav>
@@ -59,17 +153,17 @@ export default function RankingDetailPage() {
 
           {/* Body Tabel */}
           <div className="p-2 md:p-3 flex flex-col gap-2 bg-slate-50/30">
-            {dummyFullLeaderboard.length === 0 ? (
+            {leaderboard.length === 0 ? (
               <div className="text-center py-10 text-slate-500 font-medium">
-                Belum ada data peringkat.
+                Belum ada data peringkat untuk ujian ini.
               </div>
             ) : (
-              dummyFullLeaderboard.map((user, idx) => (
+              leaderboard.map((user, idx) => (
                 <div
                   key={idx}
                   className={`flex items-center px-4 py-3 md:py-4 rounded-xl border ${
                     user.isMe
-                      ? "bg-[#FFFCE8] border-[#FDEB82] shadow-sm sticky top-2 bottom-2 z-10" // Sticky agar tidak hilang saat di-scroll
+                      ? "bg-[#FFFCE8] border-[#FDEB82] shadow-sm sticky top-2 bottom-2 z-10 ring-2 ring-yellow-400/20"
                       : "bg-white border-slate-100"
                   }`}
                 >
@@ -78,13 +172,13 @@ export default function RankingDetailPage() {
                   </div>
                   <div className="flex-1 flex items-center gap-3">
                     <img
-                      src={user.avatar}
+                      src={getAvatarUrl(user.avatar)}
                       alt={user.name}
                       className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-slate-200 object-cover bg-white"
                     />
                     <div className="flex flex-col">
                       <span
-                        className={`font-bold text-sm md:text-base leading-tight ${
+                        className={`font-bold text-sm md:text-base leading-tight line-clamp-1 ${
                           user.isMe ? "text-slate-900" : "text-slate-700"
                         }`}
                       >
