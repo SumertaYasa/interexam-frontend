@@ -108,34 +108,54 @@ export const PieChartCard = ({ title, data }) => {
 
 // 3. BAR CHART 
 export const BarChartCard = ({ title, data }) => {
-    const maxValue = Math.max(...data.map(d => d.value)) * 1.2;
+    // Pengaman: Jika data kosong, atur maxValue ke 1 agar tidak NaN/Error
+    const maxValue = data?.length > 0 ? Math.max(...data.map(d => d.value)) * 1.2 : 1;
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm h-full flex flex-col font-noto-sans">
-            <h3 className="font-bold text-gray-800 text-base mb-6">{title}</h3>
-            <div className="flex-1 min-h-[300px] flex items-end justify-between gap-2 sm:gap-4 pl-8 relative">
-                <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-[10px] text-gray-400">
+        // 1. Tambahkan w-full dan overflow-hidden di sini agar card tidak bocor ke luar
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm h-full flex flex-col font-noto-sans w-full overflow-hidden">
+            <h3 className="font-bold text-gray-800 text-base mb-6 shrink-0">{title}</h3>
+            
+            <div className="relative flex-1 min-h-[300px] flex w-full">
+                
+                {/* Y-Axis Label (Fixed di Kiri) */}
+                <div className="absolute left-0 top-0 bottom-[38px] w-8 flex flex-col justify-between text-[10px] text-gray-400 bg-white z-10">
                     <span>{Math.round(maxValue)}</span>
                     <span>{Math.round(maxValue/2)}</span>
                     <span>0</span>
                 </div>
-                {data.map((item, index) => (
-                    <div key={index} className="flex flex-col items-center justify-end flex-1 h-full group">
-                        <div className="w-4 sm:w-6 h-full bg-blue-50 rounded-full relative overflow-hidden">
-                            <div 
-                                className="absolute bottom-0 w-full bg-primary rounded-t-full transition-all duration-1000 ease-out"
-                                style={{ height: `${(item.value / maxValue) * 100}%` }}
-                            >
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                                    {item.value} Soal
+
+                {/* 2. Chart Area (Tambahkan overflow-x-auto di sini agar bisa di-scroll ke samping) */}
+                <div className="flex-1 flex items-end gap-2 sm:gap-4 pl-10 pr-4 overflow-x-auto pb-2 w-full custom-scrollbar">
+                    {data.map((item, index) => (
+                        // 3. Tambahkan min-w-[70px] agar tiap batang punya ruang napas minimal dan tidak gepeng
+                        <div key={index} className="flex flex-col items-center justify-end h-full group min-w-[70px] relative">
+                            
+                            {/* Tooltip (Dipindah ke luar elemen track agar tidak terpotong overflow-hidden) */}
+                            <div className="absolute top-0 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
+                                {item.value} Soal
+                            </div>
+
+                            {/* Bar Track */}
+                            <div className="w-4 sm:w-6 mt-8 flex-1 bg-blue-50 rounded-full relative overflow-hidden">
+                                <div 
+                                    className="absolute bottom-0 w-full bg-primary rounded-t-full transition-all duration-1000 ease-out"
+                                    style={{ height: `${(item.value / maxValue) * 100}%` }}
+                                >
                                 </div>
                             </div>
+                            
+                            {/* Label X-Axis */}
+                            <span 
+                                className="mt-3 h-6 text-[10px] sm:text-xs text-gray-600 text-center truncate w-full px-1 cursor-default" 
+                                title={item.label}
+                            >
+                                {item.label}
+                            </span>
                         </div>
-                        <span className="mt-3 text-[10px] sm:text-xs text-gray-600 text-center truncate w-full" title={item.label}>
-                            {item.label}
-                        </span>
-                    </div>
-                ))}
+                    ))}
+                </div>
+
             </div>
         </div>
     );

@@ -70,6 +70,12 @@ export default function LaporanPage() {
         }
     ];
 
+    const getLegendLabels = (period) => {
+        if (period === 'week') return ['Minggu Ini', 'Minggu Lalu'];
+        if (period === 'month') return ['Bulan Ini', 'Bulan Lalu'];
+        return ['Tahun Ini', 'Tahun Lalu'];
+    };
+
     // 3. FETCH DATA DARI API SAAT FILTER BERUBAH
     useEffect(() => {
         const fetchReport = async () => {
@@ -90,10 +96,10 @@ export default function LaporanPage() {
                 setChartData({
                     lineData: {
                         current: response?.filteredData?.lineData?.current || [0],
-                        previous: response?.filteredData?.lineData?.previous || [0],
+                        previous: response?.filteredData?.lineData?.last || [0],
                         labels: response?.filteredData?.lineData?.labels || ['-']
                     },
-                    legendText: response?.filteredData?.legendText || ['Tahun Ini', 'Tahun Lalu'],
+                    legendText: getLegendLabels(filterState.period),
                     pieData: response?.filteredData?.pieData || [],
                     barData: response?.filteredData?.barData || [],
                     donutPercent: response?.filteredData?.donutPercent || 0
