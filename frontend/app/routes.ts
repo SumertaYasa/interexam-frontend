@@ -14,7 +14,16 @@ export default [
 
   route("/paket", "landing/paket/paket.jsx"),
   route("/tentang-kami", "landing/tentangKami/tentangKami.tsx"),
-  route("/coba-gratis", "landing/cobaGratis/cobaGratis.tsx"),
+  route("/coba-gratis", "landing/cobaGratis/cobaGratis.jsx"),
+  route("/coba-gratis/:label", "landing/cobaGratis/CobaGratisDetail.jsx"),
+  route(
+    "/coba-gratis/:label/attempt",
+    "landing/cobaGratis/CobaGratisAttempt.jsx",
+  ),
+  route(
+    "/coba-gratis/:label/result",
+    "landing/cobaGratis/CobaGratisResult.jsx",
+  ),
 
   route("login", "routes/auth/formSubscriber.jsx", [
     index("components/Auth/LoginFormSubscriber.jsx"),
