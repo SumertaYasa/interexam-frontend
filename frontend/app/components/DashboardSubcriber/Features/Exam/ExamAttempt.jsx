@@ -31,7 +31,7 @@ export default function ExamAttempt() {
   const { showAlert } = useAuth();
 
   const {
-    folders, // <-- DATA LANGSUNG DARI API
+    folders,
     saveQuestionToFolder,
     addFolder,
     setProgress,
@@ -64,47 +64,58 @@ export default function ExamAttempt() {
   };
   const mode = getMode();
 
-  // --- FETCH QUESTIONS ---
+  // --- FETCH QUESTIONS (LOGIC UTAMA YANG DIUPDATE) ---
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await courseService.getAllPaketsWithProgress();
+
+        // 1. Ambil List Paket untuk cari ID berdasarkan Label/Slug
+        const responseList = await courseService.getAllPaketsWithProgress();
         const items =
-          response && Array.isArray(response.data) ? response.data : [];
-        const paket = items.find(
+          responseList && Array.isArray(responseList.data)
+            ? responseList.data
+            : [];
+
+        const paketFound = items.find(
           (item) => slugify(item.label || item.nama_paket) === label,
         );
 
-        if (!paket) {
+        if (!paketFound) {
           setError("Paket soal tidak ditemukan");
           setLoading(false);
           return;
         }
 
-        const currentPaketId = paket.id || paket.id_paket_soal;
+        const currentPaketId = paketFound.id || paketFound.id_paket_soal;
         setPaketId(currentPaketId);
-        setPaketData(paket);
+        setPaketData(paketFound);
 
-        const paketDetail = await courseService.getPaketDetail(currentPaketId);
+        // 2. Ambil DETAIL Soal (Mengandung jenis_soal & options dinamis)
+        const detailResponse =
+          await courseService.getPaketDetail(currentPaketId);
 
-        if (paketDetail && paketDetail.soal_paket_soal) {
-          const formattedQuestions = paketDetail.soal_paket_soal.map(
+        // Cek Gembok / Locked
+        if (detailResponse?.is_locked) {
+          showAlert("Konten ini terkunci. Silakan berlangganan.", "error");
+          navigate(-1);
+          return;
+        }
+
+        if (detailResponse && detailResponse.soal_paket_soal) {
+          const formattedQuestions = detailResponse.soal_paket_soal.map(
             (item, index) => {
               const soal = item.soal;
+
               return {
                 id: soal.id_soal,
                 index: index,
                 text_soal: soal.text_soal,
-                options: [
-                  soal.option_a,
-                  soal.option_b,
-                  soal.option_c,
-                  soal.option_d,
-                  soal.option_e,
-                ].filter(Boolean),
-                correctAnswer: 0,
+                jenis_soal: soal.jenis_soal,
+                options: soal.options || [],
+
+                correctAnswer: 0, // Kunci jawaban disembunyikan di BE
                 deskripsi: soal.deskripsi || "",
                 paketId: currentPaketId,
               };
@@ -112,8 +123,13 @@ export default function ExamAttempt() {
           );
 
           setQuestions(formattedQuestions);
+
+          // 3. Load Jawaban Tersimpan (Resume)
+          // Prioritas: LocalStorage/Context
           const savedAnswers = getExamAnswers(String(currentPaketId));
-          if (Object.keys(savedAnswers).length > 0) setAnswers(savedAnswers);
+          if (Object.keys(savedAnswers).length > 0) {
+            setAnswers(savedAnswers);
+          }
         } else {
           setQuestions([]);
         }
@@ -131,6 +147,7 @@ export default function ExamAttempt() {
 
   const handleAnswerChange = useCallback(
     (idx, val) => {
+      // val bisa berupa string (single choice/text) atau array (multiple answer)
       const newAnswers = { ...answers, [idx]: val };
       setAnswers(newAnswers);
       if (paketId) saveExamAnswers(String(paketId), newAnswers);
@@ -138,26 +155,21 @@ export default function ExamAttempt() {
     [answers, paketId, saveExamAnswers],
   );
 
-  // --- [FIX] HANDLE FINISH SAVE ---
   const handleFinishSave = async () => {
     if (!targetQuestionId) return;
 
-    // FIX: Ambil ID dan Nama dengan pengecekan properti API (.id) dan Legacy (.id_folder)
     let folderId = null;
     let folderName = "";
 
     if (selectedFolder) {
-      folderId = selectedFolder.id || selectedFolder.id_folder; // Prioritas .id (API baru)
+      folderId = selectedFolder.id || selectedFolder.id_folder;
       folderName = selectedFolder.nama || selectedFolder.folder_name;
     }
 
     try {
-      // Panggil fungsi context
       await saveQuestionToFolder(targetQuestionId, folderId, folderName);
-
       setActiveModal(null);
       setSelectedFolder(null);
-      // showAlert sudah dipanggil di dalam saveQuestionToFolder (Context)
     } catch (err) {
       showAlert("Gagal menyimpan soal", "error");
     }
@@ -218,6 +230,21 @@ export default function ExamAttempt() {
 
   if (loading && !isCounting) return <LoadingQuestions />;
 
+  // Jika error (misal tidak ditemukan)
+  if (error && !loading) {
+    return (
+      <div className="w-full h-screen flex flex-col items-center justify-center gap-4">
+        <p className="text-lg font-bold text-slate-600">{error}</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="text-primary font-bold hover:underline"
+        >
+          Kembali
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full relative min-h-screen bg-slate-50/30 font-sans antialiased pb-20">
       {isCounting && (
@@ -256,6 +283,7 @@ export default function ExamAttempt() {
               question={q}
               onAnswer={handleAnswerChange}
               selectedAnswer={answers[i]}
+              hideActions={false}
               onBookmark={(id) => {
                 setTargetQuestionId(id);
                 setActiveModal("save");
@@ -282,7 +310,7 @@ export default function ExamAttempt() {
       <SaveToFolderModal
         isOpen={activeModal === "save"}
         onClose={() => setActiveModal(null)}
-        folders={folders} // PASSING FOLDERS DARI CONTEXT
+        folders={folders}
         onAddFolder={addFolder}
         onSelectFolder={setSelectedFolder}
         selectedFolder={selectedFolder}

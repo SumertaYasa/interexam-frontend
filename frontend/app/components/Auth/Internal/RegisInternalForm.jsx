@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 
@@ -38,7 +38,7 @@ function RegisForm() {
 
       if (response.ok) {
         alert(
-          "Registrasi sukses! Silakan tunggu verifikasi admin, lalu login melalui halaman internal."
+          "Registrasi sukses! Silakan tunggu verifikasi admin, lalu login melalui halaman internal.",
         );
         if (navigateFn) navigateFn("/login-internal");
       } else {

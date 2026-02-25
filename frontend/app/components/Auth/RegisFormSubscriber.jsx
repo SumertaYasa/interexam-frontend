@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "../../context/AuthContext";
 
 function RegisForm() {
-  // 1. Hook harus di level paling atas. Hapus try-catch di sini.
+  const { showAlert } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,6 +30,7 @@ function RegisForm() {
         localStorage.setItem("token", data.token);
         alert("Registrasi Berhasil!");
 
+        showAlert("Registrasi Berhasil!", "success");
         navigate("/login");
       } else {
         alert(data.message || "Gagal melakukan verifikasi");

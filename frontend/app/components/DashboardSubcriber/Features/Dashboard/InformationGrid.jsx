@@ -13,7 +13,7 @@ export function InformationGrid() {
         setLoading(true);
         const data = await dashboardService.getStatisticsSummary();
         setStats(data);
-      } catch (error) {
+    } catch (error) {
         console.error("Error fetching statistics:", error);
       } finally {
         setLoading(false);

@@ -197,6 +197,11 @@ export default [
     ),
 
     route(
+      "dashboard-subscriber/latihan/:label/discussion",
+      "components/DashboardSubcriber/Features/Exam/Components/ExamDiscussion.jsx",
+    ),
+
+    route(
       "dashboard-subscriber/latihan/events",
       "components/DashboardSubcriber/Features/Course/components/eventListContainer.jsx",
     ),
@@ -204,6 +209,36 @@ export default [
     route(
       "dashboard-subscriber/latihan/events/:label",
       "components/DashboardSubcriber/Features/Course/EventDetailContainer.jsx",
+    ),
+
+    route(
+      "dashboard-subscriber/latihan/events/:eventLabel/:label",
+      "components/DashboardSubcriber/Features/Course/components/ExamEventDetail.jsx",
+    ),
+
+    route(
+      "dashboard-subscriber/latihan/events/:eventLabel/:label/attempt",
+      "components/DashboardSubcriber/Features/Course/components/ExamEventAttempt.jsx",
+    ),
+
+    route(
+      "/dashboard-subscriber/latihan/events/results",
+      "components/DashboardSubcriber/Features/Course/components/EventResultWrapper.jsx",
+    ),
+
+    route(
+      "/dashboard-subscriber/latihan/events/results/:label",
+      "components/DashboardSubcriber/Features/Course/components/EventResultDetail.jsx",
+    ),
+
+    route(
+      "/dashboard-subscriber/latihan/events/results/:eventLabel/discussion/:paketLabel",
+      "components/DashboardSubcriber/Features/Course/components/EventDiscussion.jsx",
+    ),
+
+    route(
+      "/dashboard-subscriber/latihan/events/results/:eventLabel/ranking/:rankingType",
+      "components/DashboardSubcriber/Features/Course/components/RankingTablePage.jsx",
     ),
 
     // 3. Semua Detail Tersimpan

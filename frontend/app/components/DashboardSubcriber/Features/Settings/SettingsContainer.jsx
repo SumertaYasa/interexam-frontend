@@ -1,8 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   User,
   ShieldCheck,
-  LogOut,
   Camera,
   Save,
   Mail,
@@ -10,6 +9,7 @@ import {
   Lock,
   Trash2,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import ActionModal from "../../Common/ActionModal";
 import ModalWrapper from "./Components/ModalWrapper";
@@ -17,18 +17,20 @@ import InputGroup from "./Components/InputGroup";
 import SecurityCard from "./Components/SecurityCard";
 import TabButton from "./Components/TabButton";
 
-export default function SettingContainer({ user, logout }) {
+// GANTI PATH INI SESUAI DENGAN LOKASI FILE CONTEXT & SERVICE-MU
+import { useAuth } from "../../../../context/AuthContext";
+import { profileService } from "../../../../services/subscriber";
+
+export default function SettingContainer() {
+  const { user, refreshSubscription, showAlert } = useAuth();
   const [activeTab, setActiveTab] = useState("profil");
 
-  // State
-  const [activeModal, setActiveModal] = useState(null); // 'email', 'phone', 'password', 'delete-account'
+  // State Modal
+  const [activeModal, setActiveModal] = useState(null);
 
-  // Form State
+  // Form State (Hanya sisakan yang digunakan)
   const [formData, setFormData] = useState({
-    firstName: "Albert",
-    lastName: "King",
-    displayName: "King Albert",
-    bio: "",
+    displayName: "",
     newEmail: "",
     newPhone: "",
     oldPassword: "",
@@ -36,9 +38,55 @@ export default function SettingContainer({ user, logout }) {
     confirmPassword: "",
   });
 
-  // Foto Profil
+  // Foto Profil & Loading State
   const fileInputRef = useRef(null);
   const [profileImage, setProfileImage] = useState("/person.jpg");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // State untuk konfirmasi password email
+  const [emailConfirmPassword, setEmailConfirmPassword] = useState("");
+
+  // --- FUNCTION UNTUK FETCH PROFIL DATA (DIGUNAKAN BERKALI-KALI) ---
+  const fetchProfileData = async () => {
+    try {
+      setIsLoadingProfile(true);
+      const profileData = await profileService.getProfile();
+
+      if (profileData) {
+        setFormData((prev) => ({
+          ...prev,
+          displayName: profileData.nama_subscriber || "",
+          newEmail: profileData.email_subscriber || "",
+          newPhone: profileData.phone || "",
+        }));
+
+        // Set Foto Profil
+        if (profileData.foto) {
+          const fotoUrl = profileData.foto.startsWith("http")
+            ? profileData.foto
+            : `http://localhost:5000${profileData.foto}`;
+          setProfileImage(fotoUrl);
+        } else {
+          setProfileImage("/person.jpg");
+        }
+      }
+    } catch (error) {
+      console.error("Gagal memuat data profil:", error);
+      showAlert("Gagal memuat data profil", "error");
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  // --- FETCH PROFIL DATA SAAT COMPONENT MOUNT ---
+  useEffect(() => {
+    if (user) {
+      fetchProfileData();
+    }
+  }, [user, showAlert]); // Fetch ulang saat user berubah (misalnya setelah login)
 
   const handleInputChange = (e, field) => {
     setFormData({ ...formData, [field]: e.target.value });
@@ -49,12 +97,165 @@ export default function SettingContainer({ user, logout }) {
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setProfileImage(imageUrl);
+      setSelectedFile(file);
     }
+  };
+
+  // --- LOGIC SIMPAN PROFIL ---
+  const handleSaveProfile = async () => {
+    try {
+      setIsSaving(true);
+
+      const payload = new FormData();
+      // Kirim displayName langsung sebagai nama_subscriber ke backend
+      payload.append("nama_subscriber", formData.displayName.trim());
+
+      if (selectedFile) {
+        payload.append("foto", selectedFile);
+      }
+
+      await profileService.updateProfile(payload);
+
+      showAlert("Profil berhasil diperbarui!", "success");
+      await refreshSubscription();
+      // PENTING: Refetch data profil untuk memastikan form selalu menampilkan data terbaru
+      await fetchProfileData();
+      setSelectedFile(null); // Reset file yang dipilih
+    } catch (error) {
+      console.error("Gagal simpan profil:", error);
+      showAlert(
+        error.response?.data?.message ||
+          "Terjadi kesalahan saat menyimpan profil.",
+        "error",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // --- LOGIC SIMPAN EMAIL ---
+  const handleSaveEmail = async () => {
+    try {
+      // Validasi
+      if (!formData.newEmail.trim()) {
+        showAlert("Email baru tidak boleh kosong", "error");
+        return;
+      }
+      if (!emailConfirmPassword.trim()) {
+        showAlert("Password harus diisi untuk verifikasi email", "error");
+        return;
+      }
+
+      setIsProcessing(true);
+      await profileService.updateEmail(
+        formData.newEmail.trim(),
+        emailConfirmPassword,
+      );
+
+      showAlert("Email berhasil diperbarui!", "success");
+      await fetchProfileData();
+      setActiveModal(null);
+      setEmailConfirmPassword("");
+    } catch (error) {
+      console.error("Gagal simpan email:", error);
+      showAlert(
+        error.response?.data?.message ||
+          "Gagal mengubah email. Periksa password Anda.",
+        "error",
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // --- LOGIC UPDATE PHONE ---
+  const handleUpdatePhone = async () => {
+    try {
+      if (!formData.newPhone.trim()) {
+        showAlert("Nomor telepon tidak boleh kosong", "error");
+        return;
+      }
+
+      setIsProcessing(true);
+      await profileService.updatePhone(formData.newPhone.trim());
+
+      showAlert("Nomor telepon berhasil diperbarui!", "success");
+      await fetchProfileData();
+      setActiveModal(null);
+    } catch (error) {
+      console.error("Gagal update telepon:", error);
+      showAlert(
+        error.response?.data?.message || "Gagal mengubah nomor telepon.",
+        "error",
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // --- LOGIC GANTI PASSWORD ---
+  const handleChangePassword = async () => {
+    try {
+      if (
+        !formData.oldPassword.trim() ||
+        !formData.newPassword.trim() ||
+        !formData.confirmPassword.trim()
+      ) {
+        showAlert("Semua field password harus diisi", "error");
+        return;
+      }
+
+      if (formData.newPassword !== formData.confirmPassword) {
+        showAlert("Password baru dan konfirmasi tidak cocok", "error");
+        return;
+      }
+
+      setIsProcessing(true);
+      await profileService.changePassword(
+        formData.oldPassword,
+        formData.newPassword,
+        formData.confirmPassword,
+      );
+
+      showAlert("Password berhasil diperbarui!", "success");
+      setActiveModal(null);
+      // Reset form
+      setFormData((prev) => ({
+        ...prev,
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+    } catch (error) {
+      console.error("Gagal ganti password:", error);
+      showAlert(
+        error.response?.data?.message ||
+          "Gagal mengubah password. Periksa password lama Anda.",
+        "error",
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Helper untuk Masking Email & Phone
+  const maskEmail = (email) => {
+    if (!email) return "Belum ada email";
+    const [name, domain] = email.split("@");
+    return `${name.charAt(0)}${"*".repeat(name.length - 1)}@${domain}`;
+  };
+
+  const maskPhone = (phone) => {
+    if (!phone) return "Belum ada nomor telepon";
+    return (
+      phone.slice(0, 4) +
+      "*".repeat(Math.max(0, phone.length - 6)) +
+      phone.slice(-2)
+    );
   };
 
   return (
     <div className="w-full min-h-screen px-7-5 py-8 font-sans antialiased">
-      {/* Hidden File Input untuk Foto Profil */}
       <input
         type="file"
         ref={fileInputRef}
@@ -64,15 +265,16 @@ export default function SettingContainer({ user, logout }) {
       />
 
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white border  rounded-[2.5rem] shadow-sm flex overflow-hidden min-h-[700px]">
-          {/* Sidebar Navigasi */}
+        <div className="bg-white border rounded-[2.5rem] shadow-sm flex overflow-hidden min-h-[700px]">
+          {/* --- SIDEBAR NAVIGASI --- */}
           <div className="w-72 border-r border-slate-100 p-8 flex flex-col bg-slate-50/30">
             <div className="mb-10 px-4">
-              <h2 className="text-2xl font-black text-slate-900">
-                {formData.firstName}
+              <h2 className="text-2xl font-black text-slate-900 line-clamp-1">
+                {/* Tampilkan langsung nama display */}
+                {formData.displayName || "User"}
               </h2>
               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
-                Subscriber
+                {user?.isPremium ? "Premium Member" : "Free Subscriber"}
               </p>
             </div>
 
@@ -90,74 +292,58 @@ export default function SettingContainer({ user, logout }) {
                 label="Keamanan Akun"
               />
             </nav>
-
-            <button
-              onClick={logout}
-              className="mt-auto flex items-center gap-4 px-6 py-4 text-red-500 font-bold rounded-2xl hover:bg-red-50 transition-all active:scale-95"
-            >
-              <LogOut size={20} />
-              <span>Keluar Akun</span>
-            </button>
           </div>
 
-          {/* Area Konten */}
+          {/* --- AREA KONTEN --- */}
           <div className="flex-1 p-12 bg-white overflow-y-auto">
             {activeTab === "profil" ? (
               <div className="animate-in fade-in duration-500">
                 <h3 className="text-xl font-bold text-slate-900 mb-8">
                   Informasi Profil
                 </h3>
+
                 <div className="flex flex-col lg:flex-row gap-16">
-                  {/* Kolom Input Profil */}
+                  {/* KOLOM 1: Input Profil */}
                   <div className="flex-[2] flex flex-col gap-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <InputGroup
-                        label="Nama Depan"
-                        value={formData.firstName}
-                        onChange={(e) => handleInputChange(e, "firstName")}
-                      />
-                      <InputGroup
-                        label="Nama Belakang"
-                        value={formData.lastName}
-                        onChange={(e) => handleInputChange(e, "lastName")}
-                      />
-                    </div>
                     <InputGroup
-                      label="Nama Panggilan"
+                      label="Nama Lengkap / Tampilan"
                       value={formData.displayName}
                       onChange={(e) => handleInputChange(e, "displayName")}
                     />
-                    <div>
-                      <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-3 ml-2">
-                        Bio
-                      </label>
-                      <textarea
-                        className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all min-h-[150px] resize-none text-sm placeholder:text-slate-400"
-                        placeholder="Tuliskan sedikit tentang dirimu..."
-                        value={formData.bio}
-                        onChange={(e) => handleInputChange(e, "bio")}
-                      />
-                    </div>
-                    <div className="mt-4 flex justify-end">
-                      <button className="flex items-center gap-2 px-10 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 shadow-xl transition-all active:scale-95">
-                        <Save size={18} /> Simpan Perubahan
+
+                    <div className="mt-8 flex justify-start">
+                      <button
+                        onClick={handleSaveProfile}
+                        disabled={isSaving}
+                        className="flex items-center gap-2 px-10 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 shadow-xl transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 size={18} className="animate-spin" />
+                            Menyimpan...
+                          </>
+                        ) : (
+                          <>
+                            <Save size={18} /> Simpan Perubahan
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
 
-                  {/* Kolom Foto Profil */}
+                  {/* KOLOM 2: Foto Profil */}
                   <div className="flex-1 flex flex-col items-center border-l border-slate-50 pl-0 lg:pl-16">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8 self-start">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8 self-start lg:self-center">
                       Foto Profil
                     </p>
                     <div
                       className="relative group cursor-pointer w-44 h-44"
                       onClick={() => fileInputRef.current.click()}
                     >
-                      <div className="w-full h-full rounded-full overflow-hidden shadow-2xl transition-transform group-hover:scale-[1.02]">
+                      <div className="w-full h-full rounded-full overflow-hidden shadow-2xl transition-transform group-hover:scale-[1.02] border-4 border-white">
                         <img
                           src={profileImage}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover bg-slate-100"
                           alt="Profile"
                         />
                       </div>
@@ -166,11 +352,11 @@ export default function SettingContainer({ user, logout }) {
                       </div>
                     </div>
                     <div className="text-center mt-6">
-                      <h3 className="text-xl font-bold text-slate-800">
-                        {formData.displayName}
+                      <h3 className="text-xl font-bold text-slate-800 line-clamp-1">
+                        {formData.displayName || "User"}
                       </h3>
                       <p className="text-slate-400 text-sm mt-1 uppercase font-bold tracking-tighter">
-                        Subscriber
+                        {user?.isPremium ? "Premium" : "Subscriber"}
                       </p>
                     </div>
                     <button
@@ -190,13 +376,13 @@ export default function SettingContainer({ user, logout }) {
                 <div className="space-y-6">
                   <SecurityCard
                     label="Alamat Email"
-                    value="A*******@gmail.com"
+                    value={maskEmail(formData.newEmail)}
                     icon={<Mail className="text-blue-500" />}
                     onEdit={() => setActiveModal("email")}
                   />
                   <SecurityCard
                     label="Nomor Telepon"
-                    value="089*******"
+                    value={maskPhone(formData.newPhone)}
                     icon={<Phone className="text-green-500" />}
                     canDelete
                     onEdit={() => setActiveModal("phone")}
@@ -228,8 +414,10 @@ export default function SettingContainer({ user, logout }) {
         </div>
       </div>
 
-      {/*  MODAL INPUT SECTION  */}
+      {/* --- MODAL INPUT SECTION --- */}
+      {/* ... Modal Wrapper Email, Phone, Password, Delete Account tetap sama ... */}
 
+      {/* Cuma kutipan modal Email sbg contoh agar tidak terpotong JSX-nya */}
       {activeModal === "email" && (
         <ModalWrapper onClose={() => setActiveModal(null)}>
           <h4 className="text-2xl font-bold text-slate-900 mb-2">Ubah Email</h4>
@@ -248,11 +436,17 @@ export default function SettingContainer({ user, logout }) {
               label="Konfirmasi Password"
               placeholder="••••••••"
               type="password"
+              value={emailConfirmPassword}
+              onChange={(e) => setEmailConfirmPassword(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-3 mt-10">
-            <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all">
-              Simpan Perubahan
+            <button
+              onClick={handleSaveEmail}
+              disabled={isProcessing}
+              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
             <button
               onClick={() => setActiveModal(null)}
@@ -282,8 +476,12 @@ export default function SettingContainer({ user, logout }) {
             />
           </div>
           <div className="flex flex-col gap-3 mt-10">
-            <button className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all">
-              Kirim Kode Verifikasi
+            <button
+              onClick={handleUpdatePhone}
+              disabled={isProcessing}
+              className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? "Menyimpan..." : "Simpan Nomor"}
             </button>
             <button
               onClick={() => setActiveModal(null)}
@@ -324,8 +522,12 @@ export default function SettingContainer({ user, logout }) {
             />
           </div>
           <div className="flex flex-col gap-3 mt-10">
-            <button className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all">
-              Simpan Password Baru
+            <button
+              onClick={handleChangePassword}
+              disabled={isProcessing}
+              className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? "Menyimpan..." : "Simpan Password Baru"}
             </button>
             <button
               onClick={() => setActiveModal(null)}

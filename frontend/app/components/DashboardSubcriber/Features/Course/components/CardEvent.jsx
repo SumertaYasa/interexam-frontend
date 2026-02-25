@@ -2,26 +2,14 @@ import React from "react";
 import { Calendar, MapPin, ChevronRight } from "lucide-react";
 import { Link } from "react-router";
 
-function CardEvent({
-  id,
-  title,
-  date,
-  location,
-  image,
-  totalPaket,
-  path, // Link tujuan saat diklik
-}) {
+function CardEvent({ id, title, date, location, image, totalPaket, path }) {
   return (
     <Link
       to={path}
       className="group relative w-full md:w-[320px] h-[200px] rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all border border-slate-200 block"
     >
       {/* Background Image */}
-      <img
-        src={image}
-        alt={title}
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-      />
+      <img src={image} alt={title} className="w-full h-full object-cover " />
 
       {/* Dark Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
