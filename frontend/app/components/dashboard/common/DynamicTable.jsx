@@ -15,6 +15,25 @@ export default function DynamicTable({ columns, onRowClick, data, isLoading, ite
         }
     };
 
+    const getVisiblePages = () => {
+        const maxVisible = 5; // Jumlah maksimal angka yang muncul
+        
+        // Logika agar angka bergeser (Sliding Window)
+        let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let end = start + maxVisible - 1;
+
+        // Jika angka ujung melebihi total halaman, sesuaikan kembali
+        if (end > totalPages) {
+            end = totalPages;
+            start = Math.max(1, end - maxVisible + 1);
+        }
+
+        // Membuat array baru sesuai rentang (misal: [4, 5, 6, 7])
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    };
+
+    const visiblePages = getVisiblePages();
+
     return (
         <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
             <div className="overflow-x-auto flex-grow">
@@ -103,7 +122,7 @@ export default function DynamicTable({ columns, onRowClick, data, isLoading, ite
                                 </button>
 
                                 {/* Angka Halaman */}
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                                {visiblePages.map((number) => (
                                     <button
                                         key={number}
                                         onClick={() => handlePageChange(number)}
