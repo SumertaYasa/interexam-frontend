@@ -225,7 +225,7 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
           )}
 
           {/*Event */}
-          {["admin", "validator"].includes(userRole) && (
+          {userRole === "admin" && (
           <li>
             <Link
               to="/dashboard/event"
