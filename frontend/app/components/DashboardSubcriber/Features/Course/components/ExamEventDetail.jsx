@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   FileText,
   Lock,
-  CheckCircle, // <-- Tambahkan icon ini
+  CheckCircle,
 } from "lucide-react";
 
 function LoadingDetail() {

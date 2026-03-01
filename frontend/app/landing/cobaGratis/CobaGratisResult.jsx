@@ -103,35 +103,32 @@ export default function CobaGratisResult() {
         {/* SECTION 1: CIRCULAR SCORE & TITLE */}
         <div className="bg-white border border-slate-200 rounded-[32px] p-8 md:p-10 shadow-sm flex flex-col md:flex-row items-center gap-10 md:gap-12">
           <div className="relative flex items-center justify-center shrink-0">
-            <svg className="w-40 h-40 md:w-48 md:h-48 transform -rotate-90">
+            <svg
+              className="w-full h-full transform -rotate-90"
+              viewBox="0 0 100 100" // Viewbox statis agar responsifnya rapi
+            >
+              {/* Lingkaran Background (Abu-abu) */}
               <circle
-                cx="50%"
-                cy="50%"
-                r="40%"
+                cx="50"
+                cy="50"
+                r="40"
                 stroke="currentColor"
-                strokeWidth="12"
+                strokeWidth="8"
                 fill="transparent"
                 className="text-slate-100"
               />
+              {/* Lingkaran Progress (Biru) */}
               <circle
-                cx="50%"
-                cy="50%"
-                r="40%"
+                cx="50"
+                cy="50"
+                r="40"
                 stroke="currentColor"
-                strokeWidth="12"
+                strokeWidth="8"
                 fill="transparent"
-                strokeDasharray="251.2" // 2 * pi * r (approx for r=40 on 100x100 viewbox)
+                strokeDasharray="251.2" // Rumus: 2 * Math.PI * r (2 * 3.14 * 40)
                 strokeDashoffset={251.2 - (251.2 * (results.score || 0)) / 100}
                 className="text-blue-500 transition-all duration-1000 ease-out"
                 strokeLinecap="round"
-                // Menyesuaikan svg r=40% berdasarkan ukuran viewBox (opsional untuk akurasi presisi, tapi visual ini sudah oke)
-                style={{
-                  cx: "96",
-                  cy: "96",
-                  r: "88",
-                  strokeDasharray: "552.9",
-                  strokeDashoffset: `${552.9 - (552.9 * (results.score || 0)) / 100}`,
-                }}
               />
             </svg>
             <div className="absolute flex flex-col items-center">

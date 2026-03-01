@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { LayoutList, LayoutGrid, Sliders } from "lucide-react";
-import CardProgress from "../../Common/CardProgress";
-import CardProgressList from "../../Common/CardProgressList";
-import BreadCrumbs from "../../Common/BreadCrumbs";
-import SearchBar from "../../Common/SearchBar";
-import FilterPanel from "../../Common/FilterPanel";
+import CardProgress from "../../Common/CardProgress.jsx";
+import CardProgressList from "../../Common/CardProgressList.jsx";
+import BreadCrumbs from "../../Common/BreadCrumbs.jsx";
+import SearchBar from "../../Common/SearchBar.jsx";
+import FilterPanel from "../../Common/FilterPanel.jsx";
 import { slugify } from "../../../../utils/slugify.ts";
-import { dashboardService } from "../../../../services/subscriber";
+import { dashboardService } from "../../../../services/subscriber/index.js";
 import { getAssetUrl } from "../../../../utils/assetHelpper.ts";
 
 function LoadingCards() {

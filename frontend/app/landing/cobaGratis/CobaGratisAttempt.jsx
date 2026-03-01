@@ -64,8 +64,8 @@ export default function CobaGratisAttempt() {
               jenis_soal: soal.jenis_soal,
               options:
                 soal.opsi_jawaban.map((opt) => ({
-                  id_jawaban: opt.id_jawaban,
-                  opsi_jawaban_text: opt.teks,
+                  id: opt.id_jawaban,
+                  text: opt.teks,
                   is_correct: opt.is_correct, // Disimpan diam-diam di state untuk Local Grading
                 })) || [],
               deskripsi: soal.deskripsi || "",
@@ -109,12 +109,12 @@ export default function CobaGratisAttempt() {
     const totalQuestions = questions.length;
 
     questions.forEach((q, i) => {
-      const userAnswerId = answers[i];
-      if (!userAnswerId) {
+      const userAnswer = answers[i];
+      if (!userAnswer) {
         blankCount++;
       } else {
         const correctOption = q.options.find((opt) => opt.is_correct);
-        if (correctOption && correctOption.id_jawaban === userAnswerId) {
+        if (correctOption && correctOption.text === userAnswer) {
           correctCount++;
         } else {
           wrongCount++;

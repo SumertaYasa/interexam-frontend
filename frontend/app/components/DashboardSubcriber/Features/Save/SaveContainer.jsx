@@ -9,7 +9,7 @@ import LockedFeature from "../../Common/LockedFeature";
 import { slugify } from "../../../../utils/slugify";
 
 function SaveContainer() {
-  const { showAlert, isPremium } = useAuth();
+  const { showAlert, isPremium, isLoading } = useAuth();
   const { folders, addFolder, deleteFolder } = useFolder();
 
   // --- STATE ---
@@ -35,6 +35,18 @@ function SaveContainer() {
       setTargetFolder(null);
     }
   };
+
+  // 🔥 GATEKEEPER: Wait for auth to load before showing content
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen flex flex-col items-center justify-center bg-slate-50/30">
+        <div className="w-10 h-10 border-4 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-slate-500 font-bold animate-pulse">
+          Memverifikasi akses Premium...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <LockedFeature isLocked={!isPremium} minHeight="min-h-screen">

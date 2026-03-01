@@ -121,4 +121,38 @@ export const profileService = {
       throw error;
     }
   },
+
+  /**
+   * Refresh/Check subscription status
+   * Dipanggil setelah payment sukses atau saat perlu update status
+   * 🔥 DENGAN CACHE-BUSTING HEADERS UNTUK BYPASS BROWSER CACHE
+   */
+  checkSubscriptionStatus: async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/subscriber/check-status`,
+        {
+          ...getAuthHeader(),
+          headers: {
+            ...getAuthHeader().headers,
+            // 🔥 Cache-busting headers
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+          // 🔥 URL parameter cache buster
+          params: {
+            _t: new Date().getTime(),
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Gagal check subscription status:",
+        error.response?.data || error.message,
+      );
+      throw error;
+    }
+  },
 };

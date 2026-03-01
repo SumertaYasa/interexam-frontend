@@ -120,10 +120,7 @@ export default [
       "routes/dashboard/paket-langganan/edit.paket.langganan.jsx",
     ),
 
-    route(
-      "akun-subscriber",
-      "routes/dashboard/subscriber/akun.subscriber.jsx"
-    ),
+    route("akun-subscriber", "routes/dashboard/subscriber/akun.subscriber.jsx"),
 
     route(
       "daftar-subscriber",
@@ -256,19 +253,17 @@ export default [
       "components/DashboardSubcriber/Features/Save/DetailSave.jsx",
     ),
     route(
-      "dashboard-subscriber/tersimpan/:label/exam-detail",
-      "components/DashboardSubcriber/Features/Exam/DetailExam.jsx",
-      { id: "folder-detail" },
-    ),
-    route(
       "dashboard-subscriber/tersimpan/:label/attempt",
-      "components/DashboardSubcriber/Features/Exam/ExamAttempt.jsx",
-      { id: "folder-attempt" },
+      "components/DashboardSubcriber/Features/Save/Components/FolderAttempt.jsx",
     ),
     route(
       "dashboard-subscriber/tersimpan/:label/result",
-      "components/DashboardSubcriber/Features/Exam/ResultExam.jsx",
-      { id: "folder-result" },
+      "components/DashboardSubcriber/Features/Save/Components/FolderResult.jsx",
+    ),
+
+    route(
+      "dashboard-subscriber/tersimpan/:label/discussion",
+      "components/DashboardSubcriber/Features/Save/Components/FolderDiscussion.jsx",
     ),
 
     // 4. Detail Lencana

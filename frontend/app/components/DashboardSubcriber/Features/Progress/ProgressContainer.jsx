@@ -7,7 +7,7 @@ import { dashboardService } from "../../../../services/subscriber";
 import LockedFeature from "../../Common/LockedFeature";
 
 export default function ProgressContainer() {
-  const { isPremium } = useAuth();
+  const { isPremium, isLoading } = useAuth();
   const [mode, setMode] = useState("Mingguan");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -72,6 +72,17 @@ export default function ProgressContainer() {
         : ["Login hari ini", "Mulai belajar"],
   };
 
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen flex flex-col items-center justify-center bg-slate-50/30">
+        <div className="w-10 h-10 border-4 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-slate-500 font-bold animate-pulse">
+          Memverifikasi akses Premium...
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-h-screen bg-slate-50/30 font-sans [scrollbar-gutter:stable]">
       <div className="max-w-[1440px] mx-auto flex flex-col gap-5">
@@ -114,14 +125,11 @@ export default function ProgressContainer() {
 
             {/* Bottom Section: Chart & Summary */}
             <div className="flex flex-col lg:flex-row gap-8 items-stretch pb-10">
-              <LockedFeature title="Fitur Grafik" isLocked={!isPremium}>
+              <LockedFeature isPremium={isPremium}>
                 <BarChart mode={mode} data={processedChart} />
               </LockedFeature>
-              {/* Pastikan ActivitySummary bisa menerima prop summaries */}
-              <LockedFeature
-                title="Fitur Ringkasan Aktivitas"
-                isLocked={!isPremium}
-              >
+
+              <LockedFeature isPremium={isPremium}>
                 <ActivitySummary mode={mode} summaries={processedSummary} />
               </LockedFeature>
             </div>

@@ -1,8 +1,8 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
-// --- INTERFACES ---
+// --- 1. GLOBAL INTERFACES ---
 
 interface AuthHeader {
   headers: {
@@ -11,7 +11,7 @@ interface AuthHeader {
 }
 
 // Tipe standar response API kita
-interface ApiResponse<T = any> {
+export interface ApiResponse<T = any> {
   status: "success" | "error";
   message?: string;
   data: T;
@@ -22,8 +22,9 @@ interface ApiResponse<T = any> {
   };
 }
 
-// Parameter untuk filter pencarian
-interface BankSoalParams {
+// --- 2. FEATURE INTERFACES ---
+
+export interface BankSoalParams {
   search?: string;
   matapelajaran?: string;
   jenjang?: string;
@@ -33,23 +34,46 @@ interface BankSoalParams {
   folderId?: number | string | null;
 }
 
-// Tipe data Folder (Sesuai Controller getMyFolders)
 export interface FolderData {
-  id: number;
+  id: number; // Terkadang backend mengirim 'id' atau 'id_folder'
+  id_folder?: number;
   nama: string;
+  nama_folder?: string;
   keterangan: string;
   total_item: number;
   created_at: string;
 }
 
-// --- HELPER ---
+// Interface baru untuk Folder Practice
+export interface FolderQuestionData {
+  folderId: number | null;
+  folderName: string;
+  soal: any[]; // Bisa diganti dengan interface Soal yang lebih spesifik jika ada
+}
+
+export interface PracticePayload {
+  folderSlug: string;
+  answers: Record<string | number, any>;
+}
+
+export interface PracticeResultData {
+  total_soal: number;
+  terjawab: number;
+  benar: number;
+  salah: number;
+  kosong: number;
+  score: number;
+  details: any[]; // Bisa diganti dengan interface Pembahasan jika ada
+}
+
+// --- 3. HELPER ---
 
 const getAuthHeader = (): AuthHeader => {
   const token = localStorage.getItem("token");
-  return { headers: { Authorization: `Bearer ${token}` } };
+  return { headers: { Authorization: `Bearer ${token || ""}` } };
 };
 
-// --- SERVICE ---
+// --- 4. SERVICE ---
 
 export const saveService = {
   // ==========================================
@@ -75,7 +99,7 @@ export const saveService = {
         },
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal ambil bank soal:", error);
       return {
         status: "error",
@@ -102,7 +126,7 @@ export const saveService = {
         },
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal ambil soal favorit:", error);
       return {
         status: "error",
@@ -126,7 +150,7 @@ export const saveService = {
         getAuthHeader(),
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal simpan soal:", error);
       throw error;
     }
@@ -139,7 +163,7 @@ export const saveService = {
         getAuthHeader(),
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal hapus soal:", error);
       throw error;
     }
@@ -155,7 +179,7 @@ export const saveService = {
         getAuthHeader(),
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal toggle favorite:", error);
       throw error;
     }
@@ -171,9 +195,8 @@ export const saveService = {
         `${API_BASE_URL}/subscriber/folders`,
         getAuthHeader(),
       );
-      // Backend mengembalikan { status: "success", data: [...] }
       return response.data.data || [];
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal ambil folder:", error);
       return [];
     }
@@ -190,7 +213,7 @@ export const saveService = {
         getAuthHeader(),
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal buat folder:", error);
       throw error;
     }
@@ -203,7 +226,7 @@ export const saveService = {
         getAuthHeader(),
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal hapus folder:", error);
       throw error;
     }
@@ -220,9 +243,47 @@ export const saveService = {
         getAuthHeader(),
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal memindahkan ke folder:", error);
       throw error;
+    }
+  },
+
+  // ==========================================
+  // 4. LATIHAN FOLDER (PRACTICE MODE)
+  // ==========================================
+
+  // Mengambil soal dari folder favorit
+  getFolderQuestions: async (
+    slug: string,
+  ): Promise<ApiResponse<FolderQuestionData>> => {
+    try {
+      const response = await axios.get<ApiResponse<FolderQuestionData>>(
+        `${API_BASE_URL}/subscriber/folder/${slug}/questions`,
+        getAuthHeader(),
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("Gagal ambil soal folder:", error);
+      // Lempar error spesifik dari Axios jika ada, atau error default
+      throw (error as AxiosError).response?.data || error;
+    }
+  },
+
+  // Mengirim hasil latihan (koreksi murni)
+  submitFolderPractice: async (
+    payload: PracticePayload,
+  ): Promise<ApiResponse<PracticeResultData>> => {
+    try {
+      const response = await axios.post<ApiResponse<PracticeResultData>>(
+        `${API_BASE_URL}/subscriber/folder/submit-practice`,
+        payload,
+        getAuthHeader(),
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("Gagal submit latihan folder:", error);
+      throw (error as AxiosError).response?.data || error;
     }
   },
 };
