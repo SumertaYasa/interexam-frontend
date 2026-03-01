@@ -1,20 +1,38 @@
 import React from "react";
 import { Lock, Crown, ChevronRight } from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
 
 function LockedFeature({
   title = "Fitur Premium",
   description = "Upgrade paket langganan Anda untuk mengakses fitur eksklusif ini.",
   children,
-  isLocked = true,
+  isLocked,
   minHeight = "min-h-[300px]",
   className = "",
 }) {
+  // Ambil status premium dari context sebagai fallback agar komponen
+  // bereaksi terhadap perubahan isPremium secara langsung.
+  const { isPremium, isLoading } = useAuth();
+
+  // Hitung status terkunci final: terkunci HANYA jika paket berbayar (isLocked=true) AND user tidak premium
+  const effectiveLocked = isLocked && !isPremium;
+
+  // DEBUG: Log kondisi locked dan sumbernya
+  console.log(
+    `[LockedFeature] ${title} - prop.isLocked:`,
+    isLocked,
+    "| context.isPremium:",
+    isPremium,
+    "| effectiveLocked:",
+    effectiveLocked,
+  );
+
   // Fungsi redirect ke halaman harga/payment
   const handleUpgrade = () => {
     window.location.href = "/paket";
   };
 
-  if (!isLocked) {
+  if (!effectiveLocked) {
     return <>{children}</>;
   }
 

@@ -211,9 +211,43 @@ export default function ExamAttempt() {
     }
   };
 
-  const handleSendReport = (data) => {
-    showAlert("Laporan berhasil dikirim!", "success");
-    setActiveModal(null);
+  const handleSendReport = async (data) => {
+    try {
+      const reportedQuestion = questions[reportQuestionIdx];
+
+      if (!reportedQuestion) {
+        showAlert("Soal tidak ditemukan untuk dilaporkan.", "error");
+        return;
+      }
+
+      // Gabungkan kategori dan deskripsi untuk dikirim ke backend sebagai "keterangan"
+      // Formatnya: "[Kategori] Deskripsi"
+      const formatKeterangan = `[${data.category.toUpperCase()}] ${data.description}`;
+
+      const payload = {
+        id_soal: reportedQuestion.id,
+        keterangan: formatKeterangan,
+      };
+
+      if (!payload.id_soal || !payload.keterangan) {
+        showAlert(
+          "Data laporan tidak lengkap. Cek kembali form kamu.",
+          "warning",
+        );
+        return;
+      }
+
+      const response = await courseService.reportSoal(payload);
+
+      if (response.status === "success" || response.status === 201) {
+        showAlert("Laporan berhasil dikirim!", "success");
+      }
+    } catch (err) {
+      showAlert(err.message || "Gagal mengirim laporan.", "error");
+    } finally {
+      setActiveModal(null);
+      setReportQuestionIdx(null);
+    }
   };
 
   useEffect(() => {

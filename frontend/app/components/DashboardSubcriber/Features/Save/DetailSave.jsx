@@ -14,7 +14,7 @@ import {
 import BreadCrumbs from "../../Common/BreadCrumbs";
 import ActionModal from "../../Common/ActionModal";
 import Pagination from "../../Common/Pagination";
-import { slugify } from "../../../../utils/slugify"; // Pastikan import ini ada
+import { slugify } from "../../../../utils/slugify";
 
 export default function DetailSave() {
   // 1. Ambil LABEL dari URL (Slug)

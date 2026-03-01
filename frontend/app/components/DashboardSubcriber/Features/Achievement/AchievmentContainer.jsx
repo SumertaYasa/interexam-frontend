@@ -9,9 +9,11 @@ import BadgeItem from "./Components/BadgeItem";
 import LockedFeature from "../../Common/LockedFeature";
 
 export default function AchievementContainer() {
-  const { ispremium } = useAuth();
+  const { isPremium, isLoading } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  console.log("[Achievement] isPremium from useAuth:", isPremium);
 
   // --- 1. FETCH DATA DARI API ---
   useEffect(() => {
@@ -37,6 +39,17 @@ export default function AchievementContainer() {
   }, []);
 
   // --- 3. LOADING STATE (SKELETON SEDERHANA) ---
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen flex flex-col items-center justify-center bg-slate-50/30">
+        <div className="w-10 h-10 border-4 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-slate-500 font-bold animate-pulse">
+          Memverifikasi akses Premium...
+        </p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="w-full min-h-screen bg-white p-8 flex justify-center items-center">
@@ -151,7 +164,7 @@ export default function AchievementContainer() {
           </AchievementCard>
 
           {/* CARD 6: LIST LENCANA (PUTIH) */}
-          <LockedFeature title="Fitur Lencana" isLocked={!ispremium}>
+          <LockedFeature title="Fitur Lencana" isLocked={!isPremium}>
             <div className="bg-white border-2 border-[#f2a289]/30 rounded-[2.5rem] p-8 flex flex-col">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-xl font-black text-slate-800">Lencana</h3>

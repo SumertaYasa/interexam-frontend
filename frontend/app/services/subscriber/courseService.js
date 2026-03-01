@@ -112,6 +112,28 @@ export const courseService = {
   },
 
   /**
+   * Mengirim laporan terkait soal yang bermasalah
+   * @param {Object} payload - { id_soal: number, keterangan: string }
+   * @returns {Promise<Object>} Response dari server
+   */
+  reportSoal: async (payload) => {
+    try {
+      // Sesuaikan URL ini dengan prefix routing di backend kamu
+      // Misalnya jika di app.js -> app.use("/api/v1/subscriber", subscriberRoutes)
+      const response = await axios.post(
+        `${API_BASE_URL}/subscriber/report`,
+        payload,
+        getAuthHeader(),
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error sending report:", error);
+      // Lempar error agar bisa ditangkap oleh blok try-catch di komponen React
+      throw error.response?.data || error;
+    }
+  },
+
+  /**
    * Mengambil data pembahasan (discussion) dari riwayat pengerjaan terakhir
    * @param {string|number} paketId - ID dari Paket Soal
    * @param {string|number} eventId - (Opsional) ID Event jika dikerjakan di dalam event

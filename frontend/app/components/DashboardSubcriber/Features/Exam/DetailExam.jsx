@@ -8,7 +8,7 @@ import { getAssetUrl } from "../../../../utils/assetHelpper";
 import BreadCrumbs from "../../Common/BreadCrumbs";
 import RankingTable from "../../Common/RankingTable";
 import ProgressBar from "../../Common/ProgressBar";
-import LockedFeature from "../../Common/lockedFeature";
+import LockedFeature from "../../Common/LockedFeature";
 import { Star, BookOpen, Play, CheckCircle, FileText } from "lucide-react";
 
 function LoadingDetail() {
@@ -28,7 +28,7 @@ function DetailExam() {
   const { label } = useParams();
   const location = useLocation();
   const { examProgress } = useFolder();
-  const { ispremium } = useAuth();
+  const { isPremium } = useAuth();
 
   // State
   const [examData, setExamData] = useState(null);
@@ -109,7 +109,7 @@ function DetailExam() {
   }, [label]);
 
   const isPaketPremium = examData?.jenis?.toLowerCase() === "berbayar";
-  const shouldLock = isPaketPremium && !ispremium;
+  const shouldLock = isPaketPremium && !isPremium;
 
   // --- RENDERING ---
 

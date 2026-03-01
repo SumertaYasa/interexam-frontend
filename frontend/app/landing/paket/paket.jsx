@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router"; 
+import { useNavigate } from "react-router";
 import Navbar from "../../components/landing/Navbar/Navbar";
 import { subscriptionService } from "../../services/subscriptionService";
+
+// 1. IMPORT USEAUTH DARI CONTEXT (Sesuaikan path-nya jika letaknya berbeda)
+import { useAuth } from "../../context/AuthContext";
 
 // --- HELPERS ---
 const formatIDR = (value) => {
@@ -13,9 +16,8 @@ const formatIDR = (value) => {
 };
 
 const PaketCard = ({ data, theme, onBuy }) => {
-  
   const today = new Date();
-  const activeDiscount = data.diskonPaket?.find(d => {
+  const activeDiscount = data.diskonPaket?.find((d) => {
     const start = new Date(d.tanggal_mulai_diskon);
     const end = new Date(d.tanggal_selesai_diskon);
     return today >= start && today <= end;
@@ -26,7 +28,7 @@ const PaketCard = ({ data, theme, onBuy }) => {
   let diskonPersen = 0;
 
   if (activeDiscount) {
-    diskonPersen = activeDiscount.diskon; 
+    diskonPersen = activeDiscount.diskon;
     const nominalDiskon = hargaAsli * (diskonPersen / 100);
     hargaFinal = hargaAsli - nominalDiskon;
   }
@@ -55,7 +57,10 @@ const PaketCard = ({ data, theme, onBuy }) => {
         {/* Durasi */}
         <div className="bg-white/10 p-2 rounded-lg inline-block w-fit">
           <p className="text-sm font-medium opacity-90">
-            ⏳ Masa Aktif: <span className="font-bold">{data.masa_berlaku} {periodeText}</span>
+            ⏳ Masa Aktif:{" "}
+            <span className="font-bold">
+              {data.masa_berlaku} {periodeText}
+            </span>
           </p>
         </div>
 
@@ -84,8 +89,10 @@ const PaketCard = ({ data, theme, onBuy }) => {
               {formatIDR(hargaAsli)}
             </p>
           )}
-          
-          <span className="text-xs opacity-70 mt-1">/ {data.masa_berlaku} {periodeText}</span>
+
+          <span className="text-xs opacity-70 mt-1">
+            / {data.masa_berlaku} {periodeText}
+          </span>
         </div>
       </div>
 
@@ -99,11 +106,23 @@ const PaketCard = ({ data, theme, onBuy }) => {
           {[
             "Akses Ribuan Paket Soal",
             "Pembahasan Materi Lengkap",
-            "Analisis Statistik Nilai"
+            "Analisis Statistik Nilai",
           ].map((item, idx) => (
             <li key={idx} className="flex items-center gap-3">
               <div className="min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center bg-white text-purple-700">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
               </div>
               <span className="opacity-90">{item}</span>
             </li>
@@ -118,7 +137,19 @@ const PaketCard = ({ data, theme, onBuy }) => {
         style={{ background: theme.cardTheme }}
       >
         <span>Beli Sekarang</span>
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M17 8l4 4m0 0l-4 4m4-4H3"
+          ></path>
+        </svg>
       </button>
     </div>
   );
@@ -128,13 +159,18 @@ function Paket() {
   const [packages, setPackages] = useState([]);
   const navigate = useNavigate();
 
+  // 2. AMBIL FUNGSI REFRESH DARI CONTEXT
+  const { refreshSubscription, waitForPremiumStatus } = useAuth();
+
   // Tema Global
   const theme = {
-    backgroundTheme: "linear-gradient(146deg,rgba(62, 19, 143, 1) 0%, rgba(234, 156, 255, 1) 50%)",
-    cardTheme: "linear-gradient(146deg,rgba(255, 255, 255, 1) 0%, rgba(240, 240, 255, 1) 100%)", // Sedikit saya tweak biar kontras
-    textColor: "text-white", 
+    backgroundTheme:
+      "linear-gradient(146deg,rgba(62, 19, 143, 1) 0%, rgba(234, 156, 255, 1) 50%)",
+    cardTheme:
+      "linear-gradient(146deg,rgba(255, 255, 255, 1) 0%, rgba(240, 240, 255, 1) 100%)", // Sedikit saya tweak biar kontras
+    textColor: "text-white",
     borderColor: "border-0",
-    buttonTextColor: "text-purple-700"
+    buttonTextColor: "text-purple-700",
   };
 
   useEffect(() => {
@@ -142,7 +178,9 @@ function Paket() {
       try {
         const response = await subscriptionService.getAllPackages();
         // Filter yang aktif
-        const active = response.data.filter(p => p.status === "active" || p.status === "Aktif");
+        const active = response.data.filter(
+          (p) => p.status === "active" || p.status === "Aktif",
+        );
         setPackages(active);
       } catch (error) {
         console.error("Gagal load paket", error);
@@ -154,19 +192,59 @@ function Paket() {
   const handleBuy = async (paketId) => {
     const token = localStorage.getItem("token");
     if (!token) {
-        alert("Silakan Login terlebih dahulu!");
-        navigate("/login"); 
-        return;
+      alert("Silakan Login terlebih dahulu!");
+      navigate("/login");
+      return;
     }
 
     try {
       const data = await subscriptionService.createTransaction(paketId);
       // @ts-ignore
       window.snap.pay(data.token, {
-        onSuccess: () => { alert("Pembayaran Berhasil!"); navigate("/dashboard-subscriber"); },
-        onPending: () => { alert("Menunggu Pembayaran..."); navigate("/dashboard-subscriber"); },
-        onError: () => alert("Pembayaran Gagal!"),
-        onClose: () => console.log("Popup closed")
+        // 🔥 IMPROVED ASYNC HANDLER DENGAN POLLING
+        onSuccess: async () => {
+          console.log("[PAYMENT] ✅ Pembayaran berhasil di Midtrans");
+          alert("Pembayaran Berhasil!");
+
+          try {
+            // ⏳ Tunggu webhook Midtrans selesai (max 15 detik dengan polling)
+            console.log(
+              "[PAYMENT] 🔄 Menunggu server mengupdate status premium...",
+            );
+            const isPremiumConfirmed = await waitForPremiumStatus(
+              15, // max attempts
+              1000, // delay 1 detik antara polling
+            );
+
+            if (isPremiumConfirmed) {
+              console.log(
+                "[PAYMENT] ✅ Premium status confirmed! Navigating...",
+              );
+            } else {
+              console.warn(
+                "[PAYMENT] ⚠️ Premium status tidak confirmed dalam 15 detik, tetap navigate...",
+              );
+              // Tetap navigate, data akan refresh auto di dashboard
+            }
+
+            // Navigate dengan data sudah updated (atau minimal polling selesai)
+            navigate("/dashboard-subscriber");
+          } catch (error) {
+            console.error("[PAYMENT] ❌ Error saat polling:", error);
+            navigate("/dashboard-subscriber");
+          }
+        },
+
+        onPending: () => {
+          console.log("[PAYMENT] ⏳ Pembayaran sedang diproses");
+          alert("Menunggu Pembayaran...");
+          navigate("/dashboard-subscriber");
+        },
+        onError: () => {
+          console.error("[PAYMENT] ❌ Pembayaran gagal");
+          alert("Pembayaran Gagal!");
+        },
+        onClose: () => console.log("[PAYMENT] ❌ Popup ditutup user"),
       });
     } catch (error) {
       console.error(error);
@@ -179,32 +257,32 @@ function Paket() {
       <Navbar />
       <section className="absolute z-20 top-[100px] md:top-[120px] w-full mb-20">
         <div className="px-5 md:px-7-5 pb-5 md:pb-7-5 flex flex-col justify-center items-center gap-10">
-          
           {/* Section Header */}
           <div className="text-center">
             <h1 className="text-2xl md:text-3xl font-bold font-sora text-gray-900 mb-4">
               Rencanakan Belajarmu, Capai Lebih Banyak.
             </h1>
             <p className="text-gray-600 md:w-[600px] mx-auto text-xs md:text-lg">
-              Pilih paket belajar yang sesuai dengan ritmemu. Setiap langkah membawa kamu lebih dekat ke hasil terbaikmu.
+              Pilih paket belajar yang sesuai dengan ritmemu. Setiap langkah
+              membawa kamu lebih dekat ke hasil terbaikmu.
             </p>
           </div>
 
           {/* Grid Paket */}
           <div className="flex flex-col md:flex-row gap-8 flex-wrap justify-center items-stretch">
             {packages.length === 0 && (
-                <div className="text-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700 mx-auto mb-4"></div>
-                    <p className="text-gray-500">Memuat pilihan paket...</p>
-                </div>
+              <div className="text-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700 mx-auto mb-4"></div>
+                <p className="text-gray-500">Memuat pilihan paket...</p>
+              </div>
             )}
 
             {packages.map((pkg) => (
-              <PaketCard 
-                key={pkg.id_paket_langganan} 
-                data={pkg} 
-                theme={theme} 
-                onBuy={handleBuy} 
+              <PaketCard
+                key={pkg.id_paket_langganan}
+                data={pkg}
+                theme={theme}
+                onBuy={handleBuy}
               />
             ))}
           </div>

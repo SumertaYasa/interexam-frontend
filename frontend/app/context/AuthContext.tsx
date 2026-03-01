@@ -21,6 +21,7 @@ interface User {
   email_subscriber?: string;
   phone?: string;
   // Field baru khusus Subscriber
+  is_premium?: boolean;
   isPremium?: boolean;
   // Opsional: simpan tanggal expired jika butuh countdown
   subscriptionExpiredAt?: string;
@@ -29,12 +30,18 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+
   isPremium: boolean; // Helper state agar mudah diakses di UI
   isLoading: boolean;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   logout: () => void;
   // Fungsi untuk memaksa refresh status (misal setelah bayar sukses)
   refreshSubscription: () => Promise<void>;
+  // Fungsi polling untuk menunggu premium status (penting untuk post-payment)
+  waitForPremiumStatus: (
+    maxAttempts?: number,
+    delayMs?: number,
+  ) => Promise<boolean>;
   alert: { message: string; type: "success" | "error" } | null;
   showAlert: (message: string, type?: "success" | "error") => void;
   setAlert: React.Dispatch<
@@ -57,51 +64,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isAuthenticated = useMemo(() => !!user, [user]);
 
-  // Helper untuk cek apakah user adalah premium
-  // Admin/Internal dianggap "Premium" agar bisa akses semua (opsional)
+  // ✅ SIMPLIFIED: Compute isPremium langsung dari user.isPremium (backend sudah handle)
   const isPremium = useMemo(() => {
     if (!user) return false;
-    // Jika Internal, anggap true (unlocked)
-    if (user.role !== "subscriber") return true;
-    // Jika Subscriber, cek flag isPremium
+    // Admin/Internal otomatis premium
+    if (user.role && user.role !== "subscriber") return true;
+    // Subscriber: gunakan isPremium field yang sudah ada dari /me endpoint
     return !!user.isPremium;
   }, [user]);
 
-  // Fungsi Fetch User Utama
   const fetchUser = async (token: string) => {
     try {
       const response = await axios.get("http://localhost:5000/api/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      let userData = response.data.user;
+      // ✅ SIMPLIFIED: Backend sudah return isPremium lengkap dari /me
+      let userData = { ...response.data.user };
 
-      // ============================================================
-      // 🛡️ LOGIC KHUSUS SUBSCRIBER
-      // ============================================================
-      if (userData && userData.role === "subscriber") {
-        try {
-          const subResponse = await axios.get(
-            "http://localhost:5000/api/v1/subscriber/check-status",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
+      console.log("[AUTH] User data from /me (includes isPremium):", {
+        id: userData.id,
+        nama: userData.nama,
+        role: userData.role,
+        isPremium: userData.isPremium,
+      });
 
-          // Asumsi endpoint balikin { status: 'active', is_premium: true }
-          userData.isPremium = subResponse.data.is_premium;
-        } catch (error) {
-          // Jika 404 atau error, berarti Gratisan (Not Premium)
-          console.log("User status: Free Member");
-          userData.isPremium = false;
-        }
-      }
-
-      setUser(userData);
+      // Simpan ke LocalStorage, baru SetState
       localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
     } catch (error: any) {
       if (error.response?.status === 401) {
-        googleLogout();
+        logout();
       }
     } finally {
       setIsLoading(false);
@@ -110,23 +103,90 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      if (typeof window === "undefined") return;
       const token = localStorage.getItem("token");
-
       if (!token) {
         setIsLoading(false);
         return;
       }
-
       await fetchUser(token);
     };
-
     checkAuth();
   }, []);
 
+  // DEBUG: Log setiap kali state `user` berubah agar kita bisa melacak
+  // kapan `isPremium` di-set atau di-overwrite.
+  useEffect(() => {
+    if (user) {
+      console.log("🕵️ DETEKTIF: User state berubah menjadi:", {
+        id: user.id_subscriber,
+        isPremium: user.isPremium,
+        is_premium: user.is_premium,
+        source: "AuthContext Update",
+      });
+    }
+  }, [user]);
+
+  // ============================================================
+  // 🔥 FUNGSI REFRESH DENGAN POLLING (CRITICAL FIX)
+  // ============================================================
+  // Refresh kuencian dan tunggu sampai isPremium = true
+  const waitForPremiumStatus = async (
+    maxAttempts: number = 10,
+    delayMs: number = 1000,
+  ): Promise<boolean> => {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const subResponse = await axios.get(
+          "http://localhost:5000/api/v1/subscriber/check-status",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { _t: new Date().getTime() },
+          },
+        );
+
+        const isPremiumNow = !!subResponse.data.is_premium;
+
+        if (isPremiumNow) {
+          console.log("[AUTH] ✅ Premium status confirmed!");
+
+          // Gunakan functional update (prev => ...) agar data user (nama, role) tidak hilang
+          setUser((prevUser) => {
+            if (!prevUser) return null;
+            const updatedUser = {
+              ...prevUser, // Jaga data lama (nama, role, foto)
+              is_premium: true,
+              isPremium: true,
+              subscriptionExpiredAt:
+                subResponse.data.subscription?.tanggal_selesai,
+            };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            return updatedUser;
+          });
+
+          return true;
+        }
+
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+      } catch (error: any) {
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+    return false;
+  };
+
   const refreshSubscription = async () => {
     const token = localStorage.getItem("token");
-    if (token) await fetchUser(token);
+    if (token) {
+      console.log("[AUTH] 🔄 Refreshing subscription status...");
+      await fetchUser(token);
+    }
   };
 
   const showAlert = (
@@ -153,6 +213,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser,
         logout,
         refreshSubscription,
+        waitForPremiumStatus,
         alert,
         showAlert,
         setAlert,
