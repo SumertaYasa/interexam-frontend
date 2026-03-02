@@ -212,8 +212,19 @@ export default function StandardDiscussion() {
                   <div className="flex flex-col gap-3">
                     {question.opsi_jawaban.map((opsi) => {
                       const isCorrectAnswer = opsi.is_correct;
-                      const isUserChoice =
-                        question.jawaban_user?.id_jawaban === opsi.id_jawaban;
+
+                      // Handle jawaban_user bisa berupa array (multiple_answer) atau object (single answer)
+                      let isUserChoice = false;
+                      if (Array.isArray(question.jawaban_user)) {
+                        // Multiple Answer: jawaban_user adalah array
+                        isUserChoice = question.jawaban_user.some(
+                          (ans) => ans.id_jawaban === opsi.id_jawaban,
+                        );
+                      } else if (question.jawaban_user) {
+                        // Single Answer: jawaban_user adalah object
+                        isUserChoice =
+                          question.jawaban_user.id_jawaban === opsi.id_jawaban;
+                      }
 
                       let optionStyle =
                         "border-slate-200 bg-white text-slate-700";
