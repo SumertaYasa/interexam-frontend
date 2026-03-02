@@ -14,8 +14,8 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
 
   const baseClass = "flex items-center p-2 rounded-2xl group transition duration-75";
  
-  const activeClass = "bg-primary/10 text-gray-900 h-12  gap-2";
-  const inactiveClass = "text-gray-500  h-12 gap-2 hover:text-gray-900 hover:bg-primary/10";
+  const activeClass = "bg-primary text-white h-12  gap-2";
+  const inactiveClass = "text-gray-500  h-12 gap-2 hover:text-white hover:bg-primary";
 
   const textClass = isWide ? "opacity-100 ml-3" : "opacity-0 hidden w-0";
 
@@ -54,7 +54,7 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
             }
           `}
       </style>
-        <ul className="space-y-2 font-medium">
+        <ul className="space-y-1 font-medium">
           
           <h1 className={`font-se text-gray-500 uppercase text-xs font-xl px-2 mt-2 mb-2 font-noto-sans`}>
             Menu
@@ -117,7 +117,7 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
             </button>
             
             {/* Logic Dropdown menggunakan State React */}
-            <ul className={`${(isKategoriOpen && isWide) ? "block" : "hidden"} py-2 space-y-2`}>
+            <ul className={`${(isKategoriOpen && isWide) ? "block" : "hidden"} py-1 space-y-1`}>
 
               {["admin", "validator"].includes(userRole) && (
               <li>
@@ -125,11 +125,11 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
                   to="kategori" 
                   className={`flex whitespace-nowrap transition-all duration-300 ease-in-out  h-12 items-center w-full p-2  pl-11 rounded-2xl group font-noto-sans text-base
                     ${isActive("/dashboard/kategori") 
-                      ? "text-gray-900 bg-primary/10 font-medium" 
-                      : "text-gray-500 hover:text-gray-900 hover:bg-primary/10"}`}>
+                      ? "text-white bg-primary font-medium" 
+                      : "text-gray-500 hover:text-white hover:bg-primary"}`}>
                  
                   <svg
-                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/kategori") ? "text-gray-900" : "text-gray-400"}`}
+                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/kategori") ? "text-white" : "text-gray-400"}`}
                     xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12.1" cy="12.1" r="1"/>
                   </svg>
@@ -144,10 +144,10 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
                   to="jenjang" 
                   className={`flex whitespace-nowrap transition-all duration-300 ease-in-out  h-12 items-center w-full p-2  pl-11 rounded-2xl group font-noto-sans text-base
                     ${isActive("/dashboard/jenjang") 
-                      ? "text-gray-900 bg-primary/10 font-medium" 
-                      : "text-gray-500 hover:text-gray-900 hover:bg-primary/10"}`}>
+                      ? "text-white bg-primary font-medium" 
+                      : "text-gray-500 hover:text-white hover:bg-primary"}`}>
                   <svg
-                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/jenjang") ? "text-gray-900" : "text-gray-400"}`}
+                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/jenjang") ? "text-white" : "text-gray-400"}`}
                     xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12.1" cy="12.1" r="1"/>
                   </svg>
@@ -162,10 +162,10 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
                   to="mata-pelajaran" 
                   className={`flex whitespace-nowrap transition-all duration-300 ease-in-out  h-12 items-center w-full p-2  pl-11 rounded-2xl group font-noto-sans text-base
                     ${isActive("/dashboard/mata-pelajaran") 
-                      ? "text-gray-900 bg-primary/10 font-medium" 
-                      : "text-gray-500 hover:text-gray-900 hover:bg-primary/10"}`}>
+                      ? "text-white bg-primary font-medium" 
+                      : "text-gray-500 hover:text-white hover:bg-primary"}`}>
                   <svg
-                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/mata-pelajaran") ? "text-gray-900" : "text-gray-400"}`}
+                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/mata-pelajaran") ? "text-white" : "text-gray-400"}`}
                     xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12.1" cy="12.1" r="1"/>
                   </svg>
@@ -179,10 +179,10 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
                   to="topik" 
                   className={`flex  h-12 items-center w-full p-2 transition duration-75 pl-11 rounded-2xl group font-noto-sans text-base
                   ${isActive("/dashboard/topik") 
-                      ? "text-gray-900 bg-primary/10 font-medium" 
-                      : "text-gray-500 hover:text-gray-900 hover:bg-primary/10"}`}>
+                      ? "text-white bg-primary font-medium" 
+                      : "text-gray-500 hover:text-white hover:bg-primary"}`}>
                   <svg
-                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/topik") ? "text-gray-900" : "text-gray-400"}`}
+                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/topik") ? "text-white" : "text-gray-400"}`}
                     xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12.1" cy="12.1" r="1"/>
                   </svg>
@@ -269,17 +269,17 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
                   <span className={`flex-1 ms-3 font-noto-sans text-base text-left rtl:text-right whitespace-nowrap ${textClass}`}>Subscription</span>
                   <svg className={`w-5 h-5 transition-transform duration-200" ${isSubscriptionOpen ? "rotate-180" : ""} ${isWide ? "opacity-100" : "opacity-0 hidden"}`} aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 9-7 7-7-7"/></svg>
             </button>
-            <ul className={`${(isSubscriptionOpen && isWide) ? "block" : "hidden"} py-2 space-y-2`}>
+            <ul className={`${(isSubscriptionOpen && isWide) ? "block" : "hidden"} py-1 space-y-1`}>
 
               <li>
                 <Link 
                   to="paket-langganan" 
                   className={`flex  h-12 items-center w-full p-2 whitespace-nowrap transition-all duration-300 ease-in-out pl-11 rounded-2xl group font-noto-sans text-base
                     ${isActive("/dashboard/paket-langganan") 
-                      ? "text-gray-900 bg-primary/10 font-medium" 
-                      : "text-gray-500 hover:text-gray-900 hover:bg-primary/10"}`}>
+                      ? "text-white bg-primary font-medium" 
+                      : "text-gray-500 hover:text-white hover:bg-primary"}`}>
                   <svg
-                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/paket-langganan") ? "text-gray-900" : "text-gray-400"}`}
+                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/paket-langganan") ? "text-white" : "text-gray-400"}`}
                     xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12.1" cy="12.1" r="1"/>
                   </svg>
@@ -292,10 +292,10 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
                   to="akun-subscriber" 
                   className={`flex  h-12 items-center w-full p-2 whitespace-nowrap transition-all duration-300 ease-in-out pl-11 rounded-2xl group font-noto-sans text-base
                     ${isActive("/dashboard/akun-subscriber") 
-                      ? "text-gray-900 bg-primary/10 font-medium" 
-                      : "text-gray-500 hover:text-gray-900 hover:bg-primary/10"}`}>
+                      ? "text-white bg-primary font-medium" 
+                      : "text-gray-500 hover:text-white hover:bg-primary"}`}>
                   <svg
-                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/akun-subscriber") ? "text-gray-900" : "text-gray-400"}`}
+                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/akun-subscriber") ? "text-white" : "text-gray-400"}`}
                     xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12.1" cy="12.1" r="1"/>
                   </svg>
@@ -308,10 +308,10 @@ export default function Sidebar({ isWide,isMobileOpen, userRole = "admin" }) {
                   to="/dashboard/daftar-subscriber" 
                   className={`flex  h-12 items-center w-full p-2 whitespace-nowrap transition-all duration-300 ease-in-out pl-11 rounded-2xl group font-noto-sans text-base
                     ${isActive("/dashboard/daftar-subscriber") 
-                      ? "text-gray-900 bg-primary/10 font-medium" 
-                      : "text-gray-500 hover:text-gray-900 hover:bg-primary/10"}`}>
+                      ? "text-white bg-primary font-medium" 
+                      : "text-gray-500 hover:text-white hover:bg-primary"}`}>
                   <svg
-                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/daftar-subscriber") ? "text-gray-900" : "text-gray-400"}`}
+                    className={`lucide lucide-dot-icon lucide-dot w-5 h-5  mr-0 ml-2 transition-transform flex-shrink-0  ${isActive("/dashboard/daftar-subscriber") ? "text-white" : "text-gray-400"}`}
                     xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12.1" cy="12.1" r="1"/>
                   </svg>

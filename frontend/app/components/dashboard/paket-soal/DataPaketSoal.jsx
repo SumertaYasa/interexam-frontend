@@ -94,7 +94,12 @@ export default function DataPaketSoal() {
                 setDataPaket(prev => prev.filter(p => p.id !== id));
                 alert("Paket soal berhasil dihapus.");
             } catch (error) {
-                alert("Gagal menghapus: " + (error.message || "Terjadi kesalahan"));
+                console.error("Gagal hapus paket:", error);
+                
+                const errorMsg = error.response?.data?.message || error.message || "Terjadi kesalahan";
+                alert(errorMsg);
+                
+                fetchData();
             }
         }
     };

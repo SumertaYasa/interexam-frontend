@@ -73,7 +73,8 @@ export default function DataEvent() {
                 setEvents(prev => prev.filter(e => e.id !== id));
             } catch (error) {
                 console.error("Gagal hapus:", error);
-                alert("Gagal menghapus event.");
+                alert(error.response?.data?.message || "Gagal menghapus event. Event mungkin sedang digunakan.");
+                fetchData();
             }
         }
     };

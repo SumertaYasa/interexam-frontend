@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { useAuth } from "../../../context/AuthContext";
+import DashboardFooter from "./DashboardFooter";
 
 import {
   ADMIN_MENU,
@@ -108,10 +109,11 @@ export default function DashboardLayout({ children }) {
 
       <div
         id="main-content"
-        className={`h-s p-2  transition-all duration-200 ease-in-out py-20  min-h-screen bg-gray-50 
+        className={`pt-20  transition-all duration-200 ease-in-out min-h-screen bg-gray-50 flex flex-col
        ${marginClass}`}
       >
-        <main className=" pt-18 ">{children}</main>
+        <main className=" p-2 flex-grow ">{children}</main>
+        <DashboardFooter />
       </div>
     </div>
   );
