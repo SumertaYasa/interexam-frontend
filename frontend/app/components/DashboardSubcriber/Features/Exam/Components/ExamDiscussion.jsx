@@ -213,18 +213,12 @@ export default function StandardDiscussion() {
                     {question.opsi_jawaban.map((opsi) => {
                       const isCorrectAnswer = opsi.is_correct;
 
-                      // Handle jawaban_user bisa berupa array (multiple_answer) atau object (single answer)
-                      let isUserChoice = false;
-                      if (Array.isArray(question.jawaban_user)) {
-                        // Multiple Answer: jawaban_user adalah array
-                        isUserChoice = question.jawaban_user.some(
-                          (ans) => ans.id_jawaban === opsi.id_jawaban,
-                        );
-                      } else if (question.jawaban_user) {
-                        // Single Answer: jawaban_user adalah object
-                        isUserChoice =
-                          question.jawaban_user.id_jawaban === opsi.id_jawaban;
-                      }
+                      // Handle jawaban_user - sekarang selalu array
+                      const isUserChoice = Array.isArray(question.jawaban_user)
+                        ? question.jawaban_user.some(
+                            (ans) => ans.id_jawaban === opsi.id_jawaban
+                          )
+                        : false;
 
                       let optionStyle =
                         "border-slate-200 bg-white text-slate-700";
@@ -236,8 +230,12 @@ export default function StandardDiscussion() {
                         IconToShow = (
                           <CheckCircle2 size={18} className="text-green-600" />
                         );
-                      } else if (isUserChoice && !isCorrectAnswer) {
-                        optionStyle = "border-red-400 bg-red-50 text-red-700";
+                      }
+                      
+                      // PENTING: Prioritas indikator merah untuk opsi yang user pilih tapi salah
+                      // Cek ini SETELAH green, jadi urutan pengecekan: user choice yang salah > correct answer
+                      if (isUserChoice && !isCorrectAnswer) {
+                        optionStyle = "border-red-400 bg-red-50 text-red-700 ring-1 ring-red-400";
                         IconToShow = (
                           <XCircle size={18} className="text-red-500" />
                         );
