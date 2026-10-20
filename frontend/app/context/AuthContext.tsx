@@ -10,7 +10,7 @@ import { useNavigate, useLocation } from "react-router";
 import axios from "axios";
 import Alert from "../components/Common/Alert";
 import { googleLogout } from "@react-oauth/google";
-import { AUTH_API_URL, API_BASE_URL } from "../utils/apiUrl.ts";
+import { AUTH_API_URL, API_BASE_URL } from "../utils/apiUrl";
 
 // --- 1. UPDATE INTERFACE ---
 interface User {
