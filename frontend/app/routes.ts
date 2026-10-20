@@ -209,7 +209,7 @@ export default [
 
     route(
       "dashboard-subscriber/latihan/events",
-      "components/DashboardSubcriber/Features/Course/components/eventListContainer.jsx",
+      "components/DashboardSubcriber/Features/Course/components/EventListContainer.jsx",
     ),
 
     route(
