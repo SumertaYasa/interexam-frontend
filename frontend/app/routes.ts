@@ -263,7 +263,7 @@ export default [
 
     route(
       "dashboard-subscriber/tersimpan/:label/discussion",
-      "components/DashboardSubcriber/Features/Save/Components/FolderDiscussion.jsx",
+      "components/DashboardSubcriber/Features/Save/Components/folderDiscussion.jsx",
     ),
 
     // 4. Detail Lencana
