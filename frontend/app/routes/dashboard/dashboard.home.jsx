@@ -1,4 +1,4 @@
-import IndexPage from "../../components/dashboard";
+import IndexPage from "../../components/dashboard/Index";
 
 export function meta() {
   return [{ title: "Dashboard - InterExam" }];
