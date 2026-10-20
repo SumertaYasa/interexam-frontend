@@ -312,7 +312,9 @@ export default function AddPaketSoal() {
             navigate("../paket-soal");
 
         } catch (error) {
-            alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan.");
+            console.error("Detail error saat menyimpan paket soal:", error.response?.data || error);
+            const errMsg = error.response?.data?.message || error.response?.data?.error || error.message || "Terjadi kesalahan saat menyimpan.";
+            alert(errMsg);
         } finally {
             setIsSaving(false);
         }
