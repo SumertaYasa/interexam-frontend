@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Trophy, Loader2 } from "lucide-react";
 import { courseService } from "../../../../../services/subscriber";
+import { BACKEND_URL } from "../../../../../utils/apiUrl";
 
 export default function RankingDetailPage() {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export default function RankingDetailPage() {
   const getAvatarUrl = (path) => {
     if (!path || path === "/person.jpg") return "/person.jpg";
     if (path.startsWith("http")) return path;
-    return `http://localhost:5000${path}`;
+    return `${BACKEND_URL}${path.startsWith("/") ? "" : "/"}${path}`;
   };
 
   // Rendering Loading State

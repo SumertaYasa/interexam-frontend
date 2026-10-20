@@ -11,6 +11,7 @@ import {
   Loader2, // Icon tambahan untuk loading
 } from "lucide-react";
 import { courseService } from "../../../../../services/subscriber"; // Sesuaikan path-nya
+import { BACKEND_URL } from "../../../../../utils/apiUrl";
 
 // --- KOMPONEN BANTUAN: LINGKARAN SKOR ---
 function CircularScore({ score }) {
@@ -83,7 +84,7 @@ function MiniRankingTable({ eventId, title, rankingType }) {
   const getAvatarUrl = (path) => {
     if (!path || path === "/person.jpg") return "/person.jpg";
     if (path.startsWith("http")) return path;
-    return `http://localhost:5000${path}`; // Pastikan port sesuai dengan backend-mu
+    return `${BACKEND_URL}${path.startsWith("/") ? "" : "/"}${path}`;
   };
 
   return (

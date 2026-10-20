@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { useAuth } from "../../../context/AuthContext";
+import { BACKEND_URL } from "../../../utils/apiUrl";
 import {
   LayoutDashboard,
   Book,
@@ -61,7 +62,7 @@ function Sidebar() {
     if (user && user.foto) {
       const fotoUrl = user.foto.startsWith("http")
         ? user.foto
-        : `http://localhost:5000${user.foto}`;
+        : `${BACKEND_URL}${user.foto.startsWith("/") ? "" : "/"}${user.foto}`;
       setProfileImage(fotoUrl);
     } else {
       setProfileImage("/person.jpg");

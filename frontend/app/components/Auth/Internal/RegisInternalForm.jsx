@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { AUTH_API_URL } from "../../../utils/apiUrl";
 
 function RegisForm() {
   const [googleToken, setGoogleToken] = useState("");
@@ -23,7 +24,7 @@ function RegisForm() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/google", {
+      const response = await fetch(`${AUTH_API_URL}/google`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

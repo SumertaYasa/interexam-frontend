@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import { useAuth } from "../../../context/AuthContext";
+import { AUTH_API_URL } from "../../../utils/apiUrl";
 
 function DashboardLayout() {
   const { user, setUser } = useAuth();
@@ -19,7 +20,7 @@ function DashboardLayout() {
       }
 
       try {
-        const response = await fetch("http://localhost:5000/api/auth/me", {
+        const response = await fetch(`${AUTH_API_URL}/me`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

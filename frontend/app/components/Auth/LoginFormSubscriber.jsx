@@ -3,6 +3,8 @@ import { useNavigate } from "react-router";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../../context/AuthContext.tsx";
 
+import { AUTH_API_URL } from "../../utils/apiUrl";
+
 function LoginFormSubscriber() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ function LoginFormSubscriber() {
   const handleGoogleLoginSuccess = async (res) => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/auth/google", {
+      const response = await fetch(`${AUTH_API_URL}/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

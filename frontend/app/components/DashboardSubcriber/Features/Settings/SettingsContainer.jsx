@@ -16,6 +16,7 @@ import ModalWrapper from "./Components/ModalWrapper";
 import InputGroup from "./Components/InputGroup";
 import SecurityCard from "./Components/SecurityCard";
 import TabButton from "./Components/TabButton";
+import { BACKEND_URL } from "../../../../utils/apiUrl";
 
 // GANTI PATH INI SESUAI DENGAN LOKASI FILE CONTEXT & SERVICE-MU
 import { useAuth } from "../../../../context/AuthContext";
@@ -67,7 +68,7 @@ export default function SettingContainer() {
         if (profileData.foto) {
           const fotoUrl = profileData.foto.startsWith("http")
             ? profileData.foto
-            : `http://localhost:5000${profileData.foto}`;
+            : `${BACKEND_URL}${profileData.foto.startsWith("/") ? "" : "/"}${profileData.foto}`;
           setProfileImage(fotoUrl);
         } else {
           setProfileImage("/person.jpg");

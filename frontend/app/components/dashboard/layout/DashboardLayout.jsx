@@ -11,6 +11,7 @@ import {
   CONTRIBUTOR_MENU,
   VALIDATOR_MENU,
 } from "../../../config/menus";
+import { AUTH_API_URL } from "../../../utils/apiUrl";
 
 export default function DashboardLayout({ children }) {
   const { user, setUser } = useAuth();
@@ -26,7 +27,7 @@ export default function DashboardLayout({ children }) {
       }
 
       try {
-        const response = await fetch("http://localhost:5000/api/auth/me", {
+        const response = await fetch(`${AUTH_API_URL}/me`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

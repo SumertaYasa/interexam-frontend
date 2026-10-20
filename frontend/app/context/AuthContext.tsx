@@ -10,6 +10,7 @@ import { useNavigate, useLocation } from "react-router";
 import axios from "axios";
 import Alert from "../components/Common/Alert";
 import { googleLogout } from "@react-oauth/google";
+import { AUTH_API_URL, API_BASE_URL } from "../utils/apiUrl.ts";
 
 // --- 1. UPDATE INTERFACE ---
 interface User {
@@ -75,7 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUser = async (token: string) => {
     try {
-      const response = await axios.get("http://localhost:5000/api/auth/me", {
+      const response = await axios.get(`${AUTH_API_URL}/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -140,7 +141,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const subResponse = await axios.get(
-          "http://localhost:5000/api/v1/subscriber/check-status",
+          `${API_BASE_URL}/subscriber/check-status`,
           {
             headers: { Authorization: `Bearer ${token}` },
             params: { _t: new Date().getTime() },
